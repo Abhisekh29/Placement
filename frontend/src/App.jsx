@@ -1,8 +1,8 @@
 /* eslint-disable no-unused-vars */
 import { useState } from 'react'
 import './App.css'
-import Login from './assets/pages/login'
-import Register from './assets/pages/register'
+import Login from './pages/login'
+import Register from './pages/register'
 
 import React from 'react'
 
