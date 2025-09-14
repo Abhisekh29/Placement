@@ -1,17 +1,18 @@
 /* eslint-disable no-unused-vars */
-import { useState } from 'react'
+import React, { useState } from 'react'
 import './App.css'
 import Login from './pages/login'
 import Register from './pages/register'
-
-import React from 'react'
+import Homepage from './pages/Homepage'
+import StudentDashboard from './pages/StudentDashboard'
+import AdminDashboard from './pages/AdminDashboard'
 
 import { createBrowserRouter, RouterProvider } from "react-router-dom"
 
 const router = createBrowserRouter([
   {
     path: "/",
-    element: <div className='text-red-500 text-3xl font-bold underline'>Moi Tissar lover</div>
+    element: <Homepage/>
   },
   {
     path: "/login",
@@ -20,6 +21,14 @@ const router = createBrowserRouter([
   {
     path: "/register",
     element: <Register />
+  },
+  {
+    path: "/admin-dashboard",
+    element: <AdminDashboard />
+  },
+  {
+    path: "/student-dashboard",
+    element: <StudentDashboard />
   },
 ]);
 
