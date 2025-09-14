@@ -32,6 +32,7 @@ const Login = () => {
           is_enable: res.data.is_enable,
           mod_by: res.data.mod_by,
           mod_time: res.data.mod_time,
+          loggedIn: true,
         })
       );
 
