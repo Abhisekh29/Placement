@@ -1,5 +1,9 @@
 import express from "express";
 import authRoutes from "./routes/auth.js"
+import sessionRoutes from "./routes/session.js"
+import programRoutes from "./routes/program.js"
+import studentRoutes from "./routes/student.js"
+
 import cors from "cors";
 import cookieParser from "cookie-parser";
 
@@ -15,6 +19,9 @@ app.use(express.json())
 app.use(cookieParser())
 
 app.use("/api/auth", authRoutes);
+app.use("/api/session_master", sessionRoutes)
+app.use("/api/program_master", programRoutes);
+app.use("/api/student_master", studentRoutes);
 
 // app.listen(8000, () =>{
 //     console.log("Connected!")
