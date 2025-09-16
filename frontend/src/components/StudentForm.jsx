@@ -40,7 +40,7 @@ const studentSchema = z.object({
 });
 
 const StudentDashboard = () => {
-  const user = JSON.parse(localStorage.getItem("user"));
+  const user = JSON.parse(sessionStorage.getItem("user"));
   const [sessions, setSessions] = useState([]);
   const [programs, setPrograms] = useState([]);
   const [success, setSuccess] = useState("");

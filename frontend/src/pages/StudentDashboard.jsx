@@ -9,7 +9,7 @@ import StudentForm from "../components/StudentForm";
 const StudentDashboard = () => {
   const [hasDetails, setHasDetails] = useState(false);
   const [loading, setLoading] = useState(true);
-  const user = JSON.parse(localStorage.getItem("user"));
+  const user = JSON.parse(sessionStorage.getItem("user"));
 
   useEffect(() => {
     const checkStudentDetails = async () => {

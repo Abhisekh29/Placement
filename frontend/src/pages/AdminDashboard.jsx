@@ -4,7 +4,7 @@ import axios from "axios";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
-  const user = JSON.parse(localStorage.getItem("user"));
+  const user = JSON.parse(sessionStorage.getItem("user"));
 
   const handleLogout = async () => {
     try {
@@ -16,9 +16,9 @@ const AdminDashboard = () => {
 
       console.log(res.data);
 
-      // Clear localStorage
-      localStorage.removeItem("user");
-      localStorage.removeItem("token");
+      // Clear sessionStorage
+      sessionStorage.removeItem("user");
+      sessionStorage.removeItem("token");
 
       // Redirect to homepage
       navigate("/");

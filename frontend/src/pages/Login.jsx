@@ -20,10 +20,10 @@ const Login = () => {
       );
 
       console.log(res.data);
-      localStorage.setItem("token", res.data.token); // if backend returns token
+      sessionStorage.setItem("token", res.data.token); // if backend returns token
 
-      // Store user data in localStorage
-      localStorage.setItem(
+      // Store user data in sessionStorage
+      sessionStorage.setItem(
         "user",
         JSON.stringify({
           userid: res.data.userid,
@@ -36,7 +36,7 @@ const Login = () => {
         })
       );
 
-      const user = JSON.parse(localStorage.getItem("user"));
+      const user = JSON.parse(sessionStorage.getItem("user"));
       console.log(user.username); // Example: prints the username
 
       if (res.data.is_enable === "0") {

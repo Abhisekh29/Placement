@@ -1,8 +1,8 @@
 /* eslint-disable no-unused-vars */
 import React, { useEffect, useState } from "react";
 import "./App.css";
-import Login from "./pages/login";
-import Register from "./pages/register";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
 import Homepage from "./pages/Homepage";
 import StudentDashboard from "./pages/StudentDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
@@ -11,14 +11,14 @@ import { createBrowserRouter, RouterProvider, Navigate } from "react-router-dom"
 
 // Role-based wrappers
 const AdminRoute = ({ children }) => {
-  const user = JSON.parse(localStorage.getItem("user"));
+  const user = JSON.parse(sessionStorage.getItem("user"));
   const isLoggedIn = user?.loggedIn === true || user?.loggedIn === "true";
   const userType = user?.user_type; // "0" = admin
   return isLoggedIn && userType === "0" ? children : <Navigate to="/login" />;
 };
 
 const StudentRoute = ({ children }) => {
-  const user = JSON.parse(localStorage.getItem("user"));
+  const user = JSON.parse(sessionStorage.getItem("user"));
   const isLoggedIn = user?.loggedIn === true || user?.loggedIn === "true";
   const userType = user?.user_type; // "1" = student
   return isLoggedIn && userType === "1" ? children : <Navigate to="/login" />;
@@ -26,7 +26,7 @@ const StudentRoute = ({ children }) => {
 
 // Public route (for homepage/login/register)
 const PublicRoute = ({ children }) => {
-  const user = JSON.parse(localStorage.getItem("user"));
+  const user = JSON.parse(sessionStorage.getItem("user"));
   const isLoggedIn = user?.loggedIn === true || user?.loggedIn === "true";
   const userType = user?.user_type;
 
@@ -45,9 +45,9 @@ const PublicRoute = ({ children }) => {
 const App = () => {
   const [user, setUser] = useState(null);
 
-  // Load user from localStorage when app mounts
+  // Load user from sessionStorage when app mounts
   useEffect(() => {
-    const storedUser = JSON.parse(localStorage.getItem("user"));
+    const storedUser = JSON.parse(sessionStorage.getItem("user"));
     setUser(storedUser);
   }, []);
 
