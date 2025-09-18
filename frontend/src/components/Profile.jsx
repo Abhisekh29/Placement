@@ -1,8 +1,35 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import axios from "axios";
 
 const Profile = ({ studentData, onEdit }) => {
+  const [sessions, setSessions] = useState([]);
+  const [programs, setPrograms] = useState([]);
+
+  // Fetch sessions and programs from backend
+  useEffect(() => {
+    axios
+      .get("http://localhost:8000/api/session_master")
+      .then((res) => setSessions(res.data))
+      .catch((err) => console.error("Error fetching sessions:", err));
+
+    axios
+      .get("http://localhost:8000/api/program_master")
+      .then((res) => setPrograms(res.data))
+      .catch((err) => console.error("Error fetching programs:", err));
+  }, []);
+
+  // Resolve session and program names
+  const sessionName =
+    sessions.find((s) => s.session_id === studentData.session_id)?.session_name ||
+    studentData.session_id;
+
+  const programName =
+    programs.find((p) => p.program_id === studentData.program_id)?.program_name ||
+    studentData.program_id;
+
   return (
-    <div className="bg-white p-6 md:p-8 rounded-xl shadow-md max-w-5xl mx-auto">
+    <div className="bg-gray-50 p-6 md:p-8 rounded-xl shadow-md max-w mx-auto">
+      {/* Header */}
       <div className="flex justify-between items-center mb-6 border-b pb-4">
         <h2 className="text-2xl font-bold text-gray-800">Student Profile</h2>
         <button
@@ -25,7 +52,9 @@ const Profile = ({ studentData, onEdit }) => {
           Edit
         </button>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-x-8 gap-y-6">
+
+      {/* Grid Layout */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-x-8 gap-y-6">
         {/* Row 1 */}
         <div>
           <p className="text-sm font-semibold text-gray-500">Roll No</p>
@@ -35,7 +64,7 @@ const Profile = ({ studentData, onEdit }) => {
           <p className="text-sm font-semibold text-gray-500">Name</p>
           <p className="text-lg">{studentData.name}</p>
         </div>
-        <div className="md:col-span-2">
+        <div>
           <p className="text-sm font-semibold text-gray-500">Email</p>
           <p className="text-lg">{studentData.email}</p>
         </div>
@@ -43,14 +72,32 @@ const Profile = ({ studentData, onEdit }) => {
           <p className="text-sm font-semibold text-gray-500">Mobile</p>
           <p className="text-lg">{studentData.mobile}</p>
         </div>
+
+        {/* Row 2 */}
         <div>
           <p className="text-sm font-semibold text-gray-500">Date of Birth</p>
           <p className="text-lg">
-            {new Date(studentData.dob).toLocaleDateString()}
+            {new Date(studentData.dob).toLocaleDateString("en-IN", {
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            })}
           </p>
         </div>
+        <div>
+          <p className="text-sm font-semibold text-gray-500">Gender</p>
+          <p className="text-lg">{studentData.gender}</p>
+        </div>
+        <div>
+          <p className="text-sm font-semibold text-gray-500">Caste</p>
+          <p className="text-lg">{studentData.caste || "N/A"}</p>
+        </div>
+        <div>
+          <p className="text-sm font-semibold text-gray-500">Address</p>
+          <p className="text-lg">{studentData.address || "N/A"}</p>
+        </div>
 
-        {/* Row 2 */}
+        {/* Row 3 */}
         <div>
           <p className="text-sm font-semibold text-gray-500">10th Percentage</p>
           <p className="text-lg">{studentData.per_10}%</p>
@@ -60,16 +107,12 @@ const Profile = ({ studentData, onEdit }) => {
           <p className="text-lg">{studentData.per_12}%</p>
         </div>
         <div>
-          <p className="text-sm font-semibold text-gray-500">Gender</p>
-          <p className="text-lg">{studentData.gender}</p>
+          <p className="text-sm font-semibold text-gray-500">Session</p>
+          <p className="text-lg">{sessionName}</p>
         </div>
         <div>
-          <p className="text-sm font-semibold text-gray-500">Caste</p>
-          <p className="text-lg">{studentData.caste}</p>
-        </div>
-        <div className="md:col-span-1">
-          <p className="text-sm font-semibold text-gray-500">Address</p>
-          <p className="text-lg">{studentData.address}</p>
+          <p className="text-sm font-semibold text-gray-500">Program</p>
+          <p className="text-lg">{programName}</p>
         </div>
       </div>
     </div>

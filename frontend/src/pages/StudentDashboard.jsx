@@ -54,7 +54,7 @@ const StudentDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50 relative">
+    <div className="min-h-screen flex flex-col bg-white relative">
       <HeaderDashboard />
 
       {/* Toast container */}
@@ -69,7 +69,9 @@ const StudentDashboard = () => {
       <main className="flex-grow p-6">
         <h1 className="text-3xl font-bold mb-2">Student Dashboard</h1>
         <p className="mb-6 text-gray-700">
-          Welcome, <span className="font-semibold">{user.username}</span>
+          Welcome, <span className="font-semibold">
+            {studentData?.name || user.username}
+          </span>
         </p>
 
         {studentData && !editMode ? (
