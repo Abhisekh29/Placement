@@ -1,43 +1,47 @@
-import React from "react";
-import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import React, { useState, useEffect } from "react";
+import HeaderDashboard from "../components/HeaderDashboard";
+import Footer from "../components/Footer";
+import PendingRequest from "../components/PendingRequest";
+import AdminCard from "../components/AdminCard";
 
 const AdminDashboard = () => {
-  const navigate = useNavigate();
   const user = JSON.parse(sessionStorage.getItem("user"));
+  const [toastMessage, setToastMessage] = useState({ type: "", content: "" });
 
-  const handleLogout = async () => {
-    try {
-      const res = await axios.post(
-        "http://localhost:8000/api/auth/logout",
-        {},
-        { withCredentials: true }
-      );
-
-      console.log(res.data);
-
-      // Clear sessionStorage
-      sessionStorage.removeItem("user");
-      sessionStorage.removeItem("token");
-
-      // Redirect to homepage
-      navigate("/");
-    } catch (err) {
-      console.error("Logout failed:", err);
+  useEffect(() => {
+    if (toastMessage.content) {
+      const timer = setTimeout(() => {
+        setToastMessage({ type: "", content: "" });
+      }, 4000); // Hide the toast after 4 seconds
+      return () => clearTimeout(timer);
     }
-  };
+  }, [toastMessage]);
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4">Admin Dashboard</h1>
-      <h3 className="mb-6">Welcome, {user.username}</h3>
+    <div className="min-h-screen flex flex-col bg-white">
+      <HeaderDashboard />
 
-      <button
-        onClick={handleLogout}
-        className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
-      >
-        Logout
-      </button>
+      <main className="flex-grow p-6">
+        <h1 className="text-3xl font-bold mb-2">Admin Dashboard</h1>
+        <p className="mb-6 text-gray-700">
+          Welcome, <span className="font-semibold">{user.username}</span>
+        </p>
+
+        {toastMessage.content && (
+          <div
+            className={`fixed top-5 left-1/2 transform -translate-x-1/2 p-4 rounded-lg text-white ${
+              toastMessage.type === "success" ? "bg-green-500" : "bg-red-500"
+            }`}
+          >
+            {toastMessage.content}
+          </div>
+        )}
+
+        <PendingRequest setToastMessage={setToastMessage} />
+        <AdminCard />
+      </main>
+
+      <Footer />
     </div>
   );
 };
