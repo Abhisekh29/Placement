@@ -9,6 +9,9 @@ import AdminDashboard from "./pages/AdminDashboard";
 
 import { createBrowserRouter, RouterProvider, Navigate } from "react-router-dom";
 
+import AcademicYear from "./pages/AdminCards/AcademicYear";
+
+
 // Role-based wrappers
 const AdminRoute = ({ children }) => {
   const user = JSON.parse(sessionStorage.getItem("user"));
@@ -81,6 +84,103 @@ const App = () => {
       element: (
         <AdminRoute>
           <AdminDashboard />
+        </AdminRoute>
+      ),
+    },
+    {
+      path: "/admin/academic-year",
+      element: (
+        <AdminRoute>
+          <AcademicYear />
+        </AdminRoute>
+      ),
+    },
+    {
+      path: "/admin/academic-session",
+      element: (
+        <AdminRoute>
+          
+        </AdminRoute>
+      ),
+    },
+    {
+      path: "/admin/department",
+      element: (
+        <AdminRoute>
+          
+        </AdminRoute>
+      ),
+    },
+    {
+      path: "/admin/program",
+      element: (
+        <AdminRoute>
+          
+        </AdminRoute>
+      ),
+    },
+    {
+      path: "/admin/company-type",
+      element: (
+        <AdminRoute>
+          
+        </AdminRoute>
+      ),
+    },
+    {
+      path: "/admin/company",
+      element: (
+        <AdminRoute>
+          
+        </AdminRoute>
+      ),
+    },
+    {
+      path: "/admin/placement-drive",
+      element: (
+        <AdminRoute>
+          
+        </AdminRoute>
+      ),
+    },
+    {
+      path: "/admin/notifications",
+      element: (
+        <AdminRoute>
+          
+        </AdminRoute>
+      ),
+    },
+    {
+      path: "/admin/internship",
+      element: (
+        <AdminRoute>
+          
+        </AdminRoute>
+      ),
+    },
+    {
+      path: "/admin/expenditure",
+      element: (
+        <AdminRoute>
+          
+        </AdminRoute>
+      ),
+    },
+    
+    {
+      path: "/admin/students",
+      element: (
+        <AdminRoute>
+          
+        </AdminRoute>
+      ),
+    },
+    {
+      path: "/admin/reports",
+      element: (
+        <AdminRoute>
+          
         </AdminRoute>
       ),
     },

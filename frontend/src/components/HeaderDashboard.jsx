@@ -39,13 +39,13 @@ const HeaderDashboard = () => {
   return (
     <nav className="flex justify-between items-center py-2 px-10 bg-blue-500 text-white">
       <div className="w-50">
-        <img src="logo.png" alt="" />
+        <img src="/logo.png" alt="" />
       </div>
 
       <div className="flex flex-col items-center text-center">
         <button
           onClick={handleLogout}
-          className="px-2 py-1 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
+          className="px-2 py-1 bg-red-500 text-white rounded-lg hover:bg-red-600 transition cursor-pointer"
         >
           Logout
         </button>

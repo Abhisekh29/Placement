@@ -6,7 +6,7 @@ const Footer = () => {
       <footer className="flex justify-between items-center py-2 px-10 bg-gray-600 text-white">
         {/* Left - Logo */}
         <div className="w-50">
-          <img src="logo.png" alt="Logo" />
+          <img src="/logo.png" alt="Logo" />
         </div>
 
         <div>

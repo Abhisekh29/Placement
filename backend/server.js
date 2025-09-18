@@ -4,6 +4,7 @@ import sessionRoutes from "./routes/session.js"
 import programRoutes from "./routes/program.js"
 import studentRoutes from "./routes/student.js"
 import userRoutes from "./routes/user.js";
+import academicYearRoutes from "./routes/academicYear.js";
 
 import cors from "cors";
 import cookieParser from "cookie-parser";
@@ -24,6 +25,7 @@ app.use("/api/session_master", sessionRoutes)
 app.use("/api/program_master", programRoutes);
 app.use("/api/student_master", studentRoutes);
 app.use("/api/users", userRoutes);
+app.use("/api/academic-year", academicYearRoutes);
 
 // app.listen(8000, () =>{
 //     console.log("Connected!")
