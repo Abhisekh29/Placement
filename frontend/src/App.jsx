@@ -10,6 +10,9 @@ import AdminDashboard from "./pages/AdminDashboard";
 import { createBrowserRouter, RouterProvider, Navigate } from "react-router-dom";
 
 import AcademicYear from "./pages/AdminCards/AcademicYear";
+import Department from "./pages/AdminCards/Department";
+import CompanyType from "./pages/AdminCards/CompanyType";
+import AcademicSession from "./pages/AdminCards/AcademicSession";
 
 
 // Role-based wrappers
@@ -99,7 +102,7 @@ const App = () => {
       path: "/admin/academic-session",
       element: (
         <AdminRoute>
-          
+          <AcademicSession />4
         </AdminRoute>
       ),
     },
@@ -107,7 +110,7 @@ const App = () => {
       path: "/admin/department",
       element: (
         <AdminRoute>
-          
+          <Department />
         </AdminRoute>
       ),
     },
@@ -123,7 +126,7 @@ const App = () => {
       path: "/admin/company-type",
       element: (
         <AdminRoute>
-          
+          <CompanyType />
         </AdminRoute>
       ),
     },
