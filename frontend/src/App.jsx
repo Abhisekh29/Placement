@@ -13,6 +13,8 @@ import AcademicYear from "./pages/AdminCards/AcademicYear";
 import Department from "./pages/AdminCards/Department";
 import CompanyType from "./pages/AdminCards/CompanyType";
 import AcademicSession from "./pages/AdminCards/AcademicSession";
+import Program from "./pages/AdminCards/Program";
+import Company from "./pages/AdminCards/Company";
 
 
 // Role-based wrappers
@@ -118,7 +120,7 @@ const App = () => {
       path: "/admin/program",
       element: (
         <AdminRoute>
-          
+          <Program />
         </AdminRoute>
       ),
     },
@@ -134,7 +136,7 @@ const App = () => {
       path: "/admin/company",
       element: (
         <AdminRoute>
-          
+          <Company />
         </AdminRoute>
       ),
     },
