@@ -1,7 +1,7 @@
 /* eslint-disable no-unused-vars */
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../api/axios";
 
 const HeaderDashboard = () => {
   const navigate = useNavigate();
@@ -9,11 +9,7 @@ const HeaderDashboard = () => {
 
   const handleLogout = async () => {
     try {
-      const res = await axios.post(
-        "http://localhost:8000/api/auth/logout",
-        {},
-        { withCredentials: true }
-      );
+      const res = await api.post("/auth/logout", {});
 
       console.log(res.data);
 

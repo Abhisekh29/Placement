@@ -1,6 +1,6 @@
 /* eslint-disable no-unused-vars */
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import api from "../api/axios";
 
 const DepartmentTable = ({ setToastMessage }) => {
   const [Departments, setDepartments] = useState([]);
@@ -14,7 +14,7 @@ const DepartmentTable = ({ setToastMessage }) => {
 
   const fetchDepartments = async () => {
     try {
-      const res = await axios.get("http://localhost:8000/api/department");
+      const res = await api.get("/department");
       setDepartments(res.data);
     } catch (err) {
       console.error(err);
@@ -38,7 +38,10 @@ const DepartmentTable = ({ setToastMessage }) => {
 
   const handleDeleteClick = (department) => {
     setShowEditModal(false);
-    setActionToConfirm(() => () => deleteDepartment(department.department_id, department.department_name));
+    setActionToConfirm(
+      () => () =>
+        deleteDepartment(department.department_id, department.department_name)
+    );
     setShowConfirmModal(true);
   };
 
@@ -59,13 +62,10 @@ const DepartmentTable = ({ setToastMessage }) => {
 
   const updateDepartment = async () => {
     try {
-      await axios.put(
-        `http://localhost:8000/api/department/${editingDepartment.department_id}`,
-        {
-          department_name: newDepartment,
-          mod_by: user.userid,
-        }
-      );
+      await api.put(`/department/${editingDepartment.department_id}`, {
+        department_name: newDepartment,
+        mod_by: user.userid,
+      });
       fetchDepartments();
       setToastMessage({
         type: "success",
@@ -81,9 +81,11 @@ const DepartmentTable = ({ setToastMessage }) => {
 
   const deleteDepartment = async (departmentId, departmentName) => {
     try {
-      await axios.delete(`http://localhost:8000/api/department/${departmentId}`);
+      await api.delete(`/department/${departmentId}`);
       setDepartments(
-        Departments.filter((department) => department.department_id !== departmentId)
+        Departments.filter(
+          (department) => department.department_id !== departmentId
+        )
       );
       setToastMessage({
         type: "success",
@@ -103,12 +105,15 @@ const DepartmentTable = ({ setToastMessage }) => {
   const handleAddDepartment = async (e) => {
     e.preventDefault();
     if (!newDepartment.trim()) {
-      setToastMessage({ type: "error", content: "Department name cannot be empty." });
+      setToastMessage({
+        type: "error",
+        content: "Department name cannot be empty.",
+      });
       return;
     }
 
     try {
-      await axios.post("http://localhost:8000/api/department", {
+      await api.post("/department", {
         department_name: newDepartment,
         mod_by: user.userid,
       });
@@ -156,7 +161,9 @@ const DepartmentTable = ({ setToastMessage }) => {
                   className="grid grid-cols-4 items-center p-2 border-t bg-white text-sm"
                 >
                   <div>{department.department_name}</div>
-                  <div className="break-words">{department.modified_by || "N/A"}</div>
+                  <div className="break-words pr-6">
+                    {department.modified_by || "N/A"}
+                  </div>
                   <div>
                     {department.mod_time
                       ? new Date(department.mod_time).toLocaleString()

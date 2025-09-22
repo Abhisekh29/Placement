@@ -1,6 +1,6 @@
 /* eslint-disable no-unused-vars */
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import api from "../api/axios";
 
 const AcademicYearTable = ({ setToastMessage }) => {
   const [academicYears, setAcademicYears] = useState([]);
@@ -14,7 +14,7 @@ const AcademicYearTable = ({ setToastMessage }) => {
 
   const fetchAcademicYears = async () => {
     try {
-      const res = await axios.get("http://localhost:8000/api/academic-year");
+      const res = await api.get("/academic-year");
       setAcademicYears(res.data);
     } catch (err) {
       console.error(err);
@@ -59,13 +59,10 @@ const AcademicYearTable = ({ setToastMessage }) => {
 
   const updateYear = async () => {
     try {
-      await axios.put(
-        `http://localhost:8000/api/academic-year/${editingYear.year_id}`,
-        {
-          year_name: newYearName,
-          mod_by: user.userid,
-        }
-      );
+      await api.put(`/academic-year/${editingYear.year_id}`, {
+        year_name: newYearName,
+        mod_by: user.userid,
+      });
       fetchAcademicYears();
       setToastMessage({
         type: "success",
@@ -81,10 +78,8 @@ const AcademicYearTable = ({ setToastMessage }) => {
 
   const deleteYear = async (yearId, yearName) => {
     try {
-      await axios.delete(`http://localhost:8000/api/academic-year/${yearId}`);
-      setAcademicYears(
-        academicYears.filter((year) => year.year_id !== yearId)
-      );
+      await api.delete(`/academic-year/${yearId}`);
+      setAcademicYears(academicYears.filter((year) => year.year_id !== yearId));
       setToastMessage({
         type: "success",
         content: `"${yearName}" has been deleted.`,
@@ -108,7 +103,7 @@ const AcademicYearTable = ({ setToastMessage }) => {
     }
 
     try {
-      await axios.post("http://localhost:8000/api/academic-year", {
+      await api.post("/academic-year", {
         year_name: newYearName,
         mod_by: user.userid,
       });
@@ -156,7 +151,7 @@ const AcademicYearTable = ({ setToastMessage }) => {
                   className="grid grid-cols-4 items-center p-2 border-t bg-white text-sm"
                 >
                   <div>{year.year_name}</div>
-                  <div className="break-words">{year.modified_by || "N/A"}</div>
+                  <div className="break-words pr-6">{year.modified_by || "N/A"}</div>
                   <div>
                     {year.mod_time
                       ? new Date(year.mod_time).toLocaleString()

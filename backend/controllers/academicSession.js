@@ -20,22 +20,11 @@ export const getAcademicSessions = (req, res) => {
 
 export const addAcademicSession = (req, res) => {
   const { session_name, year_id, mod_by } = req.body;
-
-  // First, check if the academic year already has 2 sessions
-  const checkQuery = "SELECT COUNT(*) AS session_count FROM session_master WHERE year_id = ?";
-  db.query(checkQuery, [year_id], (err, data) => {
+  
+  const insertQuery = "INSERT INTO session_master (session_name, year_id, mod_by, mod_time) VALUES (?, ?, ?, NOW())";
+  db.query(insertQuery, [session_name, year_id, mod_by], (err, data) => {
     if (err) return res.status(500).json(err);
-
-    if (data[0].session_count >= 2) {
-      return res.status(400).json({ message: "An academic year can only have a maximum of 2 sessions." });
-    }
-
-    // If less than 2, proceed to insert the new session
-    const insertQuery = "INSERT INTO session_master (session_name, year_id, mod_by, mod_time) VALUES (?, ?, ?, NOW())";
-    db.query(insertQuery, [session_name, year_id, mod_by], (err, data) => {
-      if (err) return res.status(500).json(err);
-      return res.status(201).json({ message: "Academic session added successfully." });
-    });
+    return res.status(201).json({ message: "Academic session added successfully." });
   });
 };
 

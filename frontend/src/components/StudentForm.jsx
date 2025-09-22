@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import axios from "axios";
+import api from "../api/axios";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
@@ -61,13 +61,13 @@ const StudentForm = ({ existingData, onSuccess }) => {
 
   // Fetch dropdown data
   useEffect(() => {
-    axios
-      .get("http://localhost:8000/api/session_master")
+    api
+      .get("/session_master")
       .then((res) => setSessions(res.data))
       .catch((err) => console.error(err));
 
-    axios
-      .get("http://localhost:8000/api/program_master")
+    api
+      .get("/program_master")
       .then((res) => setPrograms(res.data))
       .catch((err) => console.error(err));
   }, []);
@@ -100,12 +100,9 @@ const StudentForm = ({ existingData, onSuccess }) => {
       const payload = { ...data, userid: user.userid, mod_by: user.userid };
 
       if (existingData) {
-        await axios.put(
-          `http://localhost:8000/api/student_master/${user.userid}`,
-          payload
-        );
+        await api.put(`/student_master/${user.userid}`, payload);
       } else {
-        await axios.post("http://localhost:8000/api/student_master", payload);
+        await api.post("/student_master", payload);
         reset();
       }
 

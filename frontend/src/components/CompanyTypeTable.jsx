@@ -1,6 +1,6 @@
 /* eslint-disable no-unused-vars */
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import api from "../api/axios";
 
 const CompanyTypeTable = ({ setToastMessage }) => {
   const [CompanyTypes, setCompanyTypes] = useState([]);
@@ -14,7 +14,7 @@ const CompanyTypeTable = ({ setToastMessage }) => {
 
   const fetchCompanyTypes = async () => {
     try {
-      const res = await axios.get("http://localhost:8000/api/companyType");
+      const res = await api.get("/companyType");
       setCompanyTypes(res.data);
     } catch (err) {
       console.error(err);
@@ -38,7 +38,9 @@ const CompanyTypeTable = ({ setToastMessage }) => {
 
   const handleDeleteClick = (companyType) => {
     setShowEditModal(false);
-    setActionToConfirm(() => () => deletecompanyType(companyType.type_id, companyType.type_name));
+    setActionToConfirm(
+      () => () => deletecompanyType(companyType.type_id, companyType.type_name)
+    );
     setShowConfirmModal(true);
   };
 
@@ -59,13 +61,10 @@ const CompanyTypeTable = ({ setToastMessage }) => {
 
   const updatecompanyType = async () => {
     try {
-      await axios.put(
-        `http://localhost:8000/api/companyType/${editingCompanyType.type_id}`,
-        {
-          type_name: newCompanyType,
-          mod_by: user.userid,
-        }
-      );
+      await api.put(`/companyType/${editingCompanyType.type_id}`, {
+        type_name: newCompanyType,
+        mod_by: user.userid,
+      });
       fetchCompanyTypes();
       setToastMessage({
         type: "success",
@@ -81,9 +80,11 @@ const CompanyTypeTable = ({ setToastMessage }) => {
 
   const deletecompanyType = async (companyTypeId, companyTypeName) => {
     try {
-      await axios.delete(`http://localhost:8000/api/companyType/${companyTypeId}`);
+      await api.delete(`/companyType/${companyTypeId}`);
       setCompanyTypes(
-        CompanyTypes.filter((companyType) => companyType.type_id !== companyTypeId)
+        CompanyTypes.filter(
+          (companyType) => companyType.type_id !== companyTypeId
+        )
       );
       setToastMessage({
         type: "success",
@@ -103,12 +104,15 @@ const CompanyTypeTable = ({ setToastMessage }) => {
   const handleAddcompanyType = async (e) => {
     e.preventDefault();
     if (!newCompanyType.trim()) {
-      setToastMessage({ type: "error", content: "companyType name cannot be empty." });
+      setToastMessage({
+        type: "error",
+        content: "companyType name cannot be empty.",
+      });
       return;
     }
 
     try {
-      await axios.post("http://localhost:8000/api/companyType", {
+      await api.post("/companyType", {
         type_name: newCompanyType,
         mod_by: user.userid,
       });
@@ -156,7 +160,9 @@ const CompanyTypeTable = ({ setToastMessage }) => {
                   className="grid grid-cols-4 items-center p-2 border-t bg-white text-sm"
                 >
                   <div>{companyType.type_name}</div>
-                  <div className="break-words">{companyType.modified_by || "N/A"}</div>
+                  <div className="break-words pr-6">
+                    {companyType.modified_by || "N/A"}
+                  </div>
                   <div>
                     {companyType.mod_time
                       ? new Date(companyType.mod_time).toLocaleString()

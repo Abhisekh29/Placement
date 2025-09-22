@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../api/axios";
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -8,7 +8,7 @@ const Register = () => {
     password: "",
     user_type: "1", // default: student
   });
-  
+
   const [err, setErr] = useState("");
 
   const navigate = useNavigate();
@@ -20,26 +20,10 @@ const Register = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // try {
-    //   const res = await fetch("http://localhost:8000/api/auth/register", {
-    //     method: "POST",
-    //     headers: { "Content-Type": "application/json" },
-    //     body: JSON.stringify(formData),
-    //   });
-
-    //   const data = await res.json();
-    //   console.log("Server response:", data);
-
-    //   // success message / redirect
-    // } catch (error) {
-    //   console.error("Error:", error);
-    // }
-
     try {
-      const res = await axios.post("http://localhost:8000/api/auth/register", formData);
+      const res = await api.post("/auth/register", formData);
       console.log(res.data); // response is already JSON
       navigate("/login");
-      
     } catch (error) {
       setErr(error.response?.data);
       console.error(error.response?.data || error.message);

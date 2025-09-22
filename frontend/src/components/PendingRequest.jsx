@@ -1,6 +1,6 @@
 /* eslint-disable no-unused-vars */
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../api/axios";
 
 const PendingRequest = ({ setToastMessage }) => {
   const [pendingUsers, setPendingUsers] = useState([]);
@@ -9,7 +9,7 @@ const PendingRequest = ({ setToastMessage }) => {
   useEffect(() => {
     const fetchPendingUsers = async () => {
       try {
-        const res = await axios.get("http://localhost:8000/api/users/pending");
+        const res = await api.get("/users/pending");
         setPendingUsers(res.data);
       } catch (err) {
         console.error(err);
@@ -20,7 +20,7 @@ const PendingRequest = ({ setToastMessage }) => {
 
   const handleAction = async (userId, username, status) => {
     try {
-      await axios.put(`http://localhost:8000/api/users/${userId}/status`, {
+      await api.put(`/users/${userId}/status`, {
         status: status,
         mod_by: user.userid,
       });

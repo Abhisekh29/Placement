@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import api from "../api/axios";
 
 const AcademicSessionTable = ({ setToastMessage }) => {
   const [academicSessions, setAcademicSessions] = useState([]);
@@ -15,7 +15,7 @@ const AcademicSessionTable = ({ setToastMessage }) => {
 
   const fetchAcademicSessions = async () => {
     try {
-      const res = await axios.get("http://localhost:8000/api/academic-session");
+      const res = await api.get("/academic-session");
       setAcademicSessions(res.data);
     } catch (err) {
       console.error(err);
@@ -24,7 +24,7 @@ const AcademicSessionTable = ({ setToastMessage }) => {
 
   const fetchAcademicYears = async () => {
     try {
-      const res = await axios.get("http://localhost:8000/api/academic-year");
+      const res = await api.get("/academic-year");
       setAcademicYears(res.data);
     } catch (err) {
       console.error(err);
@@ -54,8 +54,8 @@ const AcademicSessionTable = ({ setToastMessage }) => {
 
   const handleDeleteClick = (session) => {
     setShowEditModal(false);
-    setActionToConfirm(() => () =>
-      deleteSession(session.session_id, session.session_name)
+    setActionToConfirm(
+      () => () => deleteSession(session.session_id, session.session_name)
     );
     setShowConfirmModal(true);
   };
@@ -83,14 +83,11 @@ const AcademicSessionTable = ({ setToastMessage }) => {
 
   const updateSession = async () => {
     try {
-      await axios.put(
-        `http://localhost:8000/api/academic-session/${editingSession.session_id}`,
-        {
-          session_name: newSessionName,
-          year_id: selectedYear,
-          mod_by: user.userid,
-        }
-      );
+      await api.put(`/academic-session/${editingSession.session_id}`, {
+        session_name: newSessionName,
+        year_id: selectedYear,
+        mod_by: user.userid,
+      });
       fetchAcademicSessions();
       setToastMessage({
         type: "success",
@@ -108,9 +105,7 @@ const AcademicSessionTable = ({ setToastMessage }) => {
 
   const deleteSession = async (sessionId, sessionName) => {
     try {
-      await axios.delete(
-        `http://localhost:8000/api/academic-session/${sessionId}`
-      );
+      await api.delete(`/academic-session/${sessionId}`);
       setAcademicSessions(
         academicSessions.filter((session) => session.session_id !== sessionId)
       );
@@ -139,7 +134,7 @@ const AcademicSessionTable = ({ setToastMessage }) => {
     }
 
     try {
-      await axios.post("http://localhost:8000/api/academic-session", {
+      await api.post("/academic-session", {
         session_name: newSessionName,
         year_id: selectedYear,
         mod_by: user.userid,
@@ -193,7 +188,8 @@ const AcademicSessionTable = ({ setToastMessage }) => {
                 >
                   <div>{session.session_name}</div>
                   <div>{session.year_name}</div>
-                  <div>{session.modified_by || "N/A"}</div>
+                  <div className="break-words pr-6">{session.modified_by || "N/A"}</div>
+
                   <div>
                     {session.mod_time
                       ? new Date(session.mod_time).toLocaleString()
@@ -246,7 +242,7 @@ const AcademicSessionTable = ({ setToastMessage }) => {
                 type="text"
                 value={newSessionName}
                 onChange={(e) => setNewSessionName(e.target.value)}
-                placeholder="e.g., Monsoon 2024"
+                placeholder="e.g., Aug-Dec 2022"
                 className="w-full p-3 border rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-purple-500"
               />
               <select

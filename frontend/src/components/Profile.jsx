@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../api/axios";
 
 const Profile = ({ studentData, onEdit }) => {
   const [sessions, setSessions] = useState([]);
@@ -7,25 +7,25 @@ const Profile = ({ studentData, onEdit }) => {
 
   // Fetch sessions and programs from backend
   useEffect(() => {
-    axios
-      .get("http://localhost:8000/api/session_master")
+    api
+      .get("/session_master")
       .then((res) => setSessions(res.data))
       .catch((err) => console.error("Error fetching sessions:", err));
 
-    axios
-      .get("http://localhost:8000/api/program_master")
+    api
+      .get("/program_master")
       .then((res) => setPrograms(res.data))
       .catch((err) => console.error("Error fetching programs:", err));
   }, []);
 
   // Resolve session and program names
   const sessionName =
-    sessions.find((s) => s.session_id === studentData.session_id)?.session_name ||
-    studentData.session_id;
+    sessions.find((s) => s.session_id === studentData.session_id)
+      ?.session_name || studentData.session_id;
 
   const programName =
-    programs.find((p) => p.program_id === studentData.program_id)?.program_name ||
-    studentData.program_id;
+    programs.find((p) => p.program_id === studentData.program_id)
+      ?.program_name || studentData.program_id;
 
   return (
     <div className="bg-blue-100 p-6 md:p-8 rounded-xl shadow-md max-w mx-auto">

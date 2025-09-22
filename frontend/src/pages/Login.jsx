@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../api/axios";
 
 const Login = () => {
   const [formData, setFormData] = useState({ username: "", password: "" });
@@ -13,14 +13,10 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post(
-        "http://localhost:8000/api/auth/login",
-        formData,
-        { withCredentials: true }
-      );
+      const res = await api.post("/auth/login", formData);
 
-      console.log(res.data);
-      sessionStorage.setItem("token", res.data.token); // if backend returns token
+      // console.log(res.data);
+      // sessionStorage.setItem("token", res.data.token); // if backend returns token
 
       // Store user data in sessionStorage
       sessionStorage.setItem(
