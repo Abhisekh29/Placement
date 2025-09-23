@@ -1,48 +1,49 @@
-import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import api from "../api/axios";
 
 const Login = () => {
   const [formData, setFormData] = useState({ username: "", password: "" });
   const [err, setErr] = useState("");
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const sessionExpired = searchParams.get("sessionExpired");
+
+  useEffect(() => {
+    if (sessionExpired) {
+      setErr("Your session has expired. Please log in again.");
+    }
+  }, [sessionExpired]);
 
   const handleChange = (e) =>
     setFormData({ ...formData, [e.target.name]: e.target.value });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setErr(null); // Clear previous errors on a new submission
     try {
       const res = await api.post("/auth/login", formData);
 
-      // console.log(res.data);
-      // sessionStorage.setItem("token", res.data.token); // if backend returns token
-
-      // Store user data in sessionStorage
-      sessionStorage.setItem(
-        "user",
-        JSON.stringify({
-          userid: res.data.userid,
-          username: res.data.username,
-          user_type: res.data.user_type,
-          is_enable: res.data.is_enable,
-          mod_by: res.data.mod_by,
-          mod_time: res.data.mod_time,
-          loggedIn: true,
-        })
-      );
-
-      const user = JSON.parse(sessionStorage.getItem("user"));
-      console.log(user.username); // Example: prints the username
-
       if (res.data.is_enable === "0") {
-        alert(
+        setErr(
           "Your account is not verified yet. Please wait for admin approval."
         );
       } else if (res.data.is_enable === "2") {
-        alert("Your account has been rejected. Contact admin for details.");
+        setErr("Your account has been rejected. Contact admin for details.");
       } else if (res.data.is_enable === "1") {
         // Account verified
+        sessionStorage.setItem(
+          "user",
+          JSON.stringify({
+            userid: res.data.userid,
+            username: res.data.username,
+            user_type: res.data.user_type,
+            is_enable: res.data.is_enable,
+            mod_by: res.data.mod_by,
+            mod_time: res.data.mod_time,
+            loggedIn: true,
+          })
+        );
         if (res.data.user_type === "0") {
           navigate("/admin-dashboard");
         } else if (res.data.user_type === "1") {

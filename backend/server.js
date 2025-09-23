@@ -11,6 +11,7 @@ import companyTypeRoutes from "./routes/companyType.js";
 import academicSessionRoutes from "./routes/academicSession.js";
 import companyRoutes from "./routes/company.js";
 import adminCompanyRoutes from "./routes/adminCompany.js";
+import expenditureRoutes from "./routes/expenditure.js";
 
 import cors from "cors";
 import cookieParser from "cookie-parser";
@@ -35,7 +36,7 @@ app.use("/api/program_master", programRoutes);
 app.use("/api/student_master", studentRoutes);
 app.use("/api/company", companyRoutes);
 
-// User Routes
+// Admin Routes
 app.use("/api/users", userRoutes);
 app.use("/api/academic-year", academicYearRoutes);
 app.use("/api/department", departmentRoutes);
@@ -43,6 +44,10 @@ app.use("/api/companyType", companyTypeRoutes);
 app.use("/api/academic-session", academicSessionRoutes);
 app.use("/api/adminPrograms", adminProgramRoutes);
 app.use("/api/adminCompany", adminCompanyRoutes);
+app.use("/api/expenditure", expenditureRoutes);
+
+// File Upload Route
+app.use('/uploads', express.static('uploads'));
 
 
 const PORT = process.env.PORT || 8000;

@@ -6,4 +6,19 @@ const api = axios.create({
   withCredentials: true,
 });
 
+// Add a response interceptor
+api.interceptors.response.use(
+  (response) => response, // Directly return successful responses
+  (error) => {
+    // Check if the error is for an expired token
+    if (error.response && error.response.status === 401) {
+      // Clear user from session storage
+      sessionStorage.removeItem("user");
+      // Redirect to login page with a message
+      window.location.href = "/login?sessionExpired=true";
+    }
+    return Promise.reject(error);
+  }
+);
+
 export default api;
