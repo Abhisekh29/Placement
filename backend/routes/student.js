@@ -1,27 +1,20 @@
-// import express from "express";
-// import { addStudent, getStudentDetails, updateStudent } from "../controllers/student.js";
-
-// const router = express.Router();
-
-// router.get("/:userid", getStudentDetails);
-// router.post("/", addStudent)
-// router.put("/:userid", updateStudent);
-
-// export default router;
-
-
 import express from "express";
 import {
   addStudent,
   getStudentDetails,
   updateStudent,
+  getStudentsList,
 } from "../controllers/student.js";
-import { verifyToken } from "../middleware/auth.js";
+import { verifyToken, isAdmin } from "../middleware/auth.js";
 
 const router = express.Router();
 
+// General Routes
 router.post("/", verifyToken, addStudent);
 router.get("/:userid", verifyToken, getStudentDetails);
 router.put("/:userid", verifyToken, updateStudent);
+
+// New route for admin to get all students
+router.get("/list/all", isAdmin, getStudentsList);
 
 export default router;

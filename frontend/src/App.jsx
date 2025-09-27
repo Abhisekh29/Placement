@@ -16,6 +16,8 @@ import AcademicSession from "./pages/AdminCards/AcademicSession";
 import Program from "./pages/AdminCards/Program";
 import Company from "./pages/AdminCards/Company";
 import Expenditure from "./pages/AdminCards/Expenditure";
+import Notification from "./pages/AdminCards/Notification";
+import Internship from "./pages/AdminCards/Internship";
 
 
 // Role-based wrappers
@@ -153,7 +155,7 @@ const App = () => {
       path: "/admin/notifications",
       element: (
         <AdminRoute>
-          
+          <Notification />
         </AdminRoute>
       ),
     },
@@ -161,7 +163,7 @@ const App = () => {
       path: "/admin/internship",
       element: (
         <AdminRoute>
-          
+          <Internship />
         </AdminRoute>
       ),
     },

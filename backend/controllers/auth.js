@@ -53,9 +53,9 @@ export const login = (req, res) => {
     // const token = jwt.sign({ id: data[0].id }, "jwtkey");
     const token = jwt.sign(
       {
-        userid: data[0].userid, // ✅ use the correct column name
-        username: data[0].username, // ✅ optional, nice to have
-        user_type: data[0].user_type, // ✅ optional, useful for role-based access
+        userid: data[0].userid, // use the correct column name
+        username: data[0].username, // optional, nice to have
+        user_type: data[0].user_type, // optional, useful for role-based access
       },
       "jwtkey",
       // { expiresIn: "10s" }
