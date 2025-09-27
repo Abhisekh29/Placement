@@ -21,6 +21,8 @@ const InternshipTable = ({ setToastMessage }) => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingInternship, setEditingInternship] = useState(null);
 
+  const [searchQuery, setSearchQuery] = useState("");
+
   const [formData, setFormData] = useState(initialFormState);
   const [filters, setFilters] = useState({
     deptId: "",
@@ -213,9 +215,13 @@ const InternshipTable = ({ setToastMessage }) => {
         headers: { "Content-Type": "multipart/form-data" },
       });
       fetchInternships();
-      setToastMessage({ type: "success", content: "Internship updated successfully." });
+      setToastMessage({
+        type: "success",
+        content: "Internship updated successfully.",
+      });
     } catch (err) {
-      const errorMessage = err.response?.data?.message || "Failed to update internship.";
+      const errorMessage =
+        err.response?.data?.message || "Failed to update internship.";
       setToastMessage({ type: "error", content: errorMessage });
     }
   };
@@ -239,7 +245,19 @@ const InternshipTable = ({ setToastMessage }) => {
 
   return (
     <div className="bg-blue-200 py-2 px-4 rounded-xl shadow-md">
-      <h2 className="text-2xl font-bold mb-3">Student Internships</h2>
+      <div className="mb-3 flex items-center justify-between">
+        <h2 className="text-2xl font-bold">Student Internships</h2>
+
+        {/* Search Box */}
+        <input
+          type="text"
+          placeholder="Search for student, company, semester..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-72 h-8 p-2 bg-blue-50 border rounded-lg text-sm shadow-sm focus:ring-2 focus:ring-blue-400 focus:outline-none"
+        />
+      </div>
+
       <div className="border rounded-lg overflow-x-auto">
         <div className="min-w-[1000px]">
           <div className="grid grid-cols-7 bg-gray-300 p-2 font-semibold text-sm">
@@ -252,8 +270,47 @@ const InternshipTable = ({ setToastMessage }) => {
             <div className="text-right">Actions</div>
           </div>
           <div className="max-h-96 overflow-y-auto">
-            {internships.length > 0 ? (
-              internships.map((internship) => (
+            {/* Filtered Results */}
+            {(() => {
+              // 🔎 Filtered internships with logging
+              const filteredInternships = internships.filter((internship) => {
+                if (!searchQuery.trim()) return true;
+
+                const q = searchQuery.toLowerCase().trim();
+                const student = (internship.student_name || "")
+                  .toLowerCase()
+                  .trim();
+                const company = (internship.company_name || "")
+                  .toLowerCase()
+                  .trim();
+                const semester = String(internship.semester || "").trim();
+
+                // console.log("Filtering:", {
+                //   searchQuery: q,
+                //   student,
+                //   company,
+                //   semester,
+                //   studentMatch: student.includes(q),
+                //   companyMatch: company.includes(q),
+                //   semesterMatch: semester.includes(q),
+                // });
+
+                return (
+                  student.includes(q) ||
+                  company.includes(q) ||
+                  semester.includes(q)
+                );
+              });
+
+              if (filteredInternships.length === 0) {
+                return (
+                  <div className="text-center text-gray-600 py-4 font-medium">
+                    ❌ No records found matching "{searchQuery}"
+                  </div>
+                );
+              }
+
+              return filteredInternships.map((internship) => (
                 <div
                   key={internship.internship_id}
                   className="grid grid-cols-7 items-center p-2 border-t bg-white text-sm"
@@ -294,12 +351,8 @@ const InternshipTable = ({ setToastMessage }) => {
                     </button>
                   </div>
                 </div>
-              ))
-            ) : (
-              <p className="text-center text-gray-500 p-4">
-                No internship records found.
-              </p>
-            )}
+              ));
+            })()}
           </div>
         </div>
       </div>
@@ -420,9 +473,9 @@ const InternshipTable = ({ setToastMessage }) => {
 
                 {/* Certificate */}
                 <label className="block text-sm font-medium text-gray-600 mb-1">
-                    {showAddModal
-                      ? "Certificate (PDF, JPG, JPEG, PNG)"
-                      : "Upload New Certificate (Optional)"}
+                  {showAddModal
+                    ? "Certificate (PDF, JPG, JPEG, PNG)"
+                    : "Upload New Certificate (Optional)"}
                 </label>
                 <input
                   type="file"
