@@ -15,6 +15,7 @@ import expenditureRoutes from "./routes/expenditure.js";
 import notificationRoutes from "./routes/notification.js";
 import internshipRoutes from "./routes/internship.js";
 import filterRoutes from "./routes/filters.js";
+import homeNotificationRoutes from "./routes/homeNotification.js"
 
 import cors from "cors";
 import cookieParser from "cookie-parser";
@@ -57,6 +58,8 @@ app.use("/api/internships", internshipRoutes);
 // File Upload Route
 app.use('/uploads', express.static('uploads'));
 
+// At Home Page Routes
+app.use("/api/homeNotifications", homeNotificationRoutes);
 
 const PORT = process.env.PORT || 8000;
 app.listen(PORT, () => console.log(`Server is running on port ${PORT}`));
