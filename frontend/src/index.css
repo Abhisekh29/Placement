@@ -8,3 +8,26 @@
   -ms-overflow-style: none; /* IE/Edge */
   scrollbar-width: none; /* Firefox */
 }
+
+.scrollbar-hover::-webkit-scrollbar {
+    width: 4px;
+  }
+
+.scrollbar-hover::-webkit-scrollbar-thumb {
+  background-color: transparent;
+  border-radius: 9999px;
+}
+
+  /* Show scrollbar on hover */
+.scrollbar-hover:hover::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.3);
+}
+
+.scrollbar-hover {
+  scrollbar-width: thin; /* For Firefox */
+  scrollbar-color: transparent transparent;
+}
+
+.scrollbar-hover:hover {
+  scrollbar-color: rgba(0, 0, 0, 0.3) transparent;
+}

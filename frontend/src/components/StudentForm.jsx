@@ -5,6 +5,7 @@ import * as z from "zod";
 import api from "../api/axios";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import _isEqual from "lodash/isEqual"; // Import lodash for deep comparison
 
 // Zod schema for strict validation
 const studentSchema = z.object({
@@ -19,11 +20,12 @@ const studentSchema = z.object({
   mobile: z
     .string()
     .regex(/^\d{10}$/, "Mobile number must be exactly 10 digits"),
-  email: z.string().email("Invalid email"),
+  email: z.email("Invalid email"),
   dob: z.string().min(1, "Date of Birth is required"),
   gender: z.enum(["Male", "Female", "Other"], "Select a valid gender"),
-  caste: z.string().optional(),
-  address: z.string().optional(),
+  caste: z.string().nonempty("Caste is required"),
+  address: z.string().nonempty("Address is required"),
+
   per_10: z
     .number({ invalid_type_error: "Enter a number" })
     .min(0, "Must be between 0-100")
@@ -44,9 +46,15 @@ const studentSchema = z.object({
   program_id: z.number({ invalid_type_error: "Select a program" }),
 });
 
-const StudentForm = ({ existingData, onSuccess }) => {
+const StudentForm = ({
+  existingData,
+  onSuccess,
+  onNoChanges,
+  onErrorToast,
+}) => {
   const [sessions, setSessions] = useState([]);
   const [programs, setPrograms] = useState([]);
+  const [initialFormData, setInitialFormData] = useState(null);
 
   const {
     register,
@@ -72,7 +80,7 @@ const StudentForm = ({ existingData, onSuccess }) => {
       .catch((err) => console.error(err));
   }, []);
 
-  // Populate form in edit mode (fix date timezone issue)
+  // Populate form and store initial data
   useEffect(() => {
     if (existingData && sessions.length > 0 && programs.length > 0) {
       const dataToSet = {
@@ -91,13 +99,67 @@ const StudentForm = ({ existingData, onSuccess }) => {
           : "",
       };
       reset(dataToSet);
+      setInitialFormData(dataToSet); // Store the formatted initial data
+    } else {
+      setInitialFormData(null);
     }
   }, [existingData, sessions, programs, reset]);
 
+  // Normalize data for comparison (handle potential type differences)
+  const normalizeData = (data) => {
+    if (!data) return {};
+    return {
+      ...data,
+      rollno: Number(data.rollno || 0),
+      mobile: String(data.mobile || ""),
+      dob: data.dob ? new Date(data.dob).toLocaleDateString("en-CA") : "", // Ensure consistent date format
+      caste: data.caste || "",
+      address: data.address || "",
+      per_10: Number(parseFloat(data.per_10 || 0).toFixed(2)), // Ensure number and fixed decimals
+      per_12: Number(parseFloat(data.per_12 || 0).toFixed(2)), // Ensure number and fixed decimals
+      session_id: Number(data.session_id || 0),
+      program_id: Number(data.program_id || 0),
+    };
+  };
+
   const onSubmit = async (data) => {
+    // --- CHANGE DETECTION ---
+    if (existingData && initialFormData) {
+      // Only check if editing existing data
+      const currentNormalized = normalizeData(data);
+      const initialNormalized = normalizeData(initialFormData);
+
+      // Use lodash isEqual for deep comparison, ignoring irrelevant fields if necessary
+      // Select only the fields present in the schema for comparison
+      const fieldsToCompare = Object.keys(studentSchema.shape);
+      const currentSubset = Object.fromEntries(
+        fieldsToCompare.map((key) => [key, currentNormalized[key]])
+      );
+      const initialSubset = Object.fromEntries(
+        fieldsToCompare.map((key) => [key, initialNormalized[key]])
+      );
+
+      if (_isEqual(currentSubset, initialSubset)) {
+        if (onNoChanges) onNoChanges(); // Call the no changes handler
+        return; // Stop submission
+      }
+    }
+
+    // Proceed with submission if new data or changes detected
     try {
       const user = JSON.parse(sessionStorage.getItem("user"));
-      const payload = { ...data, userid: user.userid, mod_by: user.userid };
+      const payload = {
+        ...data,
+        userid: user.userid,
+        mod_by: user.userid,
+        rollno: Number(data.rollno),
+        per_10: Number(data.per_10),
+        per_12: Number(data.per_12),
+        session_id: Number(data.session_id),
+        program_id: Number(data.program_id),
+        address: data.address || "",
+        caste: data.caste || "",
+      };
 
       if (existingData) {
         await api.put(`/student_master/${user.userid}`, payload);
@@ -108,9 +170,19 @@ const StudentForm = ({ existingData, onSuccess }) => {
 
       if (onSuccess) onSuccess(payload);
     } catch (err) {
-      console.error(
-        err.response?.data?.message || "An unexpected error occurred."
-      );
+      const message =
+        err.response?.data?.message ||
+        err.message ||
+        "An unexpected error occurred.";
+
+      // Detect duplicate / conflict from backend
+      if (message.toLowerCase().includes("status code 500")) {
+        if (onErrorToast) onErrorToast("Roll No, Phone or Email already exists");}
+      else {
+        if (onErrorToast) onErrorToast(message);
+      }
+
+      console.error(message);
     }
   };
 
@@ -133,7 +205,9 @@ const StudentForm = ({ existingData, onSuccess }) => {
             }`}
           />
           {errors.rollno && (
-            <p className="text-red-600 mt-1">{errors.rollno.message}</p>
+            <p className="text-red-600 mt-1">
+              {"Roll is required and should be a positive integer"}
+            </p>
           )}
         </div>
 
@@ -225,7 +299,7 @@ const StudentForm = ({ existingData, onSuccess }) => {
             )}
           />
           {errors.dob && (
-            <p className="text-red-600 mt-1">{errors.dob.message}</p>
+            <p className="text-red-600 mt-1">{"Date of Birth is required"}</p>
           )}
         </div>
 
@@ -263,6 +337,9 @@ const StudentForm = ({ existingData, onSuccess }) => {
             <option value="SC">SC</option>
             <option value="ST">ST</option>
           </select>
+          {errors.caste && (
+            <p className="text-red-600 mt-1">{errors.caste.message}</p>
+          )}
         </div>
 
         {/* Address */}
@@ -272,6 +349,9 @@ const StudentForm = ({ existingData, onSuccess }) => {
             {...register("address")}
             className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-200"
           />
+          {errors.address && (
+            <p className="text-red-600 mt-1">{errors.address.message}</p>
+          )}
         </div>
 
         {/* Percentages */}
@@ -288,7 +368,9 @@ const StudentForm = ({ existingData, onSuccess }) => {
             }`}
           />
           {errors.per_10 && (
-            <p className="text-red-600 mt-1">{errors.per_10.message}</p>
+            <p className="text-red-600 mt-1">
+              {"10th Percentage should be decimal between 1 to 100"}
+            </p>
           )}
         </div>
 
@@ -305,7 +387,9 @@ const StudentForm = ({ existingData, onSuccess }) => {
             }`}
           />
           {errors.per_12 && (
-            <p className="text-red-600 mt-1">{errors.per_12.message}</p>
+            <p className="text-red-600 mt-1">
+              {"10th Percentage should be decimal between 1 to 100"}
+            </p>
           )}
         </div>
 
@@ -328,7 +412,7 @@ const StudentForm = ({ existingData, onSuccess }) => {
             ))}
           </select>
           {errors.session_id && (
-            <p className="text-red-600 mt-1">{errors.session_id.message}</p>
+            <p className="text-red-600 mt-1">{"Select a valid session"}</p>
           )}
         </div>
 
@@ -351,7 +435,7 @@ const StudentForm = ({ existingData, onSuccess }) => {
             ))}
           </select>
           {errors.program_id && (
-            <p className="text-red-600 mt-1">{errors.program_id.message}</p>
+            <p className="text-red-600 mt-1">{"Select a valid program"}</p>
           )}
         </div>
 
