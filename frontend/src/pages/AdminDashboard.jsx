@@ -29,16 +29,18 @@ const AdminDashboard = () => {
 
         {toastMessage.content && (
           <div
-            className={`fixed top-5 left-1/2 transform -translate-x-1/2 p-4 rounded-lg text-white ${
-              toastMessage.type === "success" ? "bg-green-500" : "bg-red-500"
-            }`}
+            className={`fixed top-5 left-1/2 transform -translate-x-1/2 p-4 rounded-lg text-white ${toastMessage.type === "success" ? "bg-green-500" : "bg-red-500"
+              }`}
           >
             {toastMessage.content}
           </div>
         )}
 
-        <PendingRequest setToastMessage={setToastMessage} />
         <AdminCard />
+        <div className="mt-8">
+          <PendingRequest setToastMessage={setToastMessage} />
+        </div>
+
       </main>
 
       <Footer />

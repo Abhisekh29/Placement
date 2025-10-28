@@ -110,7 +110,7 @@ const App = () => {
       path: "/admin/academic-session",
       element: (
         <AdminRoute>
-          <AcademicSession />4
+          <AcademicSession />
         </AdminRoute>
       ),
     },

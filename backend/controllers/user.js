@@ -1,7 +1,7 @@
 import { db } from "../db.js";
 
 export const getPendingUsers = (req, res) => {
-  const q = "SELECT userid, username, user_type FROM user_master WHERE is_enable = '0'";
+  const q = "SELECT userid, username, user_type FROM user_master WHERE is_enable = '0' ORDER BY mod_time DESC";
   db.query(q, (err, data) => {
     if (err) return res.status(500).json(err);
     return res.status(200).json(data);

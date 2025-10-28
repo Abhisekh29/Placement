@@ -64,8 +64,8 @@ export default function CompanyTable({ setToastMessage }) {
     const typeIdStr = matchedType
       ? String(matchedType.type_id)
       : company.type_id
-      ? String(company.type_id)
-      : "";
+        ? String(company.type_id)
+        : "";
 
     setEditingCompany(company);
     setFormData({
@@ -104,6 +104,7 @@ export default function CompanyTable({ setToastMessage }) {
   };
 
   const handleAddCompany = async () => {
+    // Frontend validation for required fields
     if (!formData.company_name.trim() || !formData.type_id) {
       setToastMessage({
         type: "error",
@@ -112,26 +113,60 @@ export default function CompanyTable({ setToastMessage }) {
       return;
     }
 
+    // Optional: Frontend phone number validation
+    const phonePattern = /^\+\d{1,4}\d{6,14}$/;
+    if (
+      formData.company_mobile &&
+      !phonePattern.test(formData.company_mobile)
+    ) {
+      setToastMessage({
+        type: "error",
+        content: "Invalid phone format. Use +<country_code><number> (e.g., +919876543210).",
+      });
+      return;
+    }
+
     try {
+      // Send the request to the backend
       await api.post("/adminCompany", {
         ...formData,
         type_id: Number(formData.type_id),
         mod_by: user.userid,
       });
+
+      // On Success
       setShowAddModal(false);
       setFormData(initialForm);
-      fetchCompanies();
+      fetchCompanies(); // Refresh the list of companies
       setToastMessage({
         type: "success",
         content: "New company added successfully.",
       });
+
     } catch (err) {
-      const errorMessage =
-        err.response?.data?.message || "Failed to add company.";
+      // --- This is the crucial error handling part ---
+      let errorMessage = "Failed to add company."; // A default error message
+
+      if (err.response) {
+        // If the server responded with an error
+        if (err.response.status === 409 && err.response.data?.message) {
+          // This handles the "duplicate entry" error from the backend
+          errorMessage = err.response.data.message;
+        } else if (err.response.data?.message) {
+          // This handles any other structured error message from the backend
+          errorMessage = err.response.data.message;
+        } else if (err.response.status === 500){
+            errorMessage = "An internal server error occurred. Please try again later.";
+        }
+      } else {
+        // This handles network errors where the server couldn't be reached
+        errorMessage = err.message || "Network error or request failed.";
+      }
+      
+      // Finally, display the determined error message in the toast
       setToastMessage({ type: "error", content: errorMessage });
     }
-  };
-
+};
   const handleUpdateSubmit = (e) => {
     e.preventDefault();
     if (!editingCompany) return;
@@ -145,11 +180,11 @@ export default function CompanyTable({ setToastMessage }) {
       formData.company_name.trim() === (editingCompany.company_name || "") &&
       formData.hr_name.trim() === (editingCompany.hr_name || "") &&
       formData.company_mobile.trim() ===
-        (editingCompany.company_mobile || "") &&
+      (editingCompany.company_mobile || "") &&
       formData.company_email.trim() === (editingCompany.company_email || "") &&
       Number(formData.type_id) === Number(originalTypeId) &&
       formData.company_description.trim() ===
-        (editingCompany.company_description || "");
+      (editingCompany.company_description || "");
 
     if (noChanges) {
       setToastMessage({ type: "error", content: "No changes were made." });
@@ -251,7 +286,7 @@ export default function CompanyTable({ setToastMessage }) {
                   >
                     {company.company_description
                       ? company.company_description.slice(0, 50) +
-                        (company.company_description.length > 50 ? "..." : "")
+                      (company.company_description.length > 50 ? "..." : "")
                       : "—"}
                   </div>
 

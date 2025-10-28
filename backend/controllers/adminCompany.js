@@ -15,13 +15,13 @@ export const getCompanies = (req, res) => {
     FROM company_master AS c
     JOIN company_type_master AS ct ON c.type_id = ct.type_id
     LEFT JOIN user_master AS um ON c.mod_by = um.userid
+    ORDER BY c.company_id DESC
   `;
   db.query(q, (err, data) => {
     if (err) return res.status(500).json(err);
     return res.status(200).json(data);
   });
 };
-
 export const addCompany = (req, res) => {
   const q = "INSERT INTO company_master (`company_name`, `hr_name`, `company_mobile`, `company_email`, `type_id`, `company_description`, `mod_by`, `mod_time`) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())";
   const values = [
@@ -33,8 +33,36 @@ export const addCompany = (req, res) => {
     req.body.company_description,
     req.body.mod_by,
   ];
+
   db.query(q, values, (err, data) => {
-    if (err) return res.status(500).json(err);
+    if (err) {
+      // Log the full error for your reference
+      console.error("SQL Error:", err);
+
+      // Check if the error is a duplicate entry
+      if (err.code === 'ER_DUP_ENTRY') {
+        let field = "A unique field"; // Default field name
+        const sqlMessage = err.sqlMessage || "";
+
+        // Check which unique constraint was violated
+        // NOTE: Adjust these key names if they are different in your database schema!
+        if (sqlMessage.includes('company_email_UNIQUE')) {
+          field = "Email address";
+        } else if (sqlMessage.includes('company_name_UNIQUE')) {
+          field = "Company name";
+        } else if (sqlMessage.includes('company_mobile_UNIQUE')) {
+            field = "Mobile number";
+        }
+
+        // Send a 409 Conflict status with a specific message
+        return res.status(409).json({ message: `${field} is already used by another company.` });
+      }
+
+      // For any other type of database error, send a generic 500 error
+      return res.status(500).json({ message: "A database error occurred while adding the company." });
+    }
+
+    // If successful
     return res.status(201).json({ message: "Company added successfully." });
   });
 };
