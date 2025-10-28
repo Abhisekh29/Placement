@@ -20,18 +20,18 @@ const Student = () => {
     <div className="min-h-screen flex flex-col bg-white">
       <HeaderDashboard />
       {/* <main> now manages the vertical stack */}
-      <main className="flex-grow p-6 flex flex-col"> 
+      <main className="flex-grow p-6 flex flex-col">
         {/* Header/Title Row, updated to include the link */}
         <div className="flex justify-between items-center mb-6">
-            <h1 className="text-3xl font-bold">Manage Students</h1>
-            
-            {/* The actual navigation link/button */}
-            <Link 
-                to="/admin/rejected-students" // This path is configured in App.jsx
-                className="bg-red-600 text-white px-4 py-2 rounded-lg shadow-xl transition hover:bg-red-700 text-sm font-medium"
-            >
-                Rejected Users
-            </Link>
+          <h1 className="text-3xl font-bold">Manage Students</h1>
+
+          {/* The actual navigation link/button */}
+          <Link
+            to="/admin/rejected-students"
+            className="text-red-600 font-medium transition-transform transform hover:scale-110 hover:text-red-700"
+          >
+            Rejected Users
+          </Link>
         </div>
 
         {toastMessage.content && (
@@ -46,9 +46,8 @@ const Student = () => {
 
         {/* 1. Student Table (the active students list) */}
         <StudentTable setToastMessage={setToastMessage} />
-        
-        {/* 2. The link button is now positioned in the header/title block */}
 
+        {/* 2. The link button is now positioned in the header/title block */}
       </main>
       <Footer />
     </div>

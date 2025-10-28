@@ -154,7 +154,7 @@ const NotificationTable = ({ setToastMessage }) => {
               notifications.map((item) => (
                 <div key={item.nid} className="grid grid-cols-6 items-center p-2 border-t bg-white text-sm">
                   <div className="col-span-2 pr-12">{item.text}</div>
-                  <div>{new Date(item.date).toLocaleDateString()}</div>
+                  <div>{new Date(item.date).toLocaleDateString("en-IN")}</div>
                   <div className="break-words pr-6">{item.modified_by || "N/A"}</div>
                   <div>
                     {new Date(item.mod_time).toLocaleString()}
