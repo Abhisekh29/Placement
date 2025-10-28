@@ -151,7 +151,7 @@ const InternshipTable = ({ setToastMessage }) => {
     if (!formData.user_id || !formData.company_id || !formData.semester) {
       setToastMessage({
         type: "error",
-        content: "Student, Company, and Semester are required.",
+        content: "Student, Company, Semester and Certificate are required.",
       });
       return;
     }
@@ -171,7 +171,7 @@ const InternshipTable = ({ setToastMessage }) => {
       });
     } catch (err) {
       const errorMessage =
-        err.response?.data?.message || "Failed to add internship.";
+        err.response?.data?.message || "Failed to add internship. All fields are required.";
       setToastMessage({ type: "error", content: errorMessage });
     }
   };

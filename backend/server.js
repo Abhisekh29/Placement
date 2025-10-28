@@ -3,6 +3,7 @@ import authRoutes from "./routes/auth.js"
 import sessionRoutes from "./routes/session.js"
 import programRoutes from "./routes/program.js"
 import adminProgramRoutes from "./routes/adminProgram.js"
+import adminStudentRoutes from "./routes/adminStudent.js"
 import studentRoutes from "./routes/student.js"
 import userRoutes from "./routes/user.js";
 import academicYearRoutes from "./routes/academicYear.js";
@@ -16,6 +17,7 @@ import notificationRoutes from "./routes/notification.js";
 import internshipRoutes from "./routes/internship.js";
 import filterRoutes from "./routes/filters.js";
 import homeNotificationRoutes from "./routes/homeNotification.js"
+import placementDriveRoutes from "./routes/placementDrive.js"
 
 import cors from "cors";
 import cookieParser from "cookie-parser";
@@ -47,10 +49,12 @@ app.use("/api/department", departmentRoutes);
 app.use("/api/companyType", companyTypeRoutes);
 app.use("/api/academic-session", academicSessionRoutes);
 app.use("/api/adminPrograms", adminProgramRoutes);
+app.use("/api/adminStudents", adminStudentRoutes);
 app.use("/api/adminCompany", adminCompanyRoutes);
 app.use("/api/expenditure", expenditureRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/filters", filterRoutes);
+app.use("/api/placementDrive", placementDriveRoutes);
 
 // Both Student & Admin Routes
 app.use("/api/internships", internshipRoutes);

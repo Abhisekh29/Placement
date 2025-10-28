@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
 import HeaderDashboard from "../../components/HeaderDashboard";
 import Footer from "../../components/Footer";
-import StudentTable from "../../components/StudentTable";
-import { Link } from "react-router-dom"; // <-- Crucial Import
+import RejectedStudentTable from "../../components/RejectedStudentTable";
+import { Link } from "react-router-dom"; // Need Link to go back to active students
 
-const Student = () => {
+const RejectedStudent = () => {
   const [toastMessage, setToastMessage] = useState({ type: "", content: "" });
 
   useEffect(() => {
@@ -19,18 +19,15 @@ const Student = () => {
   return (
     <div className="min-h-screen flex flex-col bg-white">
       <HeaderDashboard />
-      {/* <main> now manages the vertical stack */}
-      <main className="flex-grow p-6 flex flex-col"> 
-        {/* Header/Title Row, updated to include the link */}
+      <main className="flex-grow p-6 flex flex-col">
+        {/* Title and Back Button */}
         <div className="flex justify-between items-center mb-6">
-            <h1 className="text-3xl font-bold">Manage Students</h1>
-            
-            {/* The actual navigation link/button */}
+            <h1 className="text-3xl font-bold">Manage Rejected Users</h1>
             <Link 
-                to="/admin/rejected-students" // This path is configured in App.jsx
-                className="bg-red-600 text-white px-4 py-2 rounded-lg shadow-xl transition hover:bg-red-700 text-sm font-medium"
+                to="/admin/students" 
+                className="bg-blue-500 text-white px-12 py-2 rounded-lg shadow-xl transition hover:bg-blue-600 text-sm font-medium"
             >
-                Rejected Users
+                Back
             </Link>
         </div>
 
@@ -44,15 +41,11 @@ const Student = () => {
           </div>
         )}
 
-        {/* 1. Student Table (the active students list) */}
-        <StudentTable setToastMessage={setToastMessage} />
-        
-        {/* 2. The link button is now positioned in the header/title block */}
-
+        <RejectedStudentTable setToastMessage={setToastMessage} />
       </main>
       <Footer />
     </div>
   );
 };
 
-export default Student;
+export default RejectedStudent;

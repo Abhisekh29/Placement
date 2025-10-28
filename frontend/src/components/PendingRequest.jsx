@@ -27,9 +27,8 @@ const PendingRequest = ({ setToastMessage }) => {
       setPendingUsers(pendingUsers.filter((user) => user.userid !== userId));
       setToastMessage({
         type: status === "1" ? "success" : "error",
-        content: `${username} has been ${
-          status === "1" ? "accepted" : "rejected"
-        }.`,
+        content: `${username} has been ${status === "1" ? "accepted" : "rejected"
+          }.`,
       });
     } catch (err) {
       setToastMessage({
@@ -51,7 +50,7 @@ const PendingRequest = ({ setToastMessage }) => {
         </div>
 
         {/* Scrollable Container */}
-        <div className="max-h-60 overflow-y-auto">
+        <div className="max-h-60 overflow-y-auto hide-scrollbar">
           {pendingUsers.length > 0 ? (
             pendingUsers.map((request) => (
               <div
@@ -89,6 +88,18 @@ const PendingRequest = ({ setToastMessage }) => {
           )}
         </div>
       </div>
+      <style>
+        {`
+      /* --- Hide scrollbar --- */
+      .hide-scrollbar {
+        -ms-overflow-style: none;  /* IE and Edge */
+        scrollbar-width: none;  /* Firefox */
+      }
+      .hide-scrollbar::-webkit-scrollbar {
+        display: none;  /* Chrome, Safari, and Opera */
+      }
+    `}
+      </style>
     </div>
   );
 };

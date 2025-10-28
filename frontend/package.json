@@ -10,21 +10,16 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@acrool/react-vertical-marquee": "^4.0.1",
     "@hookform/resolvers": "^5.2.2",
     "@tailwindcss/vite": "^4.1.13",
-    "axios": "^1.12.2",
-    "framer-motion": "^12.23.22",
+    "axios": "^1.12.2", 
     "lodash": "^4.17.21",
     "motion": "^12.23.13",
     "react": "^19.1.1",
     "react-datepicker": "^8.7.0",
     "react-dom": "^19.1.1",
     "react-easy-marquee": "^1.2.4",
-    "react-fast-marquee": "^1.6.5",
     "react-hook-form": "^7.62.0",
-    "react-icons": "^5.5.0",
-    "react-infinite-ticker": "^2.2.0",
     "react-router-dom": "^7.8.2",
     "tailwindcss": "^4.1.13",
     "zod": "^4.1.8"

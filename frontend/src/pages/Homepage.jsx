@@ -1,4 +1,3 @@
-/* eslint-disable no-unused-vars */
 import React, { useEffect, useState } from "react";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
@@ -128,7 +127,7 @@ const Homepage = () => {
 
         if (Array.isArray(res.data)) {
 
-          // Guaranteed NEWEST FIRST (Descending) sort
+          // 🚨 Guaranteed NEWEST FIRST (Descending) sort
           const sortedData = res.data.sort((a, b) => {
             return new Date(b.date).getTime() - new Date(a.date).getTime();
           });
@@ -223,3 +222,4 @@ const Homepage = () => {
 };
 
 export default Homepage;
+
