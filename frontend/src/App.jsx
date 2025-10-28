@@ -14,10 +14,13 @@ import Department from "./pages/AdminCards/Department";
 import CompanyType from "./pages/AdminCards/CompanyType";
 import AcademicSession from "./pages/AdminCards/AcademicSession";
 import Program from "./pages/AdminCards/Program";
+import Student from "./pages/AdminCards/Students";
 import Company from "./pages/AdminCards/Company";
 import Expenditure from "./pages/AdminCards/Expenditure";
 import Notification from "./pages/AdminCards/Notification";
 import Internship from "./pages/AdminCards/Internship";
+import RejectedStudent from "./pages/AdminCards/RejectedStudent"; 
+import PlacementDrive from "./pages/AdminCards/PlacementDrive";
 
 
 // Role-based wrappers
@@ -147,7 +150,7 @@ const App = () => {
       path: "/admin/placement-drive",
       element: (
         <AdminRoute>
-          
+          <PlacementDrive />
         </AdminRoute>
       ),
     },
@@ -180,7 +183,15 @@ const App = () => {
       path: "/admin/students",
       element: (
         <AdminRoute>
-          
+          <Student />
+        </AdminRoute>
+      ),
+    },
+    {
+      path: "/admin/rejected-students", // 👈 NEW ROUTE
+      element: (
+        <AdminRoute>
+          <RejectedStudent/>
         </AdminRoute>
       ),
     },
