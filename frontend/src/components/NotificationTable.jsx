@@ -142,43 +142,42 @@ const NotificationTable = ({ setToastMessage }) => {
     <h2 className="text-2xl font-bold mb-3">Notifications</h2>
     <div className="border rounded-lg overflow-x-auto no-scrollbar">
       <div className="min-w-[900px]">
-        <div className="grid grid-cols-7 bg-gray-300 p-2 font-semibold text-sm">
-          <div>S.No.</div>
-          <div className="col-span-2">Notification Text</div>
-          <div>Date</div>
-          <div>Modified By</div>
-          <div>Last Modified</div>
-          <div className="text-right">Actions</div>
+        <div className="grid grid-cols-[0.5fr_2fr_1fr_minmax(140px,1fr)_minmax(180px,1fr)_1fr] bg-gray-300 p-2 font-semibold text-sm">
+  <div>S.No.</div>
+  <div>Notification Text</div>
+  <div>Date</div>
+  <div>Modified By</div>
+  <div>Last Modified</div>
+  <div className="text-right">Actions</div>
+</div>
+
+<div className="max-h-96 overflow-y-auto no-scrollbar">
+  {notifications.length > 0 ? (
+    notifications.map((item, index) => (
+      <div
+        key={item.nid}
+        className="grid grid-cols-[0.5fr_2fr_1fr_minmax(140px,1fr)_minmax(180px,1fr)_1fr] items-center p-2 border-t bg-white text-sm"
+      >
+        <div>{index + 1}</div>
+        <div className="pr-6">{item.text}</div>
+        <div>{new Date(item.date).toLocaleDateString("en-IN")}</div>
+        <div className="break-words pr-6">{item.modified_by || "N/A"}</div>
+        <div className="break-words pr-6">{new Date(item.mod_time).toLocaleString()}</div>
+        <div className="flex justify-end gap-2">
+          <button
+            onClick={() => handleEditClick(item)}
+            className="bg-blue-500 text-white px-2 py-0.5 rounded-md text-xs cursor-pointer"
+          >
+            Edit
+          </button>
+          <button
+            onClick={() => handleDeleteClick(item)}
+            className="bg-red-500 text-white px-2 py-0.5 rounded-md text-xs cursor-pointer"
+          >
+            Delete
+          </button>
         </div>
-        <div className="max-h-96 overflow-y-auto no-scrollbar">
-          {notifications.length > 0 ? (
-            notifications.map((item, index) => (
-              <div
-                key={item.nid}
-                className="grid grid-cols-7 items-center p-2 border-t bg-white text-sm"
-              >
-                <div>{index + 1}</div>
-                <div className="col-span-2 pr-12">{item.text}</div>
-                <div>{new Date(item.date).toLocaleDateString("en-IN")}</div>
-                <div className="break-words pr-6">
-                  {item.modified_by || "N/A"}
-                </div>
-                <div>{new Date(item.mod_time).toLocaleString()}</div>
-                <div className="flex justify-end gap-2">
-                  <button
-                    onClick={() => handleEditClick(item)}
-                    className="bg-blue-500 text-white px-2 py-0.5 rounded-md text-xs cursor-pointer"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleDeleteClick(item)}
-                    className="bg-red-500 text-white px-2 py-0.5 rounded-md text-xs cursor-pointer"
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
+      </div>
             ))
           ) : (
             <p className="text-center text-gray-500 p-4">
