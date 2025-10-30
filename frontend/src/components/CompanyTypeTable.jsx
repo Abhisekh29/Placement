@@ -139,56 +139,58 @@ const CompanyTypeTable = ({ setToastMessage }) => {
   };
 
   return (
-    <div className="bg-blue-200 py-2 px-4 rounded-xl shadow-md">
-      <h2 className="text-2xl font-bold mb-3">Company Types</h2>
-      <div className="border rounded-lg overflow-x-auto">
-        <div className="min-w-[600px]">
-          {/* Headers */}
-          <div className="grid grid-cols-4 bg-gray-300 p-2 font-semibold text-sm">
-            <div>Company Type Name</div>
-            <div>Modified By</div>
-            <div>Last Modified</div>
-            <div className="text-right">Actions</div>
-          </div>
+  <div className="bg-blue-200 py-2 px-4 rounded-xl shadow-md">
+    <h2 className="text-2xl font-bold mb-3">Company Types</h2>
+    <div className="border rounded-lg overflow-x-auto no-scrollbar">
+      <div className="min-w-[700px]">
+        {/* Headers */}
+        <div className="grid grid-cols-[1fr_2fr_1.5fr_1.2fr_1fr] bg-gray-300 p-2 font-semibold text-sm">
+          <div>S.No.</div>
+          <div>Company Type Name</div>
+          <div>Modified By</div>
+          <div>Last Modified</div>
+          <div className="text-right">Actions</div>
+        </div>
 
-          {/* Scrollable Container */}
-          <div className="max-h-60 overflow-y-auto">
-            {CompanyTypes.length > 0 ? (
-              CompanyTypes.map((companyType) => (
-                <div
-                  key={companyType.type_id}
-                  className="grid grid-cols-4 items-center p-2 border-t bg-white text-sm"
-                >
-                  <div>{companyType.type_name}</div>
-                  <div className="break-words pr-6">
-                    {companyType.modified_by || "N/A"}
-                  </div>
-                  <div>
-                    {companyType.mod_time
-                      ? new Date(companyType.mod_time).toLocaleString()
-                      : "N/A"}
-                  </div>
-                  <div className="flex justify-end gap-2">
-                    <button
-                      onClick={() => handleEditClick(companyType)}
-                      className="bg-blue-500 text-white px-2 py-0.5 rounded-md text-xs hover:bg-blue-600 transition cursor-pointer"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => handleDeleteClick(companyType)}
-                      className="bg-red-500 text-white px-2 py-0.5 rounded-md text-xs hover:bg-red-600 transition cursor-pointer"
-                    >
-                      Delete
-                    </button>
-                  </div>
+        {/* Scrollable Container */}
+        <div className="max-h-60 overflow-y-auto no-scrollbar">
+          {CompanyTypes.length > 0 ? (
+            CompanyTypes.map((companyType, index) => (
+              <div
+                key={companyType.type_id}
+                 className="grid grid-cols-[1fr_2fr_1.5fr_1.2fr_1fr] items-center p-2 border-t bg-white text-sm"
+              >
+                <div>{index + 1}</div>
+                <div>{companyType.type_name}</div>
+                <div className="break-words pr-6">
+                  {companyType.modified_by || "N/A"}
                 </div>
-              ))
-            ) : (
-              <p className="text-center text-gray-500 p-2 text-sm">
-                No Company Type found.
-              </p>
-            )}
+                <div>
+                  {companyType.mod_time
+                    ? new Date(companyType.mod_time).toLocaleString()
+                    : "N/A"}
+                </div>
+                <div className="flex justify-end gap-2">
+                  <button
+                    onClick={() => handleEditClick(companyType)}
+                    className="bg-blue-500 text-white px-2 py-0.5 rounded-md text-xs hover:bg-blue-600 transition cursor-pointer"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => handleDeleteClick(companyType)}
+                    className="bg-red-500 text-white px-2 py-0.5 rounded-md text-xs hover:bg-red-600 transition cursor-pointer"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            ))
+          ) : (
+            <p className="text-center text-gray-500 p-2 text-sm">
+              No Company Type found.
+            </p>
+          )}
           </div>
         </div>
       </div>

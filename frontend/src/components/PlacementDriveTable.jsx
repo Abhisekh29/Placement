@@ -103,10 +103,10 @@ const PlacementDriveTable = ({ setToastMessage }) => {
         api.get("/academic-session"),
         api.get("/adminCompany"),
       ]);
-      const sortedDrives = (drivesRes.data || []).sort(
-        (a, b) => a.drive_id - b.drive_id
-      );
-      setDrives(sortedDrives);
+      // const sortedDrives = (drivesRes.data || []).sort(
+      //   (a, b) => a.drive_id - b.drive_id
+      // );
+      setDrives(drivesRes.data || []);
       setSessions(sessionsRes.data || []);
       setCompanies(companiesRes.data || []);
     } catch (err) {
@@ -201,7 +201,11 @@ const PlacementDriveTable = ({ setToastMessage }) => {
       setShowAddModal(false);
       await fetchData();
       setToastMessage &&
-        setToastMessage({ type: "success", content: "New drive added." });
+        setToastMessage &&
+        setToastMessage({
+          type: "success",
+          content: `New drive "${formData.drive_name}" added.`,
+        });
     } catch (err) {
       const msg = err.response?.data?.message || "Failed to add drive.";
       setToastMessage && setToastMessage({ type: "error", content: msg });
@@ -223,7 +227,7 @@ const PlacementDriveTable = ({ setToastMessage }) => {
       Number(formData.company_id) === Number(editingDrive.company_id) &&
       Number(formData.ctc) === Number(editingDrive.ctc) &&
       formData.drive_description.trim() ===
-        (editingDrive.drive_description || "");
+      (editingDrive.drive_description || "");
     if (noChanges) {
       setToastMessage &&
         setToastMessage({ type: "info", content: "No changes detected." });
@@ -275,7 +279,7 @@ const PlacementDriveTable = ({ setToastMessage }) => {
   };
 
   const toggleDriveStatus = async (driveId, newStatus, driveName) => {
-    const statusText = newStatus === "1" ? "Closed" : "Active";
+    const statusText = newStatus === "0" ? "Closed" : "Active";
     try {
       await api.put(`/placementDrive/status/${driveId}`, {
         is_active: newStatus,
@@ -303,22 +307,21 @@ const PlacementDriveTable = ({ setToastMessage }) => {
 
   return (
     <div className="bg-blue-200 py-4 px-4 rounded-xl shadow-md">
-      {/* --- 2. Add flex wrapper and search bar --- */}
-      <div className="flex justify-between items-center mb-3">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 mb-3">
         <h2 className="text-2xl font-bold">Placement Drives</h2>
+
         <input
           type="text"
           placeholder="Search by Drive or Company name"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-60 p-1 border bg-white rounded-lg text-sm shadow-sm focus:ring-2 focus:ring-blue-400 focus:outline-none"
+          className="w-full sm:w-60 p-1 border bg-white rounded-lg text-sm shadow-sm focus:ring-2 focus:ring-blue-400 focus:outline-none"
         />
       </div>
 
       <div
-        className={`border rounded-lg overflow-x-auto hide-scrollbar ${
-          drives.length > 8 ? "max-h-96 overflow-y-auto" : ""
-        }`}
+        className={`border rounded-lg overflow-x-auto no-scrollbar ${drives.length > 8 ? "max-h-96 overflow-y-auto" : ""
+          }`}
       >
         <table className="min-w-[1240px] w-full text-sm table-fixed border-collapse">
           <thead className="sticky top-0 z-10 bg-gray-300 font-semibold text-sm border-b border-black">
@@ -404,11 +407,10 @@ const PlacementDriveTable = ({ setToastMessage }) => {
                   </td>
                   <td className="p-2 text-center align-middle">
                     <span
-                      className={`px-3 py-0.5 rounded-full text-xs font-semibold ${
-                        drive.is_active === "1"
+                      className={`px-3 py-0.5 rounded-full text-xs font-semibold ${drive.is_active === "1"
                           ? "bg-green-100 text-green-800"
                           : "bg-red-100 text-red-800"
-                      }`}
+                        }`}
                     >
                       {drive.is_active === "1" ? "Active" : "Closed"}
                     </span>
@@ -424,7 +426,10 @@ const PlacementDriveTable = ({ setToastMessage }) => {
                   <td className="p-2 text-right align-middle space-x-2">
                     <button
                       onClick={() => handleToggleStatusClick(drive)}
-                      className={`w-20 px-2 py-0.5 text-xs rounded-md text-white text-center transition ${drive.is_active === "0"? "bg-green-500 hover:bg-green-600": "bg-red-500 hover:bg-red-600"}`}
+                      className={`w-20 px-2 py-0.5 text-xs rounded-md text-white text-center transition ${drive.is_active === "0"
+                          ? "bg-green-500 hover:bg-green-600"
+                          : "bg-red-500 hover:bg-red-600"
+                        }`}
                     >
                       {drive.is_active === "0" ? "Set Active" : "Set Closed"}
                     </button>
@@ -606,15 +611,6 @@ const PlacementDriveTable = ({ setToastMessage }) => {
       <style>{`
         @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px);} to { opacity: 1; transform: translateY(0);} }
         .animate-fadeIn { animation: fadeIn 0.16s ease-out forwards; }
-
-        /* --- Hide scrollbar --- */
-        .hide-scrollbar {
-          -ms-overflow-style: none;  /* IE and Edge */
-          scrollbar-width: none;  /* Firefox */
-        }
-        .hide-scrollbar::-webkit-scrollbar {
-          display: none;  /* Chrome, Safari, and Opera */
-        }
       `}</style>
     </div>
   );

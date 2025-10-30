@@ -927,7 +927,7 @@ const StudentTable = ({ setToastMessage }) => {
             <div className="border rounded-lg overflow-hidden">
               {/* Check if there are filtered students */}
               {filteredStudents.length > 0 ? (
-                <div className="overflow-x-auto">
+                <div className="overflow-x-auto no-scrollbar">
                   <div className="min-w-[1200px]">
                     {/* Headers */}
                     <div className="grid grid-cols-[50px_2fr_1fr_1.5fr_1fr_1fr_1.2fr_1.5fr_1fr] bg-gray-300 p-2 font-semibold text-sm">
@@ -943,7 +943,7 @@ const StudentTable = ({ setToastMessage }) => {
                     </div>
 
                     {/* 🌟 CHANGE HERE: Replaced max-h-96 with max-h-64 for ~7 visible rows 🌟 */}
-                    <div className="max-h-64 overflow-y-auto hide-scrollbar">
+                    <div className="max-h-64 overflow-y-auto no-scrollbar">
                       {filteredStudents.map((student, index) => (
                         <div
                           key={student.userid}
@@ -1065,19 +1065,17 @@ const StudentTable = ({ setToastMessage }) => {
       )}
 
       {/* Style for modal animation (kept here for simplicity) */}
-      <style>{`
-                @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px);} to { opacity: 1; transform: translateY(0);} }
-                .animate-fadeIn { animation: fadeIn 0.16s ease-out forwards; }
-
-                /* --- Hide scrollbar --- */
-                .hide-scrollbar {
-                  -ms-overflow-style: none;  /* IE and Edge */
-                  scrollbar-width: none;  /* Firefox */
-                }
-                .hide-scrollbar::-webkit-scrollbar {
-                  display: none;  /* Chrome, Safari, and Opera */
-            }
-            `}</style>
+      <style>
+        {`
+          @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+          }
+          .animate-fadeIn {
+            animation: fadeIn 0.2s ease-out forwards;
+          }
+        `}
+      </style>
     </div>
   );
 };

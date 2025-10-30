@@ -44,6 +44,7 @@ export const getExpenditures = (req, res) => {
     FROM expenditure AS e
     JOIN session_master AS s ON e.session_id = s.session_id
     LEFT JOIN user_master AS um ON e.mod_by = um.userid
+    Order BY e.exp_id DESC
   `;
   db.query(q, (err, data) => {
     if (err) return res.status(500).json(err);

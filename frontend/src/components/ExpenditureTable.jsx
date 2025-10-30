@@ -182,32 +182,34 @@ const ExpenditureTable = ({ setToastMessage }) => {
   return (
     <div className="bg-blue-200 py-2 px-4 rounded-xl shadow-md">
       <h2 className="text-2xl font-bold mb-3">Expenditures</h2>
-      <div className="border rounded-lg overflow-x-auto">
+      <div className="border rounded-lg overflow-x-auto no-scrollbar">
         <div className="min-w-[1000px]">
-          <div className="flex bg-gray-300 p-2 font-semibold text-sm rounded-t-lg">
-            <div className="flex-[1.5]">Expense On</div>
-            <div className="flex-[1.5]">Session</div>
-            <div className="flex-[1.2]">Amount</div>
-            <div className="flex-[1.2]">Bill</div>
-            <div className="flex-[2]">Modified By</div>
-            <div className="flex-[1.5]">Last Modified</div>
-            <div className="flex-[1] text-right">Actions</div>
+          <div className="grid grid-cols-[0.5fr_1.5fr_1.5fr_1.2fr_1.2fr_2fr_1.5fr_1fr] bg-gray-300 p-2 font-semibold text-sm rounded-t-lg">
+            <div>S.No.</div>
+            <div>Expense On</div>
+            <div>Session</div>
+            <div>Amount</div>
+            <div>Bill</div>
+            <div>Modified By</div>
+            <div>Last Modified</div>
+            <div className="text-right">Actions</div>
           </div>
-          <div className="max-h-96 overflow-y-auto">
+          <div className="max-h-96 overflow-y-auto no-scrollbar">
             {expenditures.length > 0 ? (
-              expenditures.map((exp) => (
+              expenditures.map((exp, index) => (
                 <div
                   key={exp.exp_id}
-                  className="flex items-center p-2 border-t bg-white text-sm"
+                  className="grid grid-cols-[0.5fr_1.5fr_1.5fr_1.2fr_1.2fr_2fr_1.5fr_1fr] items-center p-2 border-t bg-white text-sm"
                 >
-                  <div className="flex-[1.5] font-semibold">
+                  <div>{index + 1}</div>
+                  <div className="font-semibold">
                     {exp.expense_on}
                   </div>
-                  <div className="flex-[1.5]">{exp.session_name}</div>
-                  <div className="flex-[1.2]">
+                  <div>{exp.session_name}</div>
+                  <div>
                     ₹{Number(exp.amount).toFixed(2)}
                   </div>
-                  <div className="flex-[1.2]">
+                  <div>
                     <a
                       href={`http://localhost:8000/uploads/expenditure/${exp.bill_file}`}
                       target="_blank"
@@ -217,13 +219,13 @@ const ExpenditureTable = ({ setToastMessage }) => {
                       View Bill
                     </a>
                   </div>
-                  <div className="flex-[2] break-words">
+                  <div className="break-words">
                     {exp.modified_by || "N/A"}
                   </div>
-                  <div className="flex-[1.5]">
+                  <div>
                     {new Date(exp.mod_time).toLocaleString()}
                   </div>
-                  <div className="flex-[1] flex justify-end gap-2 whitespace-nowrap">
+                  <div className="flex justify-end gap-2 whitespace-nowrap">
                     <button
                       onClick={() => handleEditClick(exp)}
                       className="bg-blue-500 text-white px-2 py-0.5 rounded-md text-xs hover:bg-blue-600 transition"

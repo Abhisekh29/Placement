@@ -156,17 +156,17 @@ export default function CompanyTable({ setToastMessage }) {
           // This handles any other structured error message from the backend
           errorMessage = err.response.data.message;
         } else if (err.response.status === 500){
-            errorMessage = "An internal server error occurred. Please try again later.";
+          errorMessage = "An internal server error occurred. Please try again later.";
         }
       } else {
         // This handles network errors where the server couldn't be reached
         errorMessage = err.message || "Network error or request failed.";
       }
-      
+
       // Finally, display the determined error message in the toast
       setToastMessage({ type: "error", content: errorMessage });
     }
-};
+  };
   const handleUpdateSubmit = (e) => {
     e.preventDefault();
     if (!editingCompany) return;
@@ -241,10 +241,11 @@ export default function CompanyTable({ setToastMessage }) {
   return (
     <div className="bg-blue-200 py-2 px-4 rounded-xl shadow-md">
       <h2 className="text-2xl font-bold mb-3">Companies</h2>
-      <div className="border rounded-lg overflow-x-auto">
-        <div className="min-w-[1100px]">
-          <div className="grid grid-cols-8 bg-gray-300 p-2 font-semibold text-sm">
-            <div className="col-span-1">Company Name</div>
+      <div className="border rounded-lg overflow-x-auto no-scrollbar">
+        <div className="min-w-[1200px]">
+          <div className="grid grid-cols-[0.7fr_1.1fr_1.2fr_1.5fr_0.8fr_2fr_1.2fr_1.5fr_1fr] bg-gray-300 p-2 font-semibold text-sm">
+            <div>S.No.</div>
+            <div>Company Name</div>
             <div>HR Name</div>
             <div>Contact</div>
             <div>Type</div>
@@ -254,14 +255,15 @@ export default function CompanyTable({ setToastMessage }) {
             <div className="text-right">Actions</div>
           </div>
 
-          <div className="max-h-96 overflow-y-auto">
+          <div className="max-h-96 overflow-y-auto no-scrollbar">
             {companies.length > 0 ? (
-              companies.map((company) => (
+              companies.map((company, index) => (
                 <div
                   key={company.company_id}
-                  className="grid grid-cols-8 items-center p-2 border-t bg-white text-sm"
+                  className="grid grid-cols-[0.7fr_1.1fr_1.2fr_1.5fr_0.8fr_2fr_1.2fr_1.5fr_1fr] items-center p-2 border-t bg-white text-sm"
                 >
-                  <div className="font-semibold col-span-1">
+                  <div>{index + 1}</div>
+                  <div className="font-semibold pr-4">
                     {company.company_name}
                   </div>
                   <div>{company.hr_name || "N/A"}</div>
@@ -272,24 +274,18 @@ export default function CompanyTable({ setToastMessage }) {
                     </p>
                   </div>
                   <div>{company.type_name}</div>
-
-                  {/* Description with click */}
                   <div
-                    className="break-words pr-6 cursor-pointer hover:underline"
-                    title="Click to view full description"
-                    onClick={() => {
-                      setSelectedDescription(
-                        company.company_description || "—"
-                      );
-                      setShowDescriptionModal(true);
-                    }}
-                  >
-                    {company.company_description
-                      ? company.company_description.slice(0, 50) +
-                      (company.company_description.length > 50 ? "..." : "")
-                      : "—"}
-                  </div>
-
+                className="pr-6 cursor-pointer truncate hover:underline line-clamp-2"
+                title="Click to view full description"
+                onClick={() => {
+                  setSelectedDescription(
+                    company.company_description || "—"
+                  );
+                  setShowDescriptionModal(true);
+                }}
+              >
+                {company.company_description || "—"}
+              </div>
                   <div className="break-words pr-6">
                     {company.modified_by || "N/A"}
                   </div>

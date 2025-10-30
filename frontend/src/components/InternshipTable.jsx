@@ -245,7 +245,7 @@ const InternshipTable = ({ setToastMessage }) => {
 
   return (
     <div className="bg-blue-200 py-2 px-4 rounded-xl shadow-md">
-      <div className="mb-3 flex items-center justify-between">
+      <div className="mb-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
         <h2 className="text-2xl font-bold">Student Internships</h2>
 
         {/* Search Box */}
@@ -254,13 +254,14 @@ const InternshipTable = ({ setToastMessage }) => {
           placeholder="Search for student, company, semester..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-72 h-8 p-2 bg-blue-50 border rounded-lg text-sm shadow-sm focus:ring-2 focus:ring-blue-400 focus:outline-none"
+          className="w-full sm:w-72 h-8 p-2 bg-blue-50 border rounded-lg text-sm shadow-sm focus:ring-2 focus:ring-blue-400 focus:outline-none"
         />
       </div>
 
-      <div className="border rounded-lg overflow-x-auto">
+      <div className="border rounded-lg overflow-x-auto no-scrollbar">
         <div className="min-w-[1000px]">
-          <div className="grid grid-cols-7 bg-gray-300 p-2 font-semibold text-sm">
+          <div className="grid grid-cols-[0.5fr_1.5fr_1.5fr_0.8fr_1fr_1.5fr_1.5fr_1fr] bg-gray-300 p-2 font-semibold text-sm">
+            <div>S.No.</div>
             <div>Student Name</div>
             <div>Company</div>
             <div>Semester</div>
@@ -269,10 +270,8 @@ const InternshipTable = ({ setToastMessage }) => {
             <div>Last Modified</div>
             <div className="text-right">Actions</div>
           </div>
-          <div className="max-h-96 overflow-y-auto">
-            {/* Filtered Results */}
+          <div className="max-h-96 overflow-y-auto no-scrollbar">
             {(() => {
-              // 🔎 Filtered internships with logging
               const filteredInternships = internships.filter((internship) => {
                 if (!searchQuery.trim()) return true;
 
@@ -284,16 +283,6 @@ const InternshipTable = ({ setToastMessage }) => {
                   .toLowerCase()
                   .trim();
                 const semester = String(internship.semester || "").trim();
-
-                // console.log("Filtering:", {
-                //   searchQuery: q,
-                //   student,
-                //   company,
-                //   semester,
-                //   studentMatch: student.includes(q),
-                //   companyMatch: company.includes(q),
-                //   semesterMatch: semester.includes(q),
-                // });
 
                 return (
                   student.includes(q) ||
@@ -310,11 +299,12 @@ const InternshipTable = ({ setToastMessage }) => {
                 );
               }
 
-              return filteredInternships.map((internship) => (
+              return filteredInternships.map((internship, index) => (
                 <div
                   key={internship.internship_id}
-                  className="grid grid-cols-7 items-center p-2 border-t bg-white text-sm"
+                  className="grid grid-cols-[0.5fr_1.5fr_1.5fr_0.8fr_1fr_1.5fr_1.5fr_1fr] items-center p-2 border-t bg-white text-sm"
                 >
+                  <div>{index + 1}</div>
                   <div className="font-semibold">{internship.student_name}</div>
                   <div>{internship.company_name}</div>
                   <div>{internship.semester}</div>
@@ -431,9 +421,8 @@ const InternshipTable = ({ setToastMessage }) => {
                             }));
                             setSearchedStudents([]); // close dropdown
                           }}
-                          className={`px-4 py-2 cursor-pointer hover:bg-gray-100 ${
-                            formData.user_id === s.userid ? "bg-gray-200" : ""
-                          }`}
+                          className={`px-4 py-2 cursor-pointer hover:bg-gray-100 ${formData.user_id === s.userid ? "bg-gray-200" : ""
+                            }`}
                         >
                           {s.name} ({s.rollno})
                         </li>
@@ -597,26 +586,12 @@ const InternshipTable = ({ setToastMessage }) => {
       {/* Confirm Delete Modal */}
       {showConfirmModal && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/30 backdrop-blur-sm z-50">
-          <div className="bg-white p-6 rounded-xl shadow-xl w-full max-w-md">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">
-              Confirm Action
-            </h3>
-            <p className="mb-6">
-              Are you sure you want to perform this action?
-            </p>
-            <div className="flex justify-end gap-2">
-              <button
-                onClick={() => setShowConfirmModal(false)}
-                className="px-4 py-2 bg-gray-300 rounded-lg"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={confirmAction}
-                className="px-4 py-2 bg-red-500 text-white rounded-lg"
-              >
-                Yes, Delete
-              </button>
+          <div className="bg-white w-full max-w-md rounded-xl shadow-2xl p-6 animate-fadeIn">
+            <h3 className="text-xl font-bold text-gray-800 mb-4">Are you sure?</h3>
+            <p className="text-gray-600 mb-6">Do you really want to perform this action?</p>
+            <div className="flex justify-end gap-3">
+              <button onClick={() => setShowConfirmModal(false)} className="px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300">Cancel</button>
+              <button onClick={confirmAction} className="px-4 py-2 rounded-lg bg-red-500 text-white hover:bg-red-600">Confirm</button>
             </div>
           </div>
         </div>

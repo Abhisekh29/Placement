@@ -103,22 +103,17 @@ const RejectedStudentTable = ({ setToastMessage }) => {
     });
     
     return (
-      // w-1/2 ensures both tables take exactly 50% width
-      <div className="flex flex-col border rounded-lg overflow-x-auto w-1/2 overflow-hidden"> 
-        {/* Header */}
+      <div className="flex flex-col border rounded-lg overflow-x-auto w-1/2 overflow-hidden no-scrollbar"> 
         <div className="grid grid-cols-[80px_1fr_120px] bg-gray-300 p-2 font-semibold text-sm">
           <div>Sl. No.</div>
           <div className="col-span-1 text-center">Username</div>
           <div className="text-right pr-5">Action</div>
         </div>
-        {/* Body */}
-        <div className="max-h-screen overflow-y-auto bg-white hide-scrollbar"> 
+        <div className="max-h-screen overflow-y-auto bg-white no-scrollbar"> 
           {filteredData.length > 0 ? (
             filteredData.map((student) => {
-              // Find the original index of the student in the full rejectedStudents array 
-              // to correctly display the sequential Sl. No. (1, 2, 3, 4...)
               const originalIndex = rejectedStudents.findIndex(s => s.userid === student.userid);
-              if (originalIndex === -1) return null; // Safety check
+              if (originalIndex === -1) return null; 
 
               return (
                 <div
@@ -126,7 +121,7 @@ const RejectedStudentTable = ({ setToastMessage }) => {
                   className="grid grid-cols-[60px_1fr_120px] items-center p-2 border-t bg-white text-sm"
                 >
                   <div className="w-10 pl-3">
-                    {originalIndex + 1}. {/* Display the original sequential Sl. No. */}
+                    {originalIndex + 1}. 
                   </div>
                   <div className="font-semibold break-words text-center">
                     {student.username || "N/A"}
@@ -174,7 +169,7 @@ const RejectedStudentTable = ({ setToastMessage }) => {
               <div className="col-span-1 text-center">Username</div>
               <div className="text-right pr-5">Action</div>
             </div>
-            <div className="max-h-96 overflow-y-auto hide-scrollbar">
+            <div className="max-h-96 overflow-y-auto no-scrollbar">
               {rejectedStudents.length > 0 ? (
                 rejectedStudents.map((student, index) => (
                   <div
@@ -249,16 +244,12 @@ const RejectedStudentTable = ({ setToastMessage }) => {
 
       <style>
         {`
-          @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px);} to { opacity: 1; transform: translateY(0);} }
-          .animate-fadeIn { animation: fadeIn 0.16s ease-out forwards; }
-
-          /* --- Hide scrollbar --- */
-          .hide-scrollbar {
-            -ms-overflow-style: none;  /* IE and Edge */
-                  scrollbar-width: none;  /* Firefox */
+          @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
           }
-          .hide-scrollbar::-webkit-scrollbar {
-            display: none;  /* Chrome, Safari, and Opera */
+          .animate-fadeIn {
+            animation: fadeIn 0.2s ease-out forwards;
           }
         `}
       </style>

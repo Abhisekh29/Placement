@@ -11,6 +11,7 @@ export const getPrograms = (req, res) => {
     FROM program_master AS p
     JOIN department_master AS d ON p.department_id = d.department_id
     LEFT JOIN user_master AS um ON p.mod_by = um.userid
+    Order BY p.program_id DESC
   `;
   db.query(q, (err, data) => {
     if (err) return res.status(500).json(err);

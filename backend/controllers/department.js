@@ -9,6 +9,7 @@ export const getDepartments = (req, res) => {
       um.username AS modified_by
     FROM department_master AS d
     LEFT JOIN user_master AS um ON d.mod_by = um.userid
+    ORDER BY d.department_id DESC
   `;
   db.query(q, (err, data) => {
     if (err) return res.status(500).json(err);

@@ -131,33 +131,37 @@ const AcademicYearTable = ({ setToastMessage }) => {
 
   return (
     <div className="bg-blue-200 py-2 px-4 rounded-xl shadow-md">
-      <h2 className="text-2xl font-bold mb-3">Academic Years</h2>
-      <div className="border rounded-lg overflow-x-auto">
-        <div className="min-w-[600px]">
-          {/* Headers */}
-          <div className="grid grid-cols-4 bg-gray-300 p-2 font-semibold text-sm">
-            <div>Year Name</div>
-            <div>Modified By</div>
-            <div>Last Modified</div>
-            <div className="text-right">Actions</div>
+      <h2 className="text-2xl font-bold mb-3">Departments</h2>
+      <div className="border rounded-lg overflow-x-auto no-scrollbar">
+        <div className="min-w-[800px]">
+          <div className="grid grid-cols-12 bg-gray-300 p-2 font-semibold text-sm">
+            <div className="col-span-1">S.No.</div>
+            <div className="col-span-4 whitespace-nowrap pl-20">Year Name</div>
+            <div className="col-span-3 whitespace-nowrap">Modified By</div>
+            <div className="col-span-2 whitespace-nowrap">Last Modified</div>
+            <div className="text-right col-span-2 whitespace-nowrap pl-3">
+              Actions
+            </div>
           </div>
 
-          {/* Scrollable Container */}
-          <div className="max-h-60 overflow-y-auto">
+          <div className="max-h-60 overflow-y-auto no-scrollbar">
             {academicYears.length > 0 ? (
-              academicYears.map((year) => (
+              academicYears.map((year, index) => (
                 <div
                   key={year.year_id}
-                  className="grid grid-cols-4 items-center p-2 border-t bg-white text-sm"
+                  className="grid grid-cols-12 items-center p-2 border-t bg-white text-sm"
                 >
-                  <div>{year.year_name}</div>
-                  <div className="break-words pr-6">{year.modified_by || "N/A"}</div>
-                  <div>
+                  <div className="col-span-1">{index + 1}</div>
+                  <div className="col-span-4 pl-20 break-words">{year.year_name}</div>
+                  <div className="col-span-3 break-words">
+                    {year.modified_by || "N/A"}
+                  </div>
+                  <div className="col-span-2">
                     {year.mod_time
                       ? new Date(year.mod_time).toLocaleString()
                       : "N/A"}
                   </div>
-                  <div className="flex justify-end gap-2">
+                  <div className="flex justify-end gap-2 col-span-2">
                     <button
                       onClick={() => handleEditClick(year)}
                       className="bg-blue-500 text-white px-2 py-0.5 rounded-md text-xs hover:bg-blue-600 transition cursor-pointer"

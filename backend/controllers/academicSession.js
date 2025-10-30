@@ -11,6 +11,7 @@ export const getAcademicSessions = (req, res) => {
     FROM session_master AS s
     JOIN academic_year AS ay ON s.year_id = ay.year_id
     LEFT JOIN user_master AS um ON s.mod_by = um.userid
+    ORDER BY s.session_id DESC
   `;
   db.query(q, (err, data) => {
     if (err) return res.status(500).json(err);

@@ -165,56 +165,64 @@ const AcademicSessionTable = ({ setToastMessage }) => {
   };
 
   return (
-    <div className="bg-blue-200 py-2 px-4 rounded-xl shadow-md">
-      <h2 className="text-2xl font-bold mb-3">Academic Sessions</h2>
-      <div className="border rounded-lg overflow-x-auto">
-        <div className="min-w-[700px]">
-          {/* Headers */}
-          <div className="grid grid-cols-5 bg-gray-300 p-2 font-semibold text-sm">
-            <div>Session Name</div>
-            <div>Academic Year</div>
-            <div>Modified By</div>
-            <div>Last Modified</div>
-            <div className="text-right">Actions</div>
+  <div className="bg-blue-200 py-2 px-4 rounded-xl shadow-md">
+    <h2 className="text-2xl font-bold mb-3">Academic Sessions</h2>
+    <div className="border rounded-lg overflow-x-auto no-scrollbar">
+      <div className="min-w-[800px]">
+        <div className="grid grid-cols-12 bg-gray-300 p-2 font-semibold text-sm">
+          <div className="col-span-1">S.No.</div>
+          <div className="col-span-2 whitespace-nowrap">Session Name</div>
+          <div className="col-span-2 whitespace-nowrap">Academic Year</div>
+          <div className="col-span-3 whitespace-nowrap">Modified By</div>
+          <div className="col-span-2 whitespace-nowrap">Last Modified</div>
+          <div className="text-right col-span-2 whitespace-nowrap pl-3">
+            Actions
           </div>
+        </div>
 
-          {/* Scrollable Container */}
-          <div className="max-h-60 overflow-y-auto">
-            {academicSessions.length > 0 ? (
-              academicSessions.map((session) => (
-                <div
-                  key={session.session_id}
-                  className="grid grid-cols-5 items-center p-2 border-t bg-white text-sm"
-                >
-                  <div>{session.session_name}</div>
-                  <div>{session.year_name}</div>
-                  <div className="break-words pr-6">{session.modified_by || "N/A"}</div>
-
-                  <div>
-                    {session.mod_time
-                      ? new Date(session.mod_time).toLocaleString()
-                      : "N/A"}
-                  </div>
-                  <div className="flex justify-end gap-2">
-                    <button
-                      onClick={() => handleEditClick(session)}
-                      className="bg-blue-500 text-white px-2 py-0.5 rounded-md text-xs hover:bg-blue-600 transition"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => handleDeleteClick(session)}
-                      className="bg-red-500 text-white px-2 py-0.5 rounded-md text-xs hover:bg-red-600 transition"
-                    >
-                      Delete
-                    </button>
-                  </div>
+        <div className="max-h-60 overflow-y-auto no-scrollbar">
+          {academicSessions.length > 0 ? (
+            academicSessions.map((session, index) => (
+              <div
+                key={session.session_id}
+                className="grid grid-cols-12 items-center p-2 border-t bg-white text-sm"
+              >
+                <div className="col-span-1">{index + 1}</div>
+                <div className="col-span-2 whitespace-nowrap">
+                  {session.session_name}
                 </div>
-              ))
-            ) : (
-              <p className="text-center text-gray-500 p-2 text-sm">
-                No academic sessions found.
-              </p>
+                <div className="col-span-2 whitespace-nowrap">
+                  {session.year_name}
+                </div>
+                <div className="col-span-3 whitespace-nowrap">
+                  {session.modified_by || "N/A"}
+                </div>
+
+                <div className="col-span-2 whitespace-nowrap">
+                  {session.mod_time
+                    ? new Date(session.mod_time).toLocaleString()
+                    : "N/A"}
+                </div>
+                <div className="flex justify-end gap-2 col-span-2 whitespace-nowrap pl-3">
+                  <button
+                    onClick={() => handleEditClick(session)}
+                    className="bg-blue-500 text-white px-2 py-0.5 rounded-md text-xs hover:bg-blue-600 transition"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => handleDeleteClick(session)}
+                    className="bg-red-500 text-white px-2 py-0.5 rounded-md text-xs hover:bg-red-600 transition"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            ))
+          ) : (
+            <p className="text-center text-gray-500 p-2 text-sm">
+              No academic sessions found.
+            </p>
             )}
           </div>
         </div>

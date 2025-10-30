@@ -19,7 +19,7 @@ export const getPlacementDrives = (req, res) => {
     JOIN session_master AS sm ON pd.session_id = sm.session_id
     JOIN company_master AS cm ON pd.company_id = cm.company_id
     LEFT JOIN user_master AS um ON pd.mod_by = um.userid
-    ORDER BY pd.mod_time DESC
+    ORDER BY pd.drive_id DESC
   `;
   db.query(q, (err, data) => {
     if (err) {

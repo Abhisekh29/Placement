@@ -9,6 +9,7 @@ export const getCompanyTypes = (req, res) => {
       um.username AS modified_by
     FROM company_type_master AS ct
     LEFT JOIN user_master AS um ON ct.mod_by = um.userid
+    ORDER BY ct.type_id DESC
   `;
   db.query(q, (err, data) => {
     if (err) return res.status(500).json(err);

@@ -44,6 +44,7 @@ export const getInternships = (req, res) => {
     JOIN student_master AS s ON i.user_id = s.userid
     JOIN company_master AS c ON i.company_id = c.company_id
     LEFT JOIN user_master AS um ON i.mod_by = um.userid
+    ORDER BY i.internship_id DESC
   `;
   db.query(q, (err, data) => {
     if (err) return res.status(500).json(err);
