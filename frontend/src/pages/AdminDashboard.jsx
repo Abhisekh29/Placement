@@ -18,10 +18,10 @@ const AdminDashboard = () => {
   }, [toastMessage]);
 
   return (
-    <div className="h-screen flex flex-col bg-white">
+    <div className="h-screen flex flex-col bg-white relative overflow-y-auto no-scrollbar">
       <HeaderDashboard />
 
-      <main className="flex-grow p-6 overflow-y-auto no-scrollbar">
+      <main className="flex-grow p-6">
         <h1 className="text-3xl font-bold mb-2">Admin Dashboard</h1>
         <p className="mb-6 text-gray-700">
           Welcome, <span className="font-semibold">{user.username}</span>

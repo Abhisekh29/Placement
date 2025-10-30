@@ -4,12 +4,13 @@ import HeaderDashboard from "../components/HeaderDashboard";
 import Footer from "../components/Footer";
 import StudentForm from "../components/StudentForm";
 import Profile from "../components/Profile";
+import InternshipDashboardWidget from "../components/InternshipDashboardWidget";
+import PlacementDashboardWidget from "../components/PlacementDashboardWidget";
 
 const StudentDashboard = () => {
   const [studentData, setStudentData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [editMode, setEditMode] = useState(false);
-  // Separate state for message and type
   const [toastMessage, setToastMessage] = useState("");
   const [toastType, setToastType] = useState("success"); // 'success', 'info', 'error'
   const [showToast, setShowToast] = useState(false);
@@ -17,7 +18,6 @@ const StudentDashboard = () => {
 
   useEffect(() => {
     const fetchStudentDetails = async () => {
-      // ... (fetching logic remains the same)
       try {
         const res = await api.get(`/student_master/${user.userid}`);
         if (res.data.length > 0) {
@@ -36,7 +36,7 @@ const StudentDashboard = () => {
       setLoading(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user.userid]); // Dependency array is correct
+  }, [user.userid]);
 
   // Keep handleEdit the same
   const handleEdit = () => setEditMode(true);
@@ -80,7 +80,7 @@ const StudentDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-white relative">
+    <div className="h-screen flex flex-col bg-white relative overflow-y-auto no-scrollbar">
       <HeaderDashboard />
 
       {/* Toast container - Use dynamic background color */}
@@ -104,7 +104,13 @@ const StudentDashboard = () => {
         </p>
 
         {studentData && !editMode ? (
-          <Profile studentData={studentData} onEdit={handleEdit} />
+          <>
+            <Profile studentData={studentData} onEdit={handleEdit} />
+            <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+              <InternshipDashboardWidget />
+              <PlacementDashboardWidget />
+            </div>
+          </>
         ) : (
           <StudentForm
             existingData={studentData}
@@ -124,14 +130,14 @@ const StudentDashboard = () => {
       {/* Tailwind animation */}
       <style>
         {`
-          @keyframes slideDown {
-            0% { transform: translateY(-20px); opacity: 0; }
-            100% { transform: translateY(0); opacity: 1; }
-          }
-          .animate-slideDown {
-            animation: slideDown 0.3s ease-out forwards;
-          }
-        `}
+          @keyframes slideDown {
+            0% { transform: translateY(-20px); opacity: 0; }
+            100% { transform: translateY(0); opacity: 1; }
+          }
+          .animate-slideDown {
+            animation: slideDown 0.3s ease-out forwards;
+          }
+        `}
       </style>
     </div>
   );

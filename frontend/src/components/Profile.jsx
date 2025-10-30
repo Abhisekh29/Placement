@@ -28,7 +28,7 @@ const Profile = ({ studentData, onEdit }) => {
       ?.program_name || studentData.program_id;
 
   return (
-    <div className="bg-blue-100 p-6 md:p-8 rounded-xl shadow-md max-w mx-auto">
+    <div className="bg-blue-100 p-6 md:p-8 rounded-xl shadow-md max-w mx-auto border-blue-400 border-2">
       {/* Header */}
       <div className="flex justify-between items-center mb-6 border-b pb-4">
         <h2 className="text-2xl font-bold text-gray-800">Student Profile</h2>
