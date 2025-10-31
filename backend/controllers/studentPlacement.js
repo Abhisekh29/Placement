@@ -170,13 +170,12 @@ export const applyForDrive = (req, res) => {
     // This is the CTC value you were missing
     const driveCTC = driveData[0].ctc; 
 
-    const q = "INSERT INTO student_placement (`user_id`, `drive_id`, `is_selected`, `ctc`, `role`, `mod_by`, `mod_time`) VALUES (?, ?, ?, ?, ?, ?, NOW())";
+    const q = "INSERT INTO student_placement (`user_id`, `drive_id`, `is_selected`, `ctc`, `mod_by`, `mod_time`) VALUES (?, ?, ?, ?, ?, NOW())";
     const values = [
       user_id,
       drive_id,
       '0', // Default: '0' (Pending)
       driveCTC, // 🌟 Store the CTC from the drive
-      "Applied", // Default role/remark
       user_id 
     ];
 
