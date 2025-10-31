@@ -19,7 +19,8 @@ import filterRoutes from "./routes/filters.js";
 import homeNotificationRoutes from "./routes/homeNotification.js"
 import placementDriveRoutes from "./routes/placementDrive.js"
 import studentInternshipRoutes from "./routes/studentInternship.js"
-
+import studentPlacementDriveRoute from "./routes/studentPlacementDrive.js"
+import studentPlacementRoute from "./routes/studentPlacement.js"
 import cors from "cors";
 import cookieParser from "cookie-parser";
 
@@ -43,6 +44,8 @@ app.use("/api/program_master", programRoutes);
 app.use("/api/student_master", studentRoutes);
 app.use("/api/company", companyRoutes);
 app.use("/api/student-internships", studentInternshipRoutes);
+app.use("/api/student-placement-drives", studentPlacementDriveRoute);
+app.use("/api/student-placements", studentPlacementRoute);
 
 // Admin Routes
 app.use("/api/users", userRoutes);

@@ -43,7 +43,7 @@ const InternshipDashboardWidget = () => {
               <div className="text-center">Semester</div>
               <div className="text-center">Certificate</div>
             </div>
-            <div className="max-h-48 overflow-y-auto no-scrollbar">
+            <div className="max-h-54 overflow-y-auto no-scrollbar">
               {internships.map((internship, index) => (
                 <div
                   key={internship.internship_id}

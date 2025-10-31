@@ -403,7 +403,7 @@ const PlacementDriveTable = ({ setToastMessage }) => {
                       "Click to view full description"
                     }
                   >
-                    {drive.drive_description || "—"}
+                    {drive.drive_description || "N/A"}
                   </td>
                   <td className="p-2 text-center align-middle">
                     <span

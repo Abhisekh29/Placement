@@ -22,7 +22,8 @@ import Internship from "./pages/AdminCards/Internship";
 import RejectedStudent from "./pages/AdminCards/RejectedStudent"; 
 import PlacementDrive from "./pages/AdminCards/PlacementDrive";
 import ManageInternships from "./pages/Student/ManageInternships";
-
+import StudentDriveDetail from "./pages/Student/StudentDriveDetails";
+import StudentMyPlacement from "./pages/Student/StudentMyPlacement";
 
 // Role-based wrappers
 const AdminRoute = ({ children }) => {
@@ -217,6 +218,22 @@ const App = () => {
       element: (
         <StudentRoute>
           <ManageInternships />
+        </StudentRoute>
+      ),
+    },
+    {
+      path: "/student/drive/:driveId",
+      element: (
+        <StudentRoute>
+          <StudentDriveDetail />
+        </StudentRoute>
+      ),
+    },
+    {
+      path: "/student/my-placements",
+      element: (
+        <StudentRoute>
+          <StudentMyPlacement />
         </StudentRoute>
       ),
     },
