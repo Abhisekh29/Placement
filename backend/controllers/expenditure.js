@@ -3,7 +3,7 @@ import multer from "multer";
 import path from "path";
 import fs from "fs"; // Import the File System module
 
-// Multer setup remains the same
+// Multer setup
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, "uploads/expenditure/");
@@ -29,26 +29,86 @@ const fileFilter = (req, file, cb) => {
 
 export const upload = multer({ storage: storage, fileFilter: fileFilter });
 
-// Controller functions
+// --- Controller functions ---
+
+// WRITTEN to support pagination, search, and limits 
 export const getExpenditures = (req, res) => {
-  const q = `
+  // --- 1. Get Parameters ---
+  const { 
+    search,     // Optional search term
+    page,       // Page number
+    limit       // Records per page (10, 50, 100, "all")
+  } = req.query; 
+
+  // --- 2. Build Base Queries ---
+  let q = `
     SELECT 
-      e.exp_id,
-      e.session_id,
-      s.session_name,
-      e.expense_on,
-      e.amount,
-      e.bill_file,
-      e.mod_time,
+      e.exp_id, e.session_id, s.session_name, e.expense_on,
+      e.amount, e.bill_file, e.mod_time,
       um.username AS modified_by
     FROM expenditure AS e
     JOIN session_master AS s ON e.session_id = s.session_id
     LEFT JOIN user_master AS um ON e.mod_by = um.userid
-    Order BY e.exp_id DESC
   `;
-  db.query(q, (err, data) => {
-    if (err) return res.status(500).json(err);
-    return res.status(200).json(data);
+
+  let countQuery = `
+    SELECT COUNT(*) as total
+    FROM expenditure AS e
+    JOIN session_master AS s ON e.session_id = s.session_id
+    LEFT JOIN user_master AS um ON e.mod_by = um.userid
+  `;
+
+  // --- 3. Add Dynamic WHERE Clause for Search ---
+  const values = [];
+  const countValues = [];
+
+  if (search) {
+    // Search by expense description OR session name
+    const whereClause = " WHERE (e.expense_on LIKE ? OR s.session_name LIKE ?)";
+    const searchTerm = `%${search}%`;
+    
+    q += whereClause;
+    countQuery += whereClause;
+    
+    values.push(searchTerm, searchTerm);
+    countValues.push(searchTerm, searchTerm);
+  }
+
+  // Add sorting (most recent first)
+  q += " ORDER BY e.exp_id DESC"; 
+
+  // --- 4. Add Pagination (LIMIT/OFFSET) ---
+  if (limit !== "all") {
+    const pageNum = parseInt(page, 10) || 1;
+    const limitNum = parseInt(limit, 10) || 10;
+    const offset = (pageNum - 1) * limitNum;
+
+    q += " LIMIT ? OFFSET ?";
+    values.push(limitNum, offset);
+  }
+  // If limit is "all", we add nothing to the query.
+
+  // --- 5. Execute Queries ---
+  db.query(countQuery, countValues, (err, countData) => {
+    if (err) {
+      console.error("DB Error (Count) fetching expenditures:", err);
+      return res.status(500).json(err);
+    }
+    
+    const total = countData[0].total;
+    if (total === 0) {
+      return res.status(200).json({ data: [], total: 0 });
+    }
+
+    // Now get the paged data
+    db.query(q, values, (err, data) => {
+      if (err) {
+        console.error("DB Error (Data) fetching expenditures:", err);
+        return res.status(500).json(err);
+      }
+      // Return both the page data and the total count
+      return res.status(200).json({ data: data, total: total });
+    });
   });
 };
 
@@ -73,7 +133,6 @@ export const addExpenditure = (req, res) => {
 export const updateExpenditure = (req, res) => {
   const { expId } = req.params;
   
-  // 1. Get the old filename before updating
   const getOldFileQuery = "SELECT bill_file FROM expenditure WHERE exp_id = ?";
   db.query(getOldFileQuery, [expId], (err, data) => {
     if (err) return res.status(500).json(err);
@@ -82,23 +141,23 @@ export const updateExpenditure = (req, res) => {
     const oldFileName = data[0].bill_file;
     let newFileName = oldFileName;
 
-    // 2. If a new file is uploaded, set the new filename and delete the old file
     if (req.file) {
       newFileName = req.file.filename;
       
       const oldFilePath = path.join("uploads/expenditure", oldFileName);
-      fs.unlink(oldFilePath, (unlinkErr) => {
-        if (unlinkErr) console.error("Error deleting old file:", unlinkErr);
-      });
+      if (fs.existsSync(oldFilePath)) {
+        fs.unlink(oldFilePath, (unlinkErr) => {
+          if (unlinkErr) console.error("Error deleting old file:", unlinkErr);
+        });
+      }
     }
 
-    // 3. Update the database with the new data
     const q = "UPDATE expenditure SET `session_id` = ?, `expense_on` = ?, `amount` = ?, `bill_file` = ?, `mod_by` = ?, `mod_time` = NOW() WHERE `exp_id` = ?";
     const values = [
       req.body.session_id,
       req.body.expense_on,
       req.body.amount,
-      newFileName, // Use the new filename or the old one if no new file was uploaded
+      newFileName,
       req.body.mod_by,
       expId,
     ];
@@ -114,19 +173,19 @@ export const updateExpenditure = (req, res) => {
 export const deleteExpenditure = (req, res) => {
   const { expId } = req.params;
 
-  // First, get the filename to delete it from the server
   const getFileQuery = "SELECT bill_file FROM expenditure WHERE exp_id = ?";
   db.query(getFileQuery, [expId], (err, data) => {
     if (err) return res.status(500).json(err);
     if (data.length > 0) {
       const fileName = data[0].bill_file;
       const filePath = path.join("uploads/expenditure", fileName);
-      fs.unlink(filePath, (unlinkErr) => {
-        if (unlinkErr) console.error("Error deleting file:", unlinkErr);
-      });
+      if (fs.existsSync(filePath)) {
+        fs.unlink(filePath, (unlinkErr) => {
+          if (unlinkErr) console.error("Error deleting file:", unlinkErr);
+        });
+      }
     }
 
-    // Then, delete the record from the database
     const q = "DELETE FROM expenditure WHERE exp_id = ?";
     db.query(q, [expId], (err, data) => {
       if (err) {

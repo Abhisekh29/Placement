@@ -1,5 +1,7 @@
-import React, { useState, useEffect } from "react";
+/* eslint-disable no-unused-vars */
+import React, { useState, useEffect, useCallback } from "react";
 import api from "../api/axios";
+import { debounce } from "lodash"; // Import debounce
 
 const initialFormState = {
   session_id: "",
@@ -9,8 +11,21 @@ const initialFormState = {
 };
 
 const ExpenditureTable = ({ setToastMessage }) => {
-  const [expenditures, setExpenditures] = useState([]);
-  const [sessions, setSessions] = useState([]);
+  // ---  NEW PAGINATION & SEARCH STATE ---
+  const [expenditures, setExpenditures] = useState([]); // Will hold paged data
+  const [sessions, setSessions] = useState([]); // For modals
+  const [isLoading, setIsLoading] = useState(false);
+  
+  const [currentPage, setCurrentPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [totalExpenditures, setTotalExpenditures] = useState(0);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  
+  const totalPages = Math.ceil(totalExpenditures / limit);
+  const serialNoOffset = (limit === "all" || currentPage === 1) ? 0 : (currentPage - 1) * limit;
+  // ---  END NEW STATE ---
+
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingExpenditure, setEditingExpenditure] = useState(null);
@@ -18,16 +33,44 @@ const ExpenditureTable = ({ setToastMessage }) => {
   const [actionToConfirm, setActionToConfirm] = useState(null);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const user = JSON.parse(sessionStorage.getItem("user"));
+  
+  // ---  DEBOUNCE EFFECT for search ---
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearch(searchTerm);
+      setCurrentPage(1); // Reset to page 1 on new search
+    }, 500);
+    return () => clearTimeout(handler);
+  }, [searchTerm]);
 
-  const fetchExpenditures = async () => {
+
+  // ---  REFACTORED fetchExpenditures ---
+  const fetchExpenditures = useCallback(async () => {
+    setIsLoading(true);
     try {
-      const res = await api.get("/expenditure");
-      setExpenditures(res.data);
+      const res = await api.get("/expenditure", {
+        params: {
+          search: debouncedSearch,
+          page: currentPage,
+          limit: limit,
+        },
+      });
+      setExpenditures(res.data.data || []);
+      setTotalExpenditures(res.data.total || 0);
     } catch (err) {
       console.error(err);
+      setToastMessage({
+        type: "error",
+        content: "Failed to load expenditure data."
+      });
+      setExpenditures([]);
+      setTotalExpenditures(0);
+    } finally {
+      setIsLoading(false);
     }
-  };
+  }, [debouncedSearch, currentPage, limit, setToastMessage]);
 
+  // Fetch sessions for the modal (only once)
   const fetchSessions = async () => {
     try {
       const res = await api.get("/academic-session");
@@ -38,9 +81,14 @@ const ExpenditureTable = ({ setToastMessage }) => {
   };
 
   useEffect(() => {
-    fetchExpenditures();
     fetchSessions();
   }, []);
+
+  // Effect to re-fetch data when filters change
+  useEffect(() => {
+    fetchExpenditures();
+  }, [fetchExpenditures]);
+
 
   const handleInputChange = (e) => {
     const { name, value, files } = e.target;
@@ -50,7 +98,27 @@ const ExpenditureTable = ({ setToastMessage }) => {
       setFormData((prev) => ({ ...prev, [name]: value }));
     }
   };
-
+  
+  // ---  NEW Filter Change Handler ---
+  const handleFilterChange = (e) => {
+    const { name, value } = e.target;
+    setCurrentPage(1); // Reset page on limit change
+    setLimit(value === "all" ? "all" : Number(value));
+  };
+  
+  // --- Pagination Button Handlers ---
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+  const handlePrevPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+  
+  // --- Modal Handlers (Modified to re-fetch) ---
   const handleAddClick = () => {
     setFormData(initialFormState);
     setShowAddModal(true);
@@ -62,7 +130,7 @@ const ExpenditureTable = ({ setToastMessage }) => {
       session_id: expenditure.session_id,
       expense_on: expenditure.expense_on,
       amount: expenditure.amount,
-      bill_file: null, // Reset file input for potential new upload
+      bill_file: null,
     });
     setShowEditModal(true);
   };
@@ -101,7 +169,7 @@ const ExpenditureTable = ({ setToastMessage }) => {
         headers: { "Content-Type": "multipart/form-data" },
       });
       setShowAddModal(false);
-      fetchExpenditures();
+      fetchExpenditures(); //  REFRESH DATA
       setToastMessage({
         type: "success",
         content: "Expenditure added successfully.",
@@ -115,7 +183,6 @@ const ExpenditureTable = ({ setToastMessage }) => {
 
   const handleUpdateSubmit = (e) => {
     e.preventDefault();
-
     const noChanges =
       Number(formData.session_id) === editingExpenditure.session_id &&
       formData.expense_on.trim() === editingExpenditure.expense_on &&
@@ -123,7 +190,7 @@ const ExpenditureTable = ({ setToastMessage }) => {
       !formData.bill_file;
 
     if (noChanges) {
-      setToastMessage({ type: "error", content: "No changes were made." });
+      setToastMessage({ type: "info", content: "No changes were made." });
       setShowEditModal(false);
       return;
     }
@@ -147,7 +214,7 @@ const ExpenditureTable = ({ setToastMessage }) => {
       await api.put(`/expenditure/${editingExpenditure.exp_id}`, data, {
         headers: { "Content-Type": "multipart/form-data" },
       });
-      fetchExpenditures();
+      fetchExpenditures(); //  REFRESH DATA
       setToastMessage({
         type: "success",
         content: "Expenditure updated successfully.",
@@ -162,7 +229,7 @@ const ExpenditureTable = ({ setToastMessage }) => {
   const deleteExpenditure = async (expId, expenseOn) => {
     try {
       await api.delete(`/expenditure/${expId}`);
-      setExpenditures(expenditures.filter((exp) => exp.exp_id !== expId));
+      fetchExpenditures(); //  REFRESH DATA
       setToastMessage({
         type: "success",
         content: `"${expenseOn}" has been deleted.`,
@@ -178,14 +245,81 @@ const ExpenditureTable = ({ setToastMessage }) => {
     if (actionToConfirm) actionToConfirm();
     setShowConfirmModal(false);
   };
+  
+  const showPagination = !isLoading && limit !== "all";
 
   return (
     <div className="bg-blue-200 py-2 px-4 rounded-xl shadow-md">
-      <h2 className="text-2xl font-bold mb-3">Expenditures</h2>
-      <div className="border rounded-lg overflow-x-auto no-scrollbar">
+      {/*  NEW Search Bar  */}
+      <div className="flex flex-col md:flex-row justify-between items-center mb-3 mt-1 gap-2">
+        <h2 className="text-2xl font-bold">Expenditures</h2>
+        <input
+          type="text"
+          placeholder="Search description or session..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full py-1 px-2 bg-white border rounded-lg text-sm shadow-sm focus:ring-2 focus:ring-blue-400 focus:outline-none md:w-60"
+        />
+      </div>
+
+      {/*  NEW Pagination Controls (Top)  */}
+      {!isLoading && (
+        <div className="flex flex-col sm:flex-row justify-between items-center gap-2 mb-2 text-sm">
+          <div className="flex items-center gap-2">
+            <label htmlFor="limit-select" className="text-gray-700">Records per page:</label>
+            <select
+              id="limit-select"
+              name="limit"
+              value={limit}
+              onChange={handleFilterChange}
+              className="p-1 border rounded-lg text-xs bg-white focus:outline-none"
+            >
+              <option value={10}>10</option>
+              <option value={50}>50</option>
+              <option value={100}>100</option>
+              <option value="all">All</option>
+            </select>
+            {limit !== "all" && (
+              <span className="text-gray-600">
+                Showing {Math.min(serialNoOffset + 1, totalExpenditures)} - {Math.min(serialNoOffset + expenditures.length, totalExpenditures)} of {totalExpenditures}
+              </span>
+            )}
+            {limit === "all" && totalExpenditures > 0 && (
+              <span className="text-gray-600">
+                Showing all {totalExpenditures} records
+              </span>
+            )}
+          </div>
+          
+          {limit !== "all" && (
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handlePrevPage}
+                disabled={currentPage === 1}
+                className="px-3 py-1 bg-white border rounded-lg shadow-sm text-xs hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Prev
+              </button>
+              <span className="font-semibold">
+                Page {currentPage} of {totalPages || 1}
+              </span>
+              <button
+                onClick={handleNextPage}
+                disabled={currentPage === totalPages || totalPages === 0}
+                className="px-3 py-1 bg-white border rounded-lg shadow-sm text-xs hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Next
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* --- Table --- */}
+      <div className="border rounded-lg max-h-400 overflow-x-auto no-scrollbar">
         <div className="min-w-[1000px]">
-          <div className="grid grid-cols-[0.5fr_1.5fr_1.5fr_1.2fr_1.2fr_2fr_1.5fr_1fr] bg-gray-300 p-2 font-semibold text-sm rounded-t-lg">
-            <div>S.No.</div>
+          <div className="grid grid-cols-[0.5fr_2fr_1.5fr_1.2fr_1.2fr_1.5fr_1.5fr_1fr] bg-gray-300 p-2 font-semibold text-sm rounded-t-lg">
+            <div>Sl. No.</div>
             <div>Expense On</div>
             <div>Session</div>
             <div>Amount</div>
@@ -194,14 +328,18 @@ const ExpenditureTable = ({ setToastMessage }) => {
             <div>Last Modified</div>
             <div className="text-right">Actions</div>
           </div>
-          <div className="max-h-96 overflow-y-auto no-scrollbar">
-            {expenditures.length > 0 ? (
+          
+          {/*  Table Body  */}
+          <div className="overflow-y-auto no-scrollbar">
+            {isLoading ? (
+              <p className="text-center text-gray-700 p-4">Loading data...</p>
+            ) : expenditures.length > 0 ? (
               expenditures.map((exp, index) => (
                 <div
                   key={exp.exp_id}
-                  className="grid grid-cols-[0.5fr_1.5fr_1.5fr_1.2fr_1.2fr_2fr_1.5fr_1fr] items-center p-2 border-t bg-white text-sm"
+                  className="grid grid-cols-[0.5fr_2fr_1.5fr_1.2fr_1.2fr_1.5fr_1.5fr_1fr] items-center p-2 border-t bg-white text-sm"
                 >
-                  <div>{index + 1}</div>
+                  <div className="pl-3">{serialNoOffset + index + 1}.</div>
                   <div className="font-semibold">
                     {exp.expense_on}
                   </div>
@@ -242,8 +380,10 @@ const ExpenditureTable = ({ setToastMessage }) => {
                 </div>
               ))
             ) : (
-              <p className="text-center text-gray-500 p-2 text-sm">
-                No expenditures found.
+              <p className="text-center text-gray-500 p-4 text-sm">
+                {searchTerm
+                  ? `No expenditures found matching "${searchTerm}".`
+                  : "No expenditures found."}
               </p>
             )}
           </div>

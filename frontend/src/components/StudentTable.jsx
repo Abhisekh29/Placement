@@ -1,11 +1,10 @@
 /* eslint-disable no-unused-vars */
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import api from "../api/axios";
+import { debounce } from "lodash";
 
-// ====================================================================
-// COMPONENT 1: The Read-Only View Details Modal
-// (Omitted for brevity - No changes applied)
-// ====================================================================
+// (StudentDetailsModal and AdminEditStudentModal components remain exactly the same as before)
+// ... (Omitted for brevity, paste your existing modal components here) ...
 const StudentDetailsModal = ({ student, onClose }) => {
   // ... (StudentDetailsModal code remains unchanged)
   if (!student) return null;
@@ -85,10 +84,6 @@ const StudentDetailsModal = ({ student, onClose }) => {
   );
 };
 
-// ====================================================================
-// COMPONENT 2: Simplified Edit Modal for Admin
-// (Omitted for brevity - No changes applied)
-// ====================================================================
 const AdminEditStudentModal = ({
   student,
   onClose,
@@ -514,13 +509,12 @@ const AdminEditStudentModal = ({
 };
 
 // ====================================================================
-// StudentTable Component
+// StudentTable Component (HEAVILY REFACTORED FOR PAGINATION)
 // ====================================================================
 
 const StudentTable = ({ setToastMessage }) => {
-  // ... (state declarations remain unchanged)
+  const [students, setStudents] = useState([]); // Holds only the current page's data
   const [showStudentList, setShowStudentList] = useState(false);
-  const [students, setStudents] = useState([]);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
@@ -532,14 +526,18 @@ const StudentTable = ({ setToastMessage }) => {
   const [selectedProgramId, setSelectedProgramId] = useState("all");
   const [isLoading, setIsLoading] = useState(false);
 
-  // ⭐ Search state
-  const [searchTerm, setSearchTerm] = useState("");
-
-  // ⭐ State for Export Dropdown (No longer used as requested, but keeping for compatibility)
-  const [showExportDropdown, setShowExportDropdown] = useState(false);
+  // ---  NEW PAGINATION STATE ---
+  const [searchTerm, setSearchTerm] = useState(""); // The value in the search box
+  const [debouncedSearch, setDebouncedSearch] = useState(""); // The value used for the API call
+  const [currentPage, setCurrentPage] = useState(1);
+  const [limit, setLimit] = useState(10); // Default to 10 records
+  const [totalStudents, setTotalStudents] = useState(0);
+  const totalPages = Math.ceil(totalStudents / limit);
+  // ---  END NEW PAGINATION STATE ---
 
   const user = JSON.parse(sessionStorage.getItem("user"));
 
+  // Fetch static dropdown data (unchanged)
   useEffect(() => {
     const fetchOptions = async () => {
       try {
@@ -547,7 +545,6 @@ const StudentTable = ({ setToastMessage }) => {
           api.get("/academic-year"),
           api.get("/program_master"),
         ]);
-
         setAcademicYears(yearsRes.data || []);
         setPrograms(programsRes.data || []);
       } catch (err) {
@@ -561,48 +558,43 @@ const StudentTable = ({ setToastMessage }) => {
     fetchOptions();
   }, [setToastMessage]);
 
-  const handleFilterChange = (e) => {
-    const { name, value } = e.target;
-    if (name === "year") {
-      setSelectedYearId(value);
-      // Hide list and clear data when year changes
-      if (value !== selectedYearId) {
-        setShowStudentList(false);
-        setStudents([]);
-      }
-      setSearchTerm(""); // Clear search on year change
-    } else if (name === "program") {
-      setSelectedProgramId(value);
-      // Hide list when program changes if it's currently visible
-      if (showStudentList) {
-        setShowStudentList(false);
-      }
-      setSearchTerm(""); // Clear search on program change
-    }
-  };
+  // ---  NEW DEBOUNCE EFFECT ---
+  // This effect watches the search term and updates the
+  // "debounced" version after 500ms of no typing
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearch(searchTerm);
+      setCurrentPage(1); // Reset to page 1 on a new search
+    }, 500); // 500ms delay
 
-  const fetchStudents = async (forceFetch = false) => {
-    if (!selectedYearId) {
-      setToastMessage({
-        content: "Please select an Academic Year first.",
-        type: "error",
-      });
-      setShowStudentList(false);
-      return;
-    }
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [searchTerm]);
 
-    // Only fetch if forced, or if the list is hidden (meaning we want to show it) and there's no data
-    if (!forceFetch && !showStudentList && students.length > 0) return;
+  // ---  REFACTORED fetchStudents ---
+  // This function is now the single source of truth for fetching data
+  // It's wrapped in useCallback to prevent re-renders
+  const fetchStudents = useCallback(async () => {
+    if (!selectedYearId || !showStudentList) {
+      setStudents([]);
+      setTotalStudents(0);
+      return; // Don't fetch if no year is selected or list is hidden
+    }
 
     setIsLoading(true);
     try {
       const res = await api.get("/adminStudents", {
-        params: { yearId: selectedYearId, programId: selectedProgramId },
+        params: {
+          yearId: selectedYearId,
+          programId: selectedProgramId,
+          search: debouncedSearch,
+          page: currentPage,
+          limit: limit,
+        },
       });
-      setStudents(res.data || []);
-      setIsLoading(false);
-      setShowStudentList(true);
-      setSearchTerm(""); // Clear search term after a fresh fetch
+      setStudents(res.data.data || []);
+      setTotalStudents(res.data.total || 0);
     } catch (err) {
       console.error(err);
       setToastMessage({
@@ -611,8 +603,41 @@ const StudentTable = ({ setToastMessage }) => {
           "Failed to load student data. Is backend running?",
         type: "error",
       });
+      setStudents([]);
+      setTotalStudents(0);
+    } finally {
       setIsLoading(false);
-      setShowStudentList(false);
+    }
+  }, [
+    selectedYearId,
+    selectedProgramId,
+    debouncedSearch,
+    currentPage,
+    limit,
+    showStudentList,
+    setToastMessage,
+  ]);
+
+  // ---  NEW EFFECT to call fetchStudents when filters change ---
+  useEffect(() => {
+    fetchStudents();
+  }, [fetchStudents]); // This effect runs whenever any dependency of fetchStudents changes
+
+  const handleFilterChange = (e) => {
+    const { name, value } = e.target;
+    // Reset to page 1 whenever filters change
+    setCurrentPage(1);
+
+    if (name === "year") {
+      setSelectedYearId(value);
+      if (!value) {
+        // If year is cleared, hide list
+        setShowStudentList(false);
+      }
+    } else if (name === "program") {
+      setSelectedProgramId(value);
+    } else if (name === "limit") {
+      setLimit(value === "all" ? "all" : Number(value));
     }
   };
 
@@ -624,17 +649,17 @@ const StudentTable = ({ setToastMessage }) => {
       });
       return;
     }
-
-    const newState = !showStudentList;
-    if (newState) {
-      fetchStudents(true);
-    } else {
-      // Only hide the list, don't clear the students array on toggle off
-      setShowStudentList(newState);
-      setSearchTerm("");
-    }
+    // Just toggle the state; the useEffect will handle the fetch
+    setShowStudentList(!showStudentList);
+    setCurrentPage(1);
+    setSearchTerm("");
   };
 
+  // ---  REMOVED getFilteredStudents() ---
+  // We no longer filter on the client.
+  // The `students` array *is* the filtered list.
+
+  // --- Modal and Delete handlers (unchanged) ---
   const handleViewDetailsClick = (student) => {
     setSelectedStudent(student);
     setShowDetailsModal(true);
@@ -647,7 +672,7 @@ const StudentTable = ({ setToastMessage }) => {
 
   const handleEditSuccess = (updatedData) => {
     setShowEditModal(false);
-    fetchStudents(true);
+    fetchStudents(); // Just re-fetch the current page
     setToastMessage({
       type: "success",
       content: `Student details for ${updatedData.name} updated successfully.`,
@@ -662,11 +687,12 @@ const StudentTable = ({ setToastMessage }) => {
   const deleteStudent = async (userid, studentName) => {
     try {
       await api.delete(`/adminStudents/${userid}`);
-      setStudents((prev) => prev.filter((s) => s.userid !== userid));
       setToastMessage({
         type: "success",
         content: `${studentName}'s record has been deleted.`,
       });
+      // Re-fetch data to reflect deletion
+      fetchStudents();
     } catch (err) {
       const errorMessage =
         err.response?.data?.message || "Failed to delete student record.";
@@ -681,42 +707,26 @@ const StudentTable = ({ setToastMessage }) => {
     setShowConfirmModal(false);
   };
 
-  const isToggleDisabled = isLoading || !selectedYearId;
-
-  // ---------------------------------------------------
-  // Real-time Client-Side Search Logic
-  // ---------------------------------------------------
-
-  const handleSearchTermChange = (e) => {
-    // Update the state on every keystroke for instant filtering
-    setSearchTerm(e.target.value);
-  };
-
-  const getFilteredStudents = () => {
-    if (!searchTerm.trim()) {
-      return students;
+  // --- Pagination Button Handlers ---
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
     }
-    const query = searchTerm.toLowerCase().trim();
-    // Filters based only on student's name
-    return students.filter((student) =>
-      (student.name || "").toLowerCase().includes(query)
-    );
   };
 
-  const filteredStudents = getFilteredStudents();
+  const handlePrevPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
 
-  // ---------------------------------------------------
-
-  // ---------------------------------------------------
-  // Export to Excel Functionality
-  // ---------------------------------------------------
+  // --- Export to Excel (Unchanged, will now export current page) ---
   const exportToExcel = () => {
-    if (filteredStudents.length === 0) {
+    if (students.length === 0) {
       setToastMessage({ type: "error", content: "No records to export." });
       return;
     }
 
-    // 1. Define CSV headers (DOB ADDED HERE)
     const headers = [
       "Roll No",
       "Name",
@@ -732,11 +742,9 @@ const StudentTable = ({ setToastMessage }) => {
       "Program",
     ];
 
-    // Helper to format date for CSV (YYYY-MM-DD)
     const formatDateForCsv = (dateString) => {
       if (!dateString) return "N/A";
       try {
-        // Ensure date is treated as UTC to prevent timezone skewing the date
         const date = new Date(dateString);
         if (isNaN(date.getTime())) return "N/A";
         return date.toISOString().split("T")[0];
@@ -745,15 +753,13 @@ const StudentTable = ({ setToastMessage }) => {
       }
     };
 
-    // 2. Map data to the defined headers
-    const dataRows = filteredStudents.map((student) =>
+    const dataRows = students.map((student) =>
       [
-        // Ensure no commas or quotes in data that might break CSV structure
-        `"${(student.rollno || "N/A").replace(/"/g, '""')}"`,
+        `"${(student.rollno || "N/A").toString().replace(/"/g, '""')}"`,
         `"${(student.name || "N/A").replace(/"/g, '""')}"`,
-        `"${(student.mobile || "N/A").replace(/"/g, '""')}"`,
+        `"${(student.mobile || "N/A").toString().replace(/"/g, '""')}"`,
         `"${(student.email || "N/A").replace(/"/g, '""')}"`,
-        `"${formatDateForCsv(student.dob)}"`, // DOB FORMATTED AND ADDED
+        `"${formatDateForCsv(student.dob)}"`,
         `"${(student.gender || "N/A").replace(/"/g, '""')}"`,
         `"${(student.caste || "N/A").replace(/"/g, '""')}"`,
         `"${(student.address || "N/A").replace(/"/g, '""')}"`,
@@ -762,12 +768,9 @@ const StudentTable = ({ setToastMessage }) => {
         `"${(student.session_name || "N/A").replace(/"/g, '""')}"`,
         `"${(student.program_name || "N/A").replace(/"/g, '""')}"`,
       ].join(",")
-    ); // Join fields with comma
+    );
 
-    // 3. Combine headers and data rows into a single string
-    const csvString = [headers.join(","), ...dataRows].join("\n"); // Join rows with newline
-
-    // 4. Create and trigger download using Blob
+    const csvString = [headers.join(","), ...dataRows].join("\n");
     const blob = new Blob([csvString], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
@@ -778,47 +781,41 @@ const StudentTable = ({ setToastMessage }) => {
       "Selected";
     const progName =
       selectedProgramId !== "all"
-        ? programs.find((p) => p.program_id === selectedProgramId)?.program_name
+        ? programs.find(
+            (p) => String(p.program_id) === String(selectedProgramId)
+          )?.program_name || "UnknownProgram"
         : "All";
-    const fileName = `Students_${yearName}_${progName}_${
-      new Date().toISOString().split("T")[0]
-    }.csv`;
+    const fileName = `Students_${yearName}_${progName}_Page${currentPage}.csv`;
 
     link.setAttribute("download", fileName);
     link.style.visibility = "hidden";
     document.body.appendChild(link);
-    // Using document.execCommand('copy') equivalent logic for download to prevent external file issues
-    try {
-      link.click();
-    } catch (e) {
-      // Fallback for browsers preventing click
-      console.error("Manual link click failed:", e);
-    }
+    link.click();
     document.body.removeChild(link);
 
     setToastMessage({
       type: "success",
-      content: `Exported ${filteredStudents.length} records to ${fileName}.`,
+      content: `Exported ${students.length} records from current page.`,
     });
   };
 
-  // ---------------------------------------------------
+  const isToggleDisabled = isLoading || !selectedYearId;
+  const serialNoOffset =
+    limit === "all" || currentPage === 1 ? 0 : (currentPage - 1) * limit;
+  const showPagination = showStudentList && !isLoading && limit !== "all";
 
   return (
-    // Container is set to 'relative' for dropdown positioning and uses standard padding.
     <div className="bg-blue-200 py-2 px-4 rounded-xl shadow-md relative pb-2">
       <h2 className="text-2xl font-bold mb-3">Student Details</h2>
 
-      {/* ------------------------------------------------------------- */}
-      {/* 🌟 Filter and Action Controls 🌟 */}
+      {/* ---  MODIFIED Filter and Action Controls  --- */}
       <div className="flex flex-col md:flex-row md:justify-between md:items-end gap-3 mb-3">
         {/* Filters & Toggle Button (Left side) */}
         <div className="flex items-end gap-2 flex-wrap">
-          {/* Academic Year Dropdown (Compulsory) - Added flex-shrink-0 for alignment */}
           <div className="flex flex-col w-36 flex-shrink-0">
             <label
               htmlFor="year-select"
-              className="block text-xs font-medium text-gray-700 whitespace-nowrap"
+              className="block text-xs font-medium text-gray-700 whitespace-nowrap pb-2"
             >
               Academic Year (Required)
             </label>
@@ -827,7 +824,6 @@ const StudentTable = ({ setToastMessage }) => {
               name="year"
               value={selectedYearId}
               onChange={handleFilterChange}
-              // The select is given standard vertical padding (p-1.5)
               className="p-1.5 border rounded-lg text-xs bg-white focus:outline-none focus:border-gray-400 w-full"
               disabled={isLoading}
             >
@@ -840,11 +836,10 @@ const StudentTable = ({ setToastMessage }) => {
             </select>
           </div>
 
-          {/* Program Dropdown (Optional) - Added flex-shrink-0 for alignment */}
           <div className="flex flex-col w-36 flex-shrink-0">
             <label
               htmlFor="program-select"
-              className="block text-xs font-medium text-gray-700 whitespace-nowrap"
+              className="block text-xs font-medium text-gray-700 whitespace-nowrap pb-2"
             >
               Program (Optional)
             </label>
@@ -853,7 +848,6 @@ const StudentTable = ({ setToastMessage }) => {
               name="program"
               value={selectedProgramId}
               onChange={handleFilterChange}
-              // The select is given standard vertical padding (p-1.5)
               className="p-1.5 border rounded-lg text-xs bg-white focus:outline-none focus:border-gray-400 w-full"
               disabled={isLoading}
             >
@@ -866,16 +860,14 @@ const StudentTable = ({ setToastMessage }) => {
             </select>
           </div>
 
-          {/* Toggle Button - Removed fixed height, letting padding and 'items-end' align it */}
           <button
             onClick={handleToggleClick}
-            // Button gets the same vertical padding (py-1.5) as the select inputs (p-1.5) for matching height
             className={`px-3 py-1.5 rounded-lg text-white text-xs transition shadow-sm w-auto flex-shrink-0
-                            ${
-                              isToggleDisabled
-                                ? "bg-gray-400 cursor-not-allowed"
-                                : "bg-gray-500 hover:bg-gray-600"
-                            }`}
+              ${
+                isToggleDisabled
+                  ? "bg-gray-400 cursor-not-allowed"
+                  : "bg-gray-500 hover:bg-gray-600"
+              }`}
             disabled={isToggleDisabled}
           >
             {isLoading
@@ -886,51 +878,107 @@ const StudentTable = ({ setToastMessage }) => {
           </button>
         </div>
 
-        {/* Search Bar + Export Button Group (Right side on desktop, conditional on showStudentList) */}
+        {/* Search Bar + Export (Right side) */}
         {showStudentList && (
           <div className="flex items-end gap-2 w-full md:w-auto">
-            {/* Search Input: Vertical padding py-1.5 matches button/select inputs */}
             <input
               type="text"
-              placeholder="Search by Student Name..."
+              placeholder="Search Name or Roll No..."
               value={searchTerm}
-              onChange={handleSearchTermChange}
-              className="w-full py-1.5 px-2 bg-white border rounded-lg text-sm shadow-sm focus:ring-2 focus:ring-blue-400 focus:outline-none flex-grow md:w-60 md:flex-grow-0"
-              disabled={!showStudentList || isLoading}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full py-1 px-2 bg-white border rounded-lg text-sm shadow-sm focus:ring-2 focus:ring-blue-400 focus:outline-none flex-grow md:w-48 md:flex-grow-0"
+              disabled={!showStudentList}
             />
-
-            {/* Export Button: Matches padding/height of toggle button and select inputs */}
             <button
               onClick={exportToExcel}
               className={`px-3 py-1.5 rounded-lg text-white text-xs transition shadow-sm w-auto flex-shrink-0 
-                                ${
-                                  filteredStudents.length === 0
-                                    ? "bg-green-300 cursor-not-allowed"
-                                    : "bg-green-600 hover:bg-green-700"
-                                }`}
-              disabled={filteredStudents.length === 0}
+                ${
+                  students.length === 0
+                    ? "bg-green-300 cursor-not-allowed"
+                    : "bg-green-600 hover:bg-green-700"
+                }`}
+              disabled={students.length === 0}
             >
-              Export to Excel
+              Export Page
             </button>
           </div>
         )}
       </div>
 
+      {/* --- NEW PAGINATION CONTROLS (TOP) --- */}
+      {showStudentList && !isLoading && (
+        <div className="flex flex-col sm:flex-row justify-between items-center gap-2 mb-2 text-sm">
+          <div className="flex items-center gap-2">
+            <label htmlFor="limit-select" className="text-gray-700">
+              Records per page:
+            </label>
+            <select
+              id="limit-select"
+              name="limit"
+              value={limit}
+              onChange={handleFilterChange}
+              className="p-1 border rounded-lg text-xs bg-white focus:outline-none"
+            >
+              <option value={10}>10</option>
+              <option value={50}>50</option>
+              <option value={100}>100</option>
+              <option value="all">All</option> {/*  ADDED "All" OPTION */}
+            </select>
+
+            {/*  Hide "Showing X-Y of Z" if "All" is selected */}
+            {limit !== "all" && (
+              <span className="text-gray-600">
+                Showing {Math.min(serialNoOffset + 1, totalStudents)} -{" "}
+                {Math.min(serialNoOffset + students.length, totalStudents)} of{" "}
+                {totalStudents}
+              </span>
+            )}
+            {limit === "all" && (
+              <span className="text-gray-600">
+                Showing all {totalStudents} records
+              </span>
+            )}
+          </div>
+
+          {/*  Hide pagination buttons if "All" is selected */}
+          {limit !== "all" && (
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handlePrevPage}
+                disabled={currentPage === 1}
+                className="px-2 py-1 bg-white border rounded-lg shadow-sm text-xs hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Prev
+              </button>
+              <span className="font-semibold">
+                Page {currentPage} of {totalPages || 1}
+              </span>
+              <button
+                onClick={handleNextPage}
+                disabled={currentPage === totalPages || totalPages === 0}
+                className="px-2 py-1 bg-white border rounded-lg shadow-sm text-xs hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Next
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* The Conditional Student List / Loading Indicator */}
       {showStudentList && (
-        <div className="mt-3">
+        <div className="mt-1">
           {isLoading ? (
             <p className="text-center text-gray-700 py-4">
               Loading student data...
             </p>
           ) : (
             <div className="border rounded-lg overflow-hidden">
-              {/* Check if there are filtered students */}
-              {filteredStudents.length > 0 ? (
+              {students.length > 0 ? (
                 <div className="overflow-x-auto no-scrollbar">
                   <div className="min-w-[1200px]">
-                    {/* Headers */}
-                    <div className="grid grid-cols-[50px_2fr_1fr_1.5fr_1fr_1fr_1.2fr_1.5fr_1fr] bg-gray-300 p-2 font-semibold text-sm">
+                    {/* Headers (unchanged) */}
+                    <div className="grid grid-cols-[60px_2fr_1fr_1.5fr_1fr_1fr_1.2fr_1.5fr_1fr] bg-gray-300 p-2 font-semibold text-sm">
                       <div>Sl. no.</div>
                       <div>Name</div>
                       <div>Roll No.</div>
@@ -942,29 +990,23 @@ const StudentTable = ({ setToastMessage }) => {
                       <div className="text-right">Actions</div>
                     </div>
 
-                    {/* 🌟 CHANGE HERE: Replaced max-h-96 with max-h-64 for ~7 visible rows 🌟 */}
-                    <div className="max-h-64 overflow-y-auto no-scrollbar">
-                      {filteredStudents.map((student, index) => (
+                    {/* Table Body */}
+                    <div className=" max-h-400 overflow-y-auto no-scrollbar">
+                      {students.map((student, index) => (
                         <div
                           key={student.userid}
-                          className="grid grid-cols-[50px_2fr_1fr_1.5fr_1fr_1fr_1.2fr_1.5fr_1fr] items-center p-2 border-t bg-white text-sm"
+                          className="grid grid-cols-[60px_2fr_1fr_1.5fr_1fr_1fr_1.2fr_1.5fr_1fr] items-center p-2 border-t bg-white text-sm"
                         >
-                          {/* Serial Number (Auto-incremented) */}
-                          <div>{index + 1}.</div>
-                          {/* Name */}
+                          {/*  Serial Number now respects pagination  */}
+                          <div className="pl-3">{serialNoOffset + index + 1}.</div>
                           <div className="font-semibold break-words">
                             {student.name}
                           </div>
-                          {/* Roll No. */}
                           <div>{student.rollno || "N/A"}</div>
-                          {/* Program Name */}
                           <div className="break-words">
                             {student.program_name || "N/A"}
                           </div>
-                          {/* Mobile No. */}
                           <div>{student.mobile || "N/A"}</div>
-
-                          {/* View More Button */}
                           <div>
                             <button
                               onClick={() => handleViewDetailsClick(student)}
@@ -973,13 +1015,9 @@ const StudentTable = ({ setToastMessage }) => {
                               View Details
                             </button>
                           </div>
-
-                          {/* Modified By */}
                           <div className="break-words pr-2">
                             {student.modified_by || "N/A"}
                           </div>
-
-                          {/* Last Modified */}
                           <div className="whitespace-nowrap">
                             {student.mod_time
                               ? new Date(student.mod_time)
@@ -987,8 +1025,6 @@ const StudentTable = ({ setToastMessage }) => {
                                   .replace(" ", "\u00A0")
                               : "N/A"}
                           </div>
-
-                          {/* Actions */}
                           <div className="flex justify-end gap-2">
                             <button
                               onClick={() => handleEditClick(student)}
@@ -1009,11 +1045,11 @@ const StudentTable = ({ setToastMessage }) => {
                   </div>
                 </div>
               ) : (
-                // This message is for NO RECORDS found and is intentionally outside the wide table container.
+                // This message now handles search failure too
                 <p className="text-center text-gray-500 p-4 text-sm bg-white w-full">
-                  {students.length === 0
-                    ? "No Student Records found for the selected filters."
-                    : `No student records found matching "${searchTerm}".`}
+                  {totalStudents === 0 && searchTerm
+                    ? `No students found matching "${searchTerm}".`
+                    : "No Student Records found for the selected filters."}
                 </p>
               )}
             </div>
