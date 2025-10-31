@@ -21,6 +21,7 @@ import Notification from "./pages/AdminCards/Notification";
 import Internship from "./pages/AdminCards/Internship";
 import RejectedStudent from "./pages/AdminCards/RejectedStudent"; 
 import PlacementDrive from "./pages/AdminCards/PlacementDrive";
+import ManageInternships from "./pages/Student/ManageInternships";
 
 
 // Role-based wrappers
@@ -188,7 +189,7 @@ const App = () => {
       ),
     },
     {
-      path: "/admin/rejected-students", // 👈 NEW ROUTE
+      path: "/admin/rejected-students",
       element: (
         <AdminRoute>
           <RejectedStudent/>
@@ -208,6 +209,14 @@ const App = () => {
       element: (
         <StudentRoute>
           <StudentDashboard />
+        </StudentRoute>
+      ),
+    },
+    {
+      path: "/student/internships",
+      element: (
+        <StudentRoute>
+          <ManageInternships />
         </StudentRoute>
       ),
     },

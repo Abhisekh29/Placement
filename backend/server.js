@@ -18,6 +18,7 @@ import internshipRoutes from "./routes/internship.js";
 import filterRoutes from "./routes/filters.js";
 import homeNotificationRoutes from "./routes/homeNotification.js"
 import placementDriveRoutes from "./routes/placementDrive.js"
+import studentInternshipRoutes from "./routes/studentInternship.js"
 
 import cors from "cors";
 import cookieParser from "cookie-parser";
@@ -41,6 +42,7 @@ app.use("/api/session_master", sessionRoutes)
 app.use("/api/program_master", programRoutes);
 app.use("/api/student_master", studentRoutes);
 app.use("/api/company", companyRoutes);
+app.use("/api/student-internships", studentInternshipRoutes);
 
 // Admin Routes
 app.use("/api/users", userRoutes);
@@ -55,9 +57,9 @@ app.use("/api/expenditure", expenditureRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/filters", filterRoutes);
 app.use("/api/placementDrive", placementDriveRoutes);
+app.use("/api/internships", internshipRoutes);
 
 // Both Student & Admin Routes
-app.use("/api/internships", internshipRoutes);
 
 // File Upload Route
 app.use('/uploads', express.static('uploads'));

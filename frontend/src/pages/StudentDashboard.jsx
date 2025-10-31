@@ -105,7 +105,7 @@ const StudentDashboard = () => {
 
         {studentData && !editMode ? (
           <>
-            <Profile studentData={studentData} onEdit={handleEdit} />
+            <Profile studentData={studentData} onEdit={handleEdit} />
             <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
               <InternshipDashboardWidget />
               <PlacementDashboardWidget />
@@ -130,14 +130,14 @@ const StudentDashboard = () => {
       {/* Tailwind animation */}
       <style>
         {`
-          @keyframes slideDown {
-            0% { transform: translateY(-20px); opacity: 0; }
-            100% { transform: translateY(0); opacity: 1; }
-          }
-          .animate-slideDown {
-            animation: slideDown 0.3s ease-out forwards;
-          }
-        `}
+          @keyframes slideDown {
+            0% { transform: translateY(-20px); opacity: 0; }
+            100% { transform: translateY(0); opacity: 1; }
+          }
+          .animate-slideDown {
+            animation: slideDown 0.3s ease-out forwards;
+          }
+        `}
       </style>
     </div>
   );

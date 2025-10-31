@@ -66,7 +66,7 @@ const Profile = ({ studentData, onEdit }) => {
         </div>
         <div>
           <p className="text-sm font-semibold text-gray-500">Email</p>
-          <p className="text-lg">{studentData.email}</p>
+          <p className="text-lg break-words">{studentData.email}</p>
         </div>
         <div>
           <p className="text-sm font-semibold text-gray-500">Mobile</p>

@@ -6,13 +6,13 @@ import {
   deleteInternship,
   upload,
 } from "../controllers/internship.js";
-import { verifyToken } from "../middleware/auth.js";
+import { isAdmin } from "../middleware/auth.js";
 
 const router = express.Router();
 
-router.get("/", verifyToken, getInternships);
-router.post("/", verifyToken, upload.single("certificate"), addInternship);
-router.put("/:internshipId", verifyToken, upload.single("certificate"), updateInternship);
-router.delete("/:internshipId", verifyToken, deleteInternship);
+router.get("/", isAdmin, getInternships);
+router.post("/", isAdmin, upload.single("certificate"), addInternship);
+router.put("/:internshipId", isAdmin, upload.single("certificate"), updateInternship);
+router.delete("/:internshipId", isAdmin, deleteInternship);
 
 export default router;
