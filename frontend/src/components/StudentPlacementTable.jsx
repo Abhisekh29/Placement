@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import api from "../api/axios";
 
-// Re-usable modal component for Descriptions
+// --- Description Modal ---
 const DescriptionModal = ({ content, onClose }) => (
   <div className="fixed inset-0 flex items-center justify-center bg-black/30 backdrop-blur-sm z-50 p-4">
     <div className="bg-white w-full max-w-2xl rounded-xl shadow-2xl p-6 animate-fadeIn relative max-h-[85vh] flex flex-col">
@@ -23,6 +23,7 @@ const DescriptionModal = ({ content, onClose }) => (
   </div>
 );
 
+// --- View More Modal ---
 const ViewMoreModal = ({ placement, onClose }) => (
   <div className="fixed inset-0 flex items-center justify-center bg-black/30 backdrop-blur-sm z-50 p-4">
     <div className="bg-white w-full max-w-lg rounded-xl shadow-2xl p-6 animate-fadeIn relative">
@@ -76,29 +77,26 @@ const ViewMoreModal = ({ placement, onClose }) => (
   </div>
 );
 
-
 // --- Main Table Component ---
 const StudentPlacementTable = ({ setToastMessage }) => {
   const [placements, setPlacements] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-
   const [showEditModal, setShowEditModal] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showDescriptionModal, setShowDescriptionModal] = useState(false);
   const [showViewMoreModal, setShowViewMoreModal] = useState(false);
-
   const [selectedPlacement, setSelectedPlacement] = useState(null);
   const [selectedDescription, setSelectedDescription] = useState("");
+  const [actionToConfirm, setActionToConfirm] = useState(null);
 
   const [formData, setFormData] = useState({
-    is_selected: "0",
+    is_selected: "No",
     role: "",
     place: "",
     offerletter_file_name: null,
   });
 
-  const [actionToConfirm, setActionToConfirm] = useState(null);
-
+  // Fetch placements
   const fetchMyPlacements = async () => {
     setIsLoading(true);
     try {
@@ -117,12 +115,13 @@ const StudentPlacementTable = ({ setToastMessage }) => {
 
   useEffect(() => {
     fetchMyPlacements();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleEditClick = (placement) => {
     setSelectedPlacement(placement);
     setFormData({
-      is_selected: String(placement.is_selected) === '1' ? '1' : '0',
+      is_selected: placement.is_selected || "No",
       role: placement.role || "",
       place: placement.place || "",
       offerletter_file_name: null,
@@ -148,35 +147,30 @@ const StudentPlacementTable = ({ setToastMessage }) => {
       setFormData((prev) => ({ ...prev, [name]: value }));
     }
   };
+
   const handleUpdateSubmit = (e) => {
     e.preventDefault();
-    if (formData.is_selected === '1') {
-      const missingFields = [];
 
-      if (!formData.role.trim()) {
-        missingFields.push("Role");
-      }
-      if (!formData.place.trim()) {
-        missingFields.push("Place");
-      }
-      if (!formData.offerletter_file_name && !selectedPlacement.offerletter_file_name) {
+    if (formData.is_selected === "Yes") {
+      const missingFields = [];
+      if (!formData.role.trim()) missingFields.push("Role");
+      if (!formData.place.trim()) missingFields.push("Place");
+      if (!formData.offerletter_file_name && !selectedPlacement.offerletter_file_name)
         missingFields.push("Offer Letter");
-      }
 
       if (missingFields.length > 0) {
         const fieldList = missingFields.join(", ");
         const verb = missingFields.length > 1 ? "are" : "is";
         setToastMessage({
           type: "error",
-          content: `${fieldList} ${verb} required.`
+          content: `${fieldList} ${verb} required.`,
         });
         return;
       }
     }
 
-
     const noChanges =
-      String(formData.is_selected) === String(selectedPlacement.is_selected) &&
+      formData.is_selected === selectedPlacement.is_selected &&
       formData.role.trim() === (selectedPlacement.role || "").trim() &&
       formData.place.trim() === (selectedPlacement.place || "").trim() &&
       !formData.offerletter_file_name;
@@ -211,7 +205,6 @@ const StudentPlacementTable = ({ setToastMessage }) => {
 
       setToastMessage({ type: "success", content: "Application updated!" });
       fetchMyPlacements();
-
     } catch (err) {
       setToastMessage({
         type: "error",
@@ -221,20 +214,20 @@ const StudentPlacementTable = ({ setToastMessage }) => {
   };
 
   const confirmAction = () => {
-    if (typeof actionToConfirm === 'function') {
+    if (typeof actionToConfirm === "function") {
       actionToConfirm();
     }
     setActionToConfirm(null);
   };
 
-  // Helper to display status
-  const getStatusText = (isSelected) => {
-    const status = String(isSelected);
+  // --- Display Status Helper ---
+  const getStatusText = (status) => {
     switch (status) {
-      case '1':
+      case "Yes":
         return <span className="font-semibold text-green-600">Yes</span>;
+      case "Pending":
+        return <span className="font-semibold text-orange-400">Pending</span>;
       default:
-        // This covers '0' and NULL
         return <span className="font-semibold text-red-600">No</span>;
     }
   };
@@ -256,7 +249,7 @@ const StudentPlacementTable = ({ setToastMessage }) => {
             <div>Company</div>
             <div>CTC</div>
             <div>Description</div>
-            <div className="pl-6">Selected</div>
+            <div className="text-center">Selected</div>
             <div className="text-center">View More</div>
             <div className="text-right">Actions</div>
           </div>
@@ -266,7 +259,6 @@ const StudentPlacementTable = ({ setToastMessage }) => {
             {placements.length > 0 ? (
               placements.map((placement, index) => (
                 <div
-                  // 🌟 FIX: Use drive_id as the key
                   key={placement.drive_id}
                   className="grid grid-cols-[0.5fr_2fr_1.5fr_1fr_1.5fr_1fr_1fr_1fr] items-center p-2 border-t bg-white text-sm"
                 >
@@ -283,9 +275,7 @@ const StudentPlacementTable = ({ setToastMessage }) => {
                   >
                     {placement.drive_description || "N/A"}
                   </div>
-                  <div className="pl-9">
-                    {getStatusText(placement.is_selected)}
-                  </div>
+                  <div className="text-center">{getStatusText(placement.is_selected)}</div>
                   <div className="text-center">
                     <button
                       onClick={() => handleViewMoreClick(placement)}
@@ -313,19 +303,15 @@ const StudentPlacementTable = ({ setToastMessage }) => {
         </div>
       </div>
 
-      {/* --- ALL THE MODALS --- */}
-
-      {/* Description Modal */}
+      {/* --- MODALS --- */}
       {showDescriptionModal && (
         <DescriptionModal content={selectedDescription} onClose={() => setShowDescriptionModal(false)} />
       )}
-
-      {/* View More Modal */}
       {showViewMoreModal && selectedPlacement && (
         <ViewMoreModal placement={selectedPlacement} onClose={() => setShowViewMoreModal(false)} />
       )}
 
-      {/* Edit Modal (Based on sketch) */}
+      {/* --- Edit Modal --- */}
       {showEditModal && selectedPlacement && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/30 backdrop-blur-sm z-50 p-4">
           <div className="bg-white w-full max-w-lg rounded-xl shadow-2xl p-6 animate-fadeIn relative">
@@ -335,7 +321,7 @@ const StudentPlacementTable = ({ setToastMessage }) => {
 
             <form onSubmit={handleUpdateSubmit}>
               <div className="space-y-4">
-                {/* Are you selected? */}
+                {/* Selection dropdown */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Are you selected?
@@ -346,13 +332,14 @@ const StudentPlacementTable = ({ setToastMessage }) => {
                     onChange={handleFormChange}
                     className="w-full p-2 border rounded-lg bg-white"
                   >
-                    <option value="0">No</option>
-                    <option value="1">Yes</option>
+                    <option value="No">No</option>
+                    <option value="Yes">Yes</option>
+                    <option value="Pending">Pending</option>
                   </select>
                 </div>
 
-                {/* Conditional Fields: Show only if "Yes" is selected */}
-                {formData.is_selected === '1' && (
+                {/* Conditional fields */}
+                {formData.is_selected === "Yes" && (
                   <div className="space-y-4 p-4 border rounded-lg bg-gray-50 animate-fadeIn">
                     {/* Role */}
                     <div>
@@ -387,7 +374,7 @@ const StudentPlacementTable = ({ setToastMessage }) => {
                     {/* Offer Letter */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Upload Offer Letter (Required)
+                        Upload Offer Letter (PDF, JPG, JPEG, PNG)
                       </label>
                       <input
                         type="file"
@@ -396,7 +383,6 @@ const StudentPlacementTable = ({ setToastMessage }) => {
                         accept=".pdf,.jpg,.jpeg,.png"
                         className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100"
                       />
-                      {/* Current Offer Letter View */}
                       {selectedPlacement.offerletter_file_name && (
                         <p className="text-xs text-gray-500 mt-2">
                           Current Offer Letter:{" "}
@@ -435,15 +421,25 @@ const StudentPlacementTable = ({ setToastMessage }) => {
         </div>
       )}
 
-      {/* Confirmation Modal */}
+      {/* --- Confirm Modal --- */}
       {showConfirmModal && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/30 backdrop-blur-sm z-50">
           <div className="bg-white w-full max-w-md rounded-xl shadow-2xl p-6 animate-fadeIn">
             <h3 className="text-xl font-bold text-gray-800 mb-4">Are you sure?</h3>
             <p className="text-gray-600 mb-6">Do you really want to update this application?</p>
             <div className="flex justify-end gap-3">
-              <button onClick={() => setShowConfirmModal(false)} className="px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300">Cancel</button>
-              <button onClick={confirmAction} className="px-4 py-2 rounded-lg bg-red-500 text-white hover:bg-red-600">Confirm</button>
+              <button
+                onClick={() => setShowConfirmModal(false)}
+                className="px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmAction}
+                className="px-4 py-2 rounded-lg bg-red-500 text-white hover:bg-red-600"
+              >
+                Confirm
+              </button>
             </div>
           </div>
         </div>

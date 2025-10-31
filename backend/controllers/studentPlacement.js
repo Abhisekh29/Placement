@@ -97,8 +97,8 @@ export const updateMyPlacement = (req, res) => {
     }
 
     let updateQuery, values;
-    
-    if (String(is_selected) === '1') {
+
+    if (String(is_selected) === 'Yes') {
       // If "Yes" is selected, update all fields
       updateQuery = `
         UPDATE student_placement 
@@ -115,19 +115,20 @@ export const updateMyPlacement = (req, res) => {
         user_id
       ];
     } else {
-      // If "No" is selected, reset fields to NULL
+      // If "No" or "Pending" is selected, reset fields to NULL
       updateQuery = `
         UPDATE student_placement 
         SET is_selected = ?, role = NULL, place = NULL, offerletter_file_name = NULL, mod_by = ?, mod_time = NOW() 
         WHERE drive_id = ? AND user_id = ?
       `;
       values = [
-        is_selected,
+        is_selected, // This will be 'No' or 'Pending'
         user_id,
         driveId,
         user_id
       ];
       
+      // If status is set to No/Pending, delete the old offer letter file
       if (oldFileName) {
         const oldFilePath = path.resolve("uploads/offer_letters", oldFileName);
         if (fs.existsSync(oldFilePath)) {
@@ -174,8 +175,8 @@ export const applyForDrive = (req, res) => {
     const values = [
       user_id,
       drive_id,
-      '0', // Default: '0' (Pending)
-      driveCTC, // 🌟 Store the CTC from the drive
+      'Pending',
+      driveCTC, // Store the CTC from the drive
       user_id 
     ];
 
@@ -193,7 +194,7 @@ export const applyForDrive = (req, res) => {
   });
 };
 
-// --- 5. getAppliedDrives (This is correct) ---
+// --- 5. getAppliedDrives ---
 export const getAppliedDrives = (req, res) => {
   const user_id = req.user.userid; 
   const q = "SELECT drive_id FROM student_placement WHERE user_id = ?";
