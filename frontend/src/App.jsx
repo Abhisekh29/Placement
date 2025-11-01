@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import "./App.css";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import ForgotPassword from "./pages/ForgotPassword";
 import Homepage from "./pages/Homepage";
 import StudentDashboard from "./pages/StudentDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
@@ -98,6 +99,14 @@ const App = () => {
         <AdminRoute>
           <AdminDashboard />
         </AdminRoute>
+      ),
+    },
+    {
+      path: "/forgot-password",
+      element: (
+        <PublicRoute>
+          <ForgotPassword />
+        </PublicRoute>
       ),
     },
     {

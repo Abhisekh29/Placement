@@ -124,3 +124,75 @@ export const changePassword = (req, res) => {
     });
   });
 };
+
+// VERIFY STUDENT DETAILS FOR PASSWORD RESET
+export const verifyStudentDetails = (req, res) => {
+  const { username, mobile, email, dob } = req.body;
+
+  if (!username || !mobile || !email || !dob) {
+    return res.status(400).json("All fields are required for verification.");
+  }
+
+  // This query joins user_master and student_master to find a match
+  const q = `
+    SELECT u.userid 
+    FROM user_master u
+    JOIN student_master s ON u.userid = s.userid
+    WHERE u.username = ? 
+      AND s.mobile = ? 
+      AND s.email = ? 
+      AND s.dob = ?
+  `;
+  
+  // Assumes DOB is sent in 'YYYY-MM-DD' format from the frontend
+  const values = [username, mobile, email, dob];
+
+  db.query(q, values, (err, data) => {
+    if (err) {
+      console.error("DB Error in verifyStudentDetails:", err);
+      return res.status(500).json("Database query failed.");
+    }
+
+    if (data.length === 0) {
+      // No user matched all 4 criteria
+      return res.status(404).json("Details do not match. Please try again.");
+    }
+
+    // Details matched. Send back the userid to be used in the next step.
+    return res.status(200).json({ 
+      message: "Verification successful. Please set your new password.",
+      userid: data[0].userid 
+    });
+  });
+};
+
+// RESET PASSWORD (PUBLIC)
+// This is called *after* verification is successful
+export const resetPasswordPublic = (req, res) => {
+  const { userid, newPassword } = req.body;
+
+  if (!userid || !newPassword) {
+    return res.status(400).json("User ID and new password are required.");
+  }
+  if (newPassword.length < 4) {
+    return res.status(400).json("Password must be at least 4 characters.");
+  }
+
+  // Hash the new password
+  const salt = bcrypt.genSaltSync(10);
+  const hash = bcrypt.hashSync(newPassword, salt);
+
+  // Update the password using the userid we got from verification
+  const q = "UPDATE user_master SET password = ? WHERE userid = ?";
+  
+  db.query(q, [hash, userid], (err, data) => {
+    if (err) {
+      console.error("DB Error in resetPasswordPublic:", err);
+      return res.status(500).json("Failed to update password.");
+    }
+    if (data.affectedRows === 0) {
+      return res.status(404).json("User not found.");
+    }
+    return res.status(200).json("Password has been reset successfully!");
+  });
+};

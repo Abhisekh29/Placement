@@ -72,7 +72,7 @@ const Login = () => {
               name="username"
               value={formData.username}
               onChange={handleChange}
-              placeholder="your_phone_number"
+              placeholder="Username"
               className="mt-1 w-full rounded-xl border border-gray-300 px-4 py-2 text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
               required
             />
@@ -90,6 +90,14 @@ const Login = () => {
               className="mt-1 w-full rounded-xl border border-gray-300 px-4 py-2 text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
               required
             />
+            <div className="text-right">
+              <Link
+                to="/forgot-password"
+                className="text-sm font-medium text-blue-600 hover:bg-blue-50 px-1 py-1 rounded-lg transition"
+              >
+                Forgot password?
+              </Link>
+            </div>
           </div>
           <button
             type="submit"
