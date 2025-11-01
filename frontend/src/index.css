@@ -31,3 +31,15 @@
 .scrollbar-hover:hover {
   scrollbar-color: rgba(0, 0, 0, 0.3) transparent;
 }
+
+@keyframes slowspin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+.animate-slowspin {
+  animation: slowspin 2s linear infinite;
+}

@@ -83,3 +83,44 @@ export const logout = (req, res) => {
     .status(200)
     .json("User logged out");
 };
+
+export const changePassword = (req, res) => {
+  // 1. Get userid from the verified token
+  const userId = req.user.userid;
+  const { oldPassword, newPassword } = req.body;
+
+  if (!oldPassword || !newPassword) {
+    return res.status(400).json("Old and new passwords are required.");
+  }
+  
+  if (newPassword.length < 4) {
+    return res.status(400).json("New password must be at least 4 characters.");
+  }
+
+  // 2. Get the user's current password from DB
+  const q = "SELECT password FROM user_master WHERE userid = ?";
+  db.query(q, [userId], (err, data) => {
+    if (err) return res.status(500).json(err);
+    if (data.length === 0) return res.status(404).json("User not found.");
+
+    const user = data[0];
+
+    // 3. Check if the old password is correct
+    const isPasswordCorrect = bcrypt.compareSync(oldPassword, user.password);
+
+    if (!isPasswordCorrect) {
+      return res.status(400).json("Incorrect old password!");
+    }
+
+    // 4. Hash the new password
+    const salt = bcrypt.genSaltSync(10);
+    const hash = bcrypt.hashSync(newPassword, salt);
+
+    // 5. Update the password in the database
+    const updateQ = "UPDATE user_master SET password = ? WHERE userid = ?";
+    db.query(updateQ, [hash, userId], (err, data) => {
+      if (err) return res.status(500).json(err);
+      return res.status(200).json("Password has been changed successfully.");
+    });
+  });
+};

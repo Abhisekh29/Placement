@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import api from "../api/axios";
 import HeaderDashboard from "../components/HeaderDashboard";
 import Footer from "../components/Footer";
@@ -6,6 +6,8 @@ import StudentForm from "../components/StudentForm";
 import Profile from "../components/Profile";
 import InternshipDashboardWidget from "../components/InternshipDashboardWidget";
 import PlacementDashboardWidget from "../components/PlacementDashboardWidget";
+import { IoSettingsSharp } from "react-icons/io5"; //
+import ChangePasswordModal from "../components/ChangePasswordModal";
 
 const StudentDashboard = () => {
   const [studentData, setStudentData] = useState(null);
@@ -15,6 +17,11 @@ const StudentDashboard = () => {
   const [toastType, setToastType] = useState("success"); // 'success', 'info', 'error'
   const [showToast, setShowToast] = useState(false);
   const user = JSON.parse(sessionStorage.getItem("user"));
+
+  // --- Add state for dropdown and modal ---
+  const [showModal, setShowModal] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const dropdownRef = useRef(null); // Ref for detecting outside clicks
 
   useEffect(() => {
     const fetchStudentDetails = async () => {
@@ -38,6 +45,19 @@ const StudentDashboard = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user.userid]);
 
+  // --- Add effect to close dropdown on outside click ---
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [dropdownRef]);
+
   // Keep handleEdit the same
   const handleEdit = () => setEditMode(true);
 
@@ -52,7 +72,7 @@ const StudentDashboard = () => {
     setTimeout(() => setShowToast(false), 4000);
   };
 
-  // NEW: Handle case where no changes were made
+  // Handle case where no changes were made
   const handleNoChanges = () => {
     setEditMode(false); // Still exit edit mode
     setToastMessage("No changes were made.");
@@ -71,7 +91,7 @@ const StudentDashboard = () => {
       case "success":
         return "bg-green-500";
       case "info":
-        return "bg-blue-500"; // Example info color
+        return "bg-blue-500";
       case "error":
         return "bg-red-500";
       default:
@@ -95,13 +115,54 @@ const StudentDashboard = () => {
       </div>
 
       <main className="flex-grow p-6">
-        <h1 className="text-3xl font-bold mb-2">Student Dashboard</h1>
-        <p className="mb-6 text-gray-700">
-          Welcome,{" "}
-          <span className="font-semibold">
-            {studentData?.name || user.username}
-          </span>
-        </p>
+        <div className="flex justify-between items-center mb-6">
+          {/* Left Side: Title + Welcome */}
+          <div>
+            <h1 className="text-3xl font-bold text-gray-800 mb-2">
+              Student Dashboard
+            </h1>
+            <p className="font-semibold text-lg text-gray-700">
+              Welcome,{" "}
+              <span className="font-bold text-lg text-purple-600">
+                {studentData?.name || user.username}
+              </span>
+            </p>
+          </div>
+
+          {/* Right Side: Settings Dropdown */}
+          <div className="relative" ref={dropdownRef}>
+            {/* Settings Button */}
+
+            <button
+              onClick={() => setShowDropdown((prev) => !prev)}
+              className="group p-2 rounded-full text-gray-600 hover:text-purple-600 hover:bg-purple-100 transition-colors duration-200"
+              title="Settings"
+            >
+              <IoSettingsSharp
+                size={26}
+                className="transform transition-transform duration-300 group-hover:rotate-90"
+              />
+            </button>
+
+            {/* Dropdown Menu */}
+            {showDropdown && (
+              <div className="absolute right-0 mt-2 w-56 bg-white border border-gray-200 rounded-2xl shadow-2xl z-[9999] overflow-hidden animate-fadeIn">
+                <div className="p-2">
+                  <button
+                    onClick={() => {
+                      setShowModal(true);
+                      setShowDropdown(false);
+                    }}
+                    className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-700 rounded-lg transition-colors duration-200"
+                  >
+                    <span>🔒</span>
+                    <span>Change Password</span>
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
 
         {studentData && !editMode ? (
           <>
@@ -127,18 +188,9 @@ const StudentDashboard = () => {
       </main>
       <Footer />
 
-      {/* Tailwind animation */}
-      <style>
-        {`
-          @keyframes slideDown {
-            0% { transform: translateY(-20px); opacity: 0; }
-            100% { transform: translateY(0); opacity: 1; }
-          }
-          .animate-slideDown {
-            animation: slideDown 0.3s ease-out forwards;
-          }
-        `}
-      </style>
+      {/* --- Render the Modal (conditionally) --- */}
+      {showModal && <ChangePasswordModal onClose={() => setShowModal(false)} />}
+
     </div>
   );
 };
