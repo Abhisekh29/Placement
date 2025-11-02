@@ -166,6 +166,43 @@ export const verifyStudentDetails = (req, res) => {
   });
 };
 
+export const verifyAdminDetails = (req, res) => {
+  const { username, mobile, email, dob } = req.body;
+
+  if (!username || !mobile || !email || !dob) {
+    return res.status(400).json("All fields are required for verification.");
+  }
+
+  // This query joins with admin_master instead
+  const q = `
+    SELECT u.userid 
+    FROM user_master u
+    JOIN admin_master a ON u.userid = a.userid
+    WHERE u.username = ? 
+      AND a.mobile = ? 
+      AND a.email = ? 
+      AND a.dob = ?
+  `;
+  
+  const values = [username, mobile, email, dob];
+
+  db.query(q, values, (err, data) => {
+    if (err) {
+      console.error("DB Error in verifyAdminDetails:", err);
+      return res.status(500).json("Database query failed.");
+    }
+
+    if (data.length === 0) {
+      return res.status(404).json("Details do not match. Please try again.");
+    }
+
+    return res.status(200).json({ 
+      message: "Verification successful. Please set your new password.",
+      userid: data[0].userid 
+    });
+  });
+};
+
 // RESET PASSWORD (PUBLIC)
 // This is called *after* verification is successful
 export const resetPasswordPublic = (req, res) => {

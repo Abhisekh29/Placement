@@ -37,6 +37,44 @@ const Register = () => {
           Create New Account
         </h2>
         <form className="space-y-5" onSubmit={handleSubmit}>
+          {/* User Type */}
+          <div className="relative flex bg-gray-100 rounded-full shadow-inner p-1 w-full max-w-[260px] mx-auto">
+            {/* Admin Option */}
+            <button
+              type="button"
+              onClick={() => setFormData({ ...formData, user_type: "0" })}
+              className={`relative z-10 flex-1 rounded-full px-4 py-2 text-sm font-semibold transition-all duration-300 ${
+                formData.user_type === "0"
+                  ? "text-white"
+                  : "text-gray-600 hover:text-gray-800"
+              }`}
+            >
+              Admin
+            </button>
+
+            {/* Student Option */}
+            <button
+              type="button"
+              onClick={() => setFormData({ ...formData, user_type: "1" })}
+              className={`relative z-10 flex-1 rounded-full px-4 py-2 text-sm font-semibold transition-all duration-300 ${
+                formData.user_type === "1"
+                  ? "text-white"
+                  : "text-gray-600 hover:text-gray-800"
+              }`}
+            >
+              Student
+            </button>
+
+            {/* Animated background indicator */}
+            <div
+              className={`absolute top-1 bottom-1 w-1/2 rounded-full bg-gradient-to-r transition-all duration-300 ${
+                formData.user_type === "0"
+                  ? "left-1 from-blue-400 to-blue-600 "
+                  : "left-[calc(8rem+0.25rem)] from-purple-400 to-purple-600"
+              }`}
+            ></div>
+          </div>
+
           {/* Username */}
           <div>
             <label className="block text-sm font-medium text-gray-600">
@@ -47,7 +85,7 @@ const Register = () => {
               name="username"
               value={formData.username}
               onChange={handleChange}
-              placeholder="your_phone_number"
+              placeholder="Username"
               className="mt-1 w-full rounded-xl border border-gray-300 px-4 py-2 text-gray-700 
                 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
               required
@@ -69,23 +107,6 @@ const Register = () => {
                 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
               required
             />
-          </div>
-
-          {/* User Type */}
-          <div>
-            <label className="block text-sm font-medium text-gray-600">
-              User Type
-            </label>
-            <select
-              name="user_type"
-              value={formData.user_type}
-              onChange={handleChange}
-              className="mt-1 w-full rounded-xl border border-gray-300 px-4 py-2 text-gray-700 
-                focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
-            >
-              <option value="0">Admin</option>
-              <option value="1">Student</option>
-            </select>
           </div>
 
           {/* Submit button */}

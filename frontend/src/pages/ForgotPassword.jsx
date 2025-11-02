@@ -6,6 +6,7 @@ import "react-datepicker/dist/react-datepicker.css";
 
 const ForgotPassword = () => {
   const [step, setStep] = useState(1); // Step 1: Verify, Step 2: Reset
+  const [userType, setUserType] = useState("student");
   const [formData, setFormData] = useState({
     username: "",
     mobile: "",
@@ -39,17 +40,21 @@ const ForgotPassword = () => {
     setIsLoading(true);
     setErr("");
 
-    // Format date to YYYY-MM-DD (using en-CA locale)
     const formattedDOB = formData.dob
-      ? formData.dob.toLocaleDateString("en-CA")
+      ? formData.dob.toLocaleDateString("en-CA") // YYYY-MM-DD
       : "";
 
+    const verificationEndpoint =
+      userType === "student"
+        ? "/auth/verify-student-details"
+        : "/auth/verify-admin-details";
+
     try {
-      const res = await api.post("/auth/verify-student-details", {
+      const res = await api.post(verificationEndpoint, {
         username: formData.username,
         mobile: formData.mobile,
         email: formData.email,
-        dob: formattedDOB, // now in YYYY-MM-DD format
+        dob: formattedDOB,
       });
 
       setVerifiedUserId(res.data.userid);
@@ -98,7 +103,6 @@ const ForgotPassword = () => {
       setSuccess(res.data + " Redirecting to login...");
       setErr("");
 
-      // Redirect to login after 2 seconds
       setTimeout(() => {
         navigate("/login");
       }, 2000);
@@ -120,11 +124,51 @@ const ForgotPassword = () => {
             <p className="mb-6 text-center text-sm text-gray-600">
               Please enter your details to verify your identity.
             </p>
+
+            <div className="mb-6 flex justify-center">
+              <div className="relative flex bg-gray-100 rounded-full shadow-inner p-1">
+                {/* Admin Option */}
+                <button
+                  type="button"
+                  onClick={() => setUserType("admin")}
+                  className={`relative z-10 w-32 rounded-full px-4 py-2 text-sm font-semibold transition-all duration-300 ${
+                    userType === "admin"
+                      ? "text-white"
+                      : "text-gray-600 hover:text-gray-800"
+                  }`}
+                >
+                  I am Admin
+                </button>
+
+                {/* Student Option */}
+                <button
+                  type="button"
+                  onClick={() => setUserType("student")}
+                  className={`relative z-10 w-32 rounded-full px-4 py-2 text-sm font-semibold transition-all duration-300 ${
+                    userType === "student"
+                      ? "text-white"
+                      : "text-gray-600 hover:text-gray-800"
+                  }`}
+                >
+                  I am Student
+                </button>
+
+                {/* Highlight background */}
+                <div
+                  className={`absolute top-1 bottom-1 w-32 rounded-full bg-gradient-to-r transition-all duration-300 ${
+                    userType === "admin"
+                      ? "left-1 from-blue-400 to-blue-600 "
+                      : "left-[calc(8rem+0.25rem)] from-purple-400 to-purple-600"
+                  }`}
+                ></div>
+              </div>
+            </div>
+
             <form className="space-y-4" onSubmit={handleVerificationSubmit}>
               <input
                 type="text"
                 name="username"
-                placeholder="Username (Phone Number)"
+                placeholder="Username"
                 onChange={handleFormChange}
                 className="w-full rounded-xl border border-gray-300 px-4 py-2"
                 required
