@@ -25,6 +25,7 @@ import PlacementDrive from "./pages/AdminCards/PlacementDrive";
 import ManageInternships from "./pages/Student/ManageInternships";
 import StudentDriveDetail from "./pages/Student/StudentDriveDetails";
 import StudentMyPlacement from "./pages/Student/StudentMyPlacement";
+import IncompleteRegistrations from "./pages/AdminCards/IncompleteRegistrations";
 
 // Role-based wrappers
 const AdminRoute = ({ children }) => {
@@ -203,6 +204,14 @@ const App = () => {
       element: (
         <AdminRoute>
           <RejectedStudent/>
+        </AdminRoute>
+      ),
+    },
+    {
+      path: "/admin/incomplete-registrations",
+      element: (
+        <AdminRoute>
+          <IncompleteRegistrations />
         </AdminRoute>
       ),
     },

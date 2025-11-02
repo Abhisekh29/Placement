@@ -99,7 +99,7 @@ const PendingRequest = ({ setToastMessage }) => {
         </div>
 
         {/* Scrollable Container */}
-        <div className="max-h-60 overflow-y-auto hide-scrollbar">
+        <div className="max-h-120 overflow-y-auto hide-scrollbar">
           {filteredUsers.length > 0 ? (
             filteredUsers.map((request, index) => (
               <div
