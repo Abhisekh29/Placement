@@ -51,7 +51,7 @@ const Login = () => {
         }
       }
     } catch (error) {
-      setErr(error.response?.data || "Something went wrong");
+      setErr(error.response?.data || error.message || "Something went wrong");
       console.error(error.response?.data || error.message);
     }
   };

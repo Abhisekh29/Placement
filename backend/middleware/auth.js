@@ -44,3 +44,16 @@ export const isAdmin = (req, res, next) => {
     }
   });
 };
+
+export const isStudent = (req, res, next) => {
+  verifyToken(req, res, () => {
+    if (req.user.user_type === "1") {
+      // '1' is for Student
+      next();
+    } else {
+      return res.status(403).json({
+        message: "Forbidden. You must be a student to access this resource.",
+      });
+    }
+  });
+};

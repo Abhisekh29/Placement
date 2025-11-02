@@ -10,10 +10,19 @@ const api = axios.create({
 api.interceptors.response.use(
   (response) => response, // Directly return successful responses
   (error) => {
+    if (!error.response) {
+      console.error("Server appears to be offline:", error.message);
+      return Promise.reject({
+        ...error,
+        code: "ERR_NETWORK",
+        message: "Server is offline or unreachable.",
+      });
+    }
     // Check if the error is for an expired token
-    if (error.response && error.response.status === 401) {
+    if (error.response && error.response.status === 401 || error.response.status === 403) {
       // Clear user from session storage
       sessionStorage.removeItem("user");
+      sessionStorage.removeItem("token");
       // Redirect to login page with a message
       window.location.href = "/login?sessionExpired=true";
     }

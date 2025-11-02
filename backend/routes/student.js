@@ -5,14 +5,14 @@ import {
   updateStudent,
   getStudentsList,
 } from "../controllers/student.js";
-import { verifyToken, isAdmin } from "../middleware/auth.js";
+import { isStudent, isAdmin } from "../middleware/auth.js";
 
 const router = express.Router();
 
 // General Routes
-router.post("/", verifyToken, addStudent);
-router.get("/:userid", verifyToken, getStudentDetails);
-router.put("/:userid", verifyToken, updateStudent);
+router.post("/", isStudent, addStudent);
+router.get("/:userid", isStudent, getStudentDetails);
+router.put("/:userid", isStudent, updateStudent);
 
 // New route for admin to get all students
 router.get("/list/all", isAdmin, getStudentsList);

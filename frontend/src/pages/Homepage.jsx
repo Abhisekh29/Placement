@@ -1,17 +1,14 @@
+/* eslint-disable no-unused-vars */
 import React, { useEffect, useState } from "react";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { Link } from "react-router-dom";
 import api from '../api/axios'
-// Import the Marquee component for vertical scrolling
 import Marquee from "react-easy-marquee";
-// Dot icon 
 import { BsDot } from "react-icons/bs";
 
 
-// Utility function to format the date reliably (remains the same)
 const formatDate = (dateString) => {
-  // ... (implementation remains the same)
   if (!dateString) return '';
   try {
     const date = new Date(dateString);
@@ -29,8 +26,6 @@ const formatDate = (dateString) => {
 
 const NotificationTicker = ({ notifications }) => {
   const reversedNotifications = [...notifications].reverse();
-  // Keep blank items for initial marquee fill
-  //const blankItems = Array(1).fill({ text: '', date: '' });
   const blankItems1 = Array(6).fill({ text: '', date: '' });
   const finalData = [ ...reversedNotifications, ...blankItems1];
 
@@ -43,7 +38,7 @@ const NotificationTicker = ({ notifications }) => {
       <div
         key={index}
         // Set up the container as a flex row, aligning items to the START (top)
-        className="w-full flex items-start" // <-- Crucial for top alignment
+        className="w-full flex items-start" // Crucial for top alignment
         style={{
           flexShrink: 0,
           padding: '4px 0',
@@ -127,7 +122,7 @@ const Homepage = () => {
 
         if (Array.isArray(res.data)) {
 
-          // 🚨 Guaranteed NEWEST FIRST (Descending) sort
+          // Guaranteed NEWEST FIRST (Descending) sort
           const sortedData = res.data.sort((a, b) => {
             return new Date(b.date).getTime() - new Date(a.date).getTime();
           });

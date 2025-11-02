@@ -82,7 +82,7 @@ const StudentDashboard = () => {
   };
 
   if (loading) {
-    return <div>Loading...</div>; // Keep loading state
+    return null;
   }
 
   // Determine toast background color based on type

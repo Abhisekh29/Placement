@@ -3,13 +3,12 @@ import {
   getActiveDrives, 
   getDriveDetails, 
 } from "../controllers/studentPlacementDrive.js";
-import { verifyToken } from "../middleware/auth.js"; 
+import { isStudent } from "../middleware/auth.js"; 
 
-// 1. You were missing these two lines
 const router = express.Router();
 
 // --- Student Routes ---
-router.get("/active", verifyToken, getActiveDrives);
-router.get("/details/:driveId", verifyToken, getDriveDetails);
+router.get("/active", isStudent, getActiveDrives);
+router.get("/details/:driveId", isStudent, getDriveDetails);
 
 export default router;

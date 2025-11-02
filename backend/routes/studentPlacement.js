@@ -4,20 +4,19 @@ import {
   getAppliedDrives,
   getMyPlacements,
   updateMyPlacement,
-  uploadOfferLetter, // 1. Import the upload middleware
+  uploadOfferLetter,
 } from "../controllers/studentPlacement.js";
-import { verifyToken } from "../middleware/auth.js";
+import { isStudent } from "../middleware/auth.js";
 
 const router = express.Router();
 
-router.post("/apply", verifyToken, applyForDrive);
-router.get("/applied-drives", verifyToken, getAppliedDrives);
-router.get("/my-placements", verifyToken, getMyPlacements);
+router.post("/apply", isStudent, applyForDrive);
+router.get("/applied-drives", isStudent, getAppliedDrives);
+router.get("/my-placements", isStudent, getMyPlacements);
 
-// 2. Add the middleware to the PUT route
 router.put(
   "/my-placements/:driveId", 
-  verifyToken, 
+  isStudent, 
   uploadOfferLetter.single("offerletter_file_name"), // Handles the file
   updateMyPlacement
 );
