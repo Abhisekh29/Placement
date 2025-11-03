@@ -181,8 +181,6 @@ const AdminDashboard = () => {
             className={`fixed top-5 left-1/2 transform -translate-x-1/2 p-4 rounded-lg text-white ${
               toastMessage.type === "success"
                 ? "bg-green-500"
-                : toastMessage.type === "info"
-                ? "bg-blue-500"
                 : "bg-red-500"
             }`}
           >

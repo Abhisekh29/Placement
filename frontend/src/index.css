@@ -155,3 +155,12 @@
 .notification-item:hover * {
   animation-play-state: paused;
 }
+
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+.group:hover .text-4xl {
+  animation: float 1s ease-in-out infinite;
+}
