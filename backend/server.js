@@ -21,6 +21,7 @@ import placementDriveRoutes from "./routes/placementDrive.js"
 import studentInternshipRoutes from "./routes/studentInternship.js"
 import studentPlacementDriveRoute from "./routes/studentPlacementDrive.js"
 import studentPlacementRoute from "./routes/studentPlacement.js"
+import internshipRequirementRoutes from "./routes/internshipRequirement.js";
 import adminRoutes from "./routes/admin.js";
 import cors from "cors";
 import cookieParser from "cookie-parser";
@@ -63,6 +64,7 @@ app.use("/api/notifications", notificationRoutes);
 app.use("/api/filters", filterRoutes);
 app.use("/api/placementDrive", placementDriveRoutes);
 app.use("/api/internships", internshipRoutes);
+app.use("/api/internship-requirements", internshipRequirementRoutes);
 
 // Both Student & Admin Routes
 

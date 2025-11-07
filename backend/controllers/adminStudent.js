@@ -24,6 +24,7 @@ export const getStudents = (req, res) => {
       s.caste, s.address, s.per_10, s.per_12,
       ss.session_name,
       p.program_name,
+      s.is_profile_frozen,
       s.mod_time,
       um.username AS modified_by
     FROM student_master AS s
@@ -200,4 +201,92 @@ export const deleteStudent = (req, res) => {
       });
     });
   });
+};
+
+
+// --- FREEZE FUNCTION ---
+export const freezeStudent = async (req, res) => {
+  const { userid } = req.params;
+  const mod_by = req.user.userid; // Get admin ID from token
+
+  try {
+    // === Check 1: Pending Placements ===
+    const placementCheckQuery =
+      "SELECT COUNT(*) as count FROM student_placement WHERE user_id = ? AND is_selected = 'Pending'";
+    
+    const [placementData] = await db.promise().query(placementCheckQuery, [userid]);
+
+    if (placementData[0].count > 0) {
+      return res.status(400).json({
+        message: `Cannot freeze: Student has ${placementData[0].count} pending placement application(s).`,
+      });
+    }
+
+    // === Check 2: Internship Requirements ===
+    const studentQuery = "SELECT program_id FROM student_master WHERE userid = ?";
+    const [studentData] = await db.promise().query(studentQuery, [userid]);
+    
+    if (studentData.length === 0) {
+      return res.status(404).json({ message: "Student not found." });
+    }
+    const studentProgramId = studentData[0].program_id;
+
+    const reqQuery = "SELECT semester, internship_count FROM internship_requirement WHERE program_id = ?";
+    const [requirements] = await db.promise().query(reqQuery, [studentProgramId]);
+
+    if (requirements.length > 0) {
+      const completedQuery =
+        "SELECT semester, COUNT(*) as count FROM student_internship WHERE user_id = ? GROUP BY semester";
+      const [completedData] = await db.promise().query(completedQuery, [userid]);
+
+      const completedMap = new Map();
+      completedData.forEach(item => {
+        completedMap.set(item.semester, item.count);
+      });
+
+      for (const req of requirements) {
+        const completedCount = completedMap.get(req.semester) || 0;
+        if (completedCount < req.internship_count) {
+          const needed = req.internship_count - completedCount;
+          return res.status(400).json({
+            message: `Cannot freeze: Missing ${needed} internship(s) for Semester ${req.semester}.`,
+          });
+        }
+      }
+    }
+
+    // === All Checks Passed: Freeze Profile ===
+    const freezeQuery = "UPDATE student_master SET is_profile_frozen = 'Yes', mod_by = ?, mod_time = NOW() WHERE userid = ?";
+    await db.promise().query(freezeQuery, [mod_by, userid]);
+
+    return res.status(200).json({ message: "Student profile has been frozen." });
+
+  } catch (err) {
+    console.error("Error freezing student:", err);
+    return res.status(500).json({ message: "An internal server error occurred.", error: err });
+  }
+};
+
+export const unfreezeStudent = async (req, res) => {
+  const { userid } = req.params;
+  const mod_by = req.user.userid; // Get admin ID from token
+
+  try {
+    const unfreezeQuery =
+      "UPDATE student_master SET is_profile_frozen = 'No', mod_by = ?, mod_time = NOW() WHERE userid = ?";
+    const [result] = await db.promise().query(unfreezeQuery, [mod_by, userid]);
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: "Student not found." });
+    }
+
+    return res
+      .status(200)
+      .json({ message: "Student profile has been unfrozen." });
+  } catch (err) {
+    console.error("Error unfreezing student:", err);
+    return res
+      .status(500)
+      .json({ message: "An internal server error occurred.", error: err });
+  }
 };

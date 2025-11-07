@@ -2,14 +2,14 @@
 import React, { useState, useEffect, useCallback } from "react";
 import api from "../api/axios";
 import { debounce } from "lodash";
+import { HiLockClosed, HiLockOpen } from "react-icons/hi2";
 
-// (StudentDetailsModal and AdminEditStudentModal components remain exactly the same as before)
-// ... (Omitted for brevity, paste your existing modal components here) ...
+// ====================================================================
+// StudentDetailsModal Component
+// ====================================================================
 const StudentDetailsModal = ({ student, onClose }) => {
-  // ... (StudentDetailsModal code remains unchanged)
   if (!student) return null;
 
-  // Utility function to format date
   const formatDate = (dateString) => {
     if (!dateString) return "N/A";
     try {
@@ -25,18 +25,15 @@ const StudentDetailsModal = ({ student, onClose }) => {
     }
   };
 
-  // The 12 student fields in a matrix layout
   const studentFields = [
     { label: "Roll No", value: student.rollno },
     { label: "Name", value: student.name },
     { label: "Mobile No", value: student.mobile },
     { label: "Email", value: student.email },
-
     { label: "Date of Birth", value: formatDate(student.dob) },
     { label: "Gender", value: student.gender },
     { label: "Caste", value: student.caste || "N/A" },
     { label: "Address", value: student.address || "N/A" },
-
     {
       label: "10th Percentage",
       value: student.per_10 ? `${student.per_10}%` : "N/A",
@@ -45,19 +42,23 @@ const StudentDetailsModal = ({ student, onClose }) => {
       label: "12th Percentage",
       value: student.per_12 ? `${student.per_12}%` : "N/A",
     },
-    { label: "Session", value: student.session_name || "N/A" },
+    { label: "Admission Session", value: student.session_name || "N/A" },
     { label: "Program", value: student.program_name || "N/A" },
+    { label: "Modified By", value: student.modified_by || "N/A" },
+    {
+      label: "Last Modified",
+      value: student.mod_time
+        ? new Date(student.mod_time).toLocaleString()
+        : "N/A",
+    },
   ];
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black/30 backdrop-blur-sm z-[1000] p-4 overflow-y-auto">
-      {/* Modal adjustments for Mobile Panel View */}
       <div className="bg-white w-full max-w-4xl rounded-xl shadow-2xl p-6 md:p-8 animate-fadeIn relative max-h-[95vh] my-4 overflow-y-auto">
         <h3 className="text-2xl font-bold text-gray-800 border-b pb-3 mb-6">
           Details for: {student.name} ({student.rollno})
         </h3>
-
-        {/* The requested 3x4 Grid Layout */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-4 text-sm">
           {studentFields.map((field, index) => (
             <div key={index} className="flex flex-col">
@@ -70,7 +71,6 @@ const StudentDetailsModal = ({ student, onClose }) => {
             </div>
           ))}
         </div>
-
         <div className="flex justify-end mt-8">
           <button
             onClick={onClose}
@@ -84,6 +84,9 @@ const StudentDetailsModal = ({ student, onClose }) => {
   );
 };
 
+// ====================================================================
+// AdminEditStudentModal Component
+// ====================================================================
 const AdminEditStudentModal = ({
   student,
   onClose,
@@ -91,20 +94,15 @@ const AdminEditStudentModal = ({
   setToastMessage,
 }) => {
   const user = JSON.parse(sessionStorage.getItem("user"));
-
-  // Utility function to format the date to YYYY-MM-DD for the input field.
   const formatDOB = (dateString) => {
     if (!dateString) return "";
     try {
       const date = new Date(dateString);
-      // "en-CA" format forces YYYY-MM-DD which is required for HTML date input type
       return isNaN(date.getTime()) ? "" : date.toLocaleDateString("en-CA");
     } catch (e) {
       return "";
     }
   };
-
-  // 1. Initial State for Comparison (The original, unedited data)
   const initialFormData = {
     rollno: student.rollno || "",
     name: student.name || "",
@@ -116,21 +114,16 @@ const AdminEditStudentModal = ({
     address: student.address || "",
     per_10: student.per_10 || 0,
     per_12: student.per_12 || 0,
-    // Keep original names to derive IDs later in useEffect
     session_name: student.session_name || "",
     program_name: student.program_name || "",
-    session_id: "", // Will be set in useEffect (initial value is empty string)
-    program_id: "", // Will be set in useEffect (initial value is empty string)
+    session_id: "",
+    program_id: "",
   };
-
   const [formData, setFormData] = useState(initialFormData);
   const [sessions, setSessions] = useState([]);
   const [programs, setPrograms] = useState([]);
   const [loadingOptions, setLoadingOptions] = useState(true);
-
-  // Helper function to check if any of the data fields have changed
   const hasDataChanged = (currentData) => {
-    // Create a copy of the initial state but with the selected IDs synchronized
     const originalStateWithIds = {
       ...initialFormData,
       session_id: sessions.find(
@@ -152,8 +145,6 @@ const AdminEditStudentModal = ({
           )
         : "",
     };
-
-    // Keys to compare (all editable fields that go into the API payload)
     const keysToCompare = [
       "rollno",
       "name",
@@ -166,29 +157,21 @@ const AdminEditStudentModal = ({
       "session_id",
       "program_id",
     ];
-
-    // Check percentages first as they are numbers/floats
     const per_10_changed =
       parseFloat(currentData.per_10 || 0) !==
       parseFloat(originalStateWithIds.per_10 || 0);
     const per_12_changed =
       parseFloat(currentData.per_12 || 0) !==
       parseFloat(originalStateWithIds.per_12 || 0);
-
     if (per_10_changed || per_12_changed) {
       return true;
     }
-
-    // Compare all other keys
     return keysToCompare.some((key) => {
-      // Trim and stringify to handle empty strings/nulls and whitespace differences robustly
       const currentValue = String(currentData[key] || "").trim();
       const originalValue = String(originalStateWithIds[key] || "").trim();
       return currentValue !== originalValue;
     });
   };
-
-  // Fetch dropdown data on mount
   useEffect(() => {
     Promise.all([api.get("/session_master"), api.get("/program_master")])
       .then(([sessionsRes, programsRes]) => {
@@ -205,8 +188,6 @@ const AdminEditStudentModal = ({
         setLoadingOptions(false);
       });
   }, [setToastMessage]);
-
-  // Synchronization Effect for pre-population of IDs (runs after options load)
   useEffect(() => {
     if (!loadingOptions && sessions.length > 0 && programs.length > 0) {
       const matchedSession = sessions.find(
@@ -215,8 +196,6 @@ const AdminEditStudentModal = ({
       const matchedProgram = programs.find(
         (p) => p.program_name === student.program_name
       );
-
-      // This sets the initial, correct session_id and program_id into formData
       setFormData((prev) => ({
         ...prev,
         session_id: matchedSession ? String(matchedSession.session_id) : "",
@@ -231,16 +210,12 @@ const AdminEditStudentModal = ({
     student.program_name,
     student,
   ]);
-
-  // Universal handler for all inputs and selects (value is a string)
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
-
   const handleUpdateSubmit = async (e) => {
     e.preventDefault();
-
     if (!formData.name.trim() || !formData.rollno) {
       setToastMessage({
         type: "error",
@@ -248,18 +223,14 @@ const AdminEditStudentModal = ({
       });
       return;
     }
-
-    // CORE FIX: Perform dirty check. If no changes, stop here.
     if (!hasDataChanged(formData)) {
       setToastMessage({
         type: "info",
         content: "No changes detected. Update cancelled.",
       });
-      onClose(); // Close the modal without making an API call
+      onClose();
       return;
     }
-
-    // Convert string IDs and percentages back to numbers for the API payload
     const payload = {
       ...formData,
       mod_by: user.userid,
@@ -268,11 +239,8 @@ const AdminEditStudentModal = ({
       per_10: parseFloat(formData.per_10 || 0),
       per_12: parseFloat(formData.per_12 || 0),
     };
-
     try {
       await api.put(`/adminStudents/${student.userid}`, payload);
-
-      // Find the names from the local options list for instant table refresh
       const updatedStudentNames = {
         session_name:
           sessions.find((s) => String(s.session_id) === formData.session_id)
@@ -281,17 +249,14 @@ const AdminEditStudentModal = ({
           programs.find((p) => String(p.program_id) === formData.program_id)
             ?.program_name || student.program_name,
       };
-
       onSuccess({ ...student, ...payload, ...updatedStudentNames });
-      onClose(); // Close on success
+      onClose();
     } catch (err) {
       const errorMessage =
         err.response?.data?.message || "Failed to update student details.";
       setToastMessage({ type: "error", content: errorMessage });
     }
   };
-
-  // Loading state block
   if (loadingOptions) {
     return (
       <div className="fixed inset-0 flex items-center justify-center bg-black/30 backdrop-blur-sm z-[1000] p-4">
@@ -301,19 +266,14 @@ const AdminEditStudentModal = ({
       </div>
     );
   }
-
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black/30 backdrop-blur-sm z-[1000] p-4 overflow-y-auto">
-      {/* Modal adjustments for Mobile Panel View */}
       <div className="bg-white w-full max-w-4xl rounded-xl shadow-2xl p-6 my-4 animate-fadeIn relative max-h-[95vh] overflow-y-auto">
         <h3 className="text-xl font-bold text-gray-800 border-b pb-3 mb-6">
           Edit Student Details: {student.name}
         </h3>
-
         <form onSubmit={handleUpdateSubmit}>
-          {/* Ensure form grid is responsive */}
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {/* Row 1: Core Identification */}
             <div className="col-span-1">
               <label className="block text-sm font-medium">Roll No</label>
               <input
@@ -321,7 +281,7 @@ const AdminEditStudentModal = ({
                 name="rollno"
                 value={formData.rollno}
                 onChange={(e) => {
-                  const digitsOnly = e.target.value.replace(/\D/g, ""); // only digits
+                  const digitsOnly = e.target.value.replace(/\D/g, "");
                   setFormData((prev) => ({ ...prev, rollno: digitsOnly }));
                 }}
                 className="w-full p-2 border rounded-lg"
@@ -330,7 +290,6 @@ const AdminEditStudentModal = ({
                 required
               />
             </div>
-
             <div className="col-span-1">
               <label className="block text-sm font-medium">Name</label>
               <input
@@ -349,7 +308,6 @@ const AdminEditStudentModal = ({
                 required
               />
             </div>
-
             <div className="col-span-1">
               <label className="block text-sm font-medium">Mobile</label>
               <input
@@ -373,7 +331,6 @@ const AdminEditStudentModal = ({
                 </p>
               )}
             </div>
-
             <div className="col-span-1">
               <label className="block text-sm font-medium">Email</label>
               <input
@@ -384,8 +341,6 @@ const AdminEditStudentModal = ({
                 className="w-full p-2 border rounded-lg"
               />
             </div>
-
-            {/* Row 2: Academic Setup (Dropdowns) */}
             <div className="col-span-1">
               <label className="block text-sm font-medium">Session</label>
               <select
@@ -440,8 +395,6 @@ const AdminEditStudentModal = ({
                 className="w-full p-2 border rounded-lg"
               />
             </div>
-
-            {/* Row 3: Other Details */}
             <div className="col-span-1">
               <label className="block text-sm font-medium">Gender</label>
               <select
@@ -486,7 +439,6 @@ const AdminEditStudentModal = ({
               />
             </div>
           </div>
-
           <div className="flex justify-end gap-3 mt-6">
             <button
               type="button"
@@ -509,16 +461,21 @@ const AdminEditStudentModal = ({
 };
 
 // ====================================================================
-// StudentTable Component (HEAVILY REFACTORED FOR PAGINATION)
+// StudentTable Component
 // ====================================================================
 
 const StudentTable = ({ setToastMessage }) => {
-  const [students, setStudents] = useState([]); // Holds only the current page's data
+  const [students, setStudents] = useState([]);
   const [showStudentList, setShowStudentList] = useState(false);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [actionToConfirm, setActionToConfirm] = useState(null);
+  const [confirmModalText, setConfirmModalText] = useState({
+    title: "",
+    content: "",
+  });
+
   const [showEditModal, setShowEditModal] = useState(false);
   const [academicYears, setAcademicYears] = useState([]);
   const [programs, setPrograms] = useState([]);
@@ -526,18 +483,16 @@ const StudentTable = ({ setToastMessage }) => {
   const [selectedProgramId, setSelectedProgramId] = useState("all");
   const [isLoading, setIsLoading] = useState(false);
 
-  // ---  NEW PAGINATION STATE ---
-  const [searchTerm, setSearchTerm] = useState(""); // The value in the search box
-  const [debouncedSearch, setDebouncedSearch] = useState(""); // The value used for the API call
+  const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [limit, setLimit] = useState(10); // Default to 10 records
+  const [limit, setLimit] = useState(10);
   const [totalStudents, setTotalStudents] = useState(0);
   const totalPages = Math.ceil(totalStudents / limit);
-  // ---  END NEW PAGINATION STATE ---
 
   const user = JSON.parse(sessionStorage.getItem("user"));
 
-  // Fetch static dropdown data (unchanged)
+  // Fetch static dropdown data
   useEffect(() => {
     const fetchOptions = async () => {
       try {
@@ -558,30 +513,25 @@ const StudentTable = ({ setToastMessage }) => {
     fetchOptions();
   }, [setToastMessage]);
 
-  // ---  NEW DEBOUNCE EFFECT ---
-  // This effect watches the search term and updates the
-  // "debounced" version after 500ms of no typing
+  // Debounce effect for search
   useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedSearch(searchTerm);
-      setCurrentPage(1); // Reset to page 1 on a new search
-    }, 500); // 500ms delay
+      setCurrentPage(1);
+    }, 500);
 
     return () => {
       clearTimeout(handler);
     };
   }, [searchTerm]);
 
-  // ---  REFACTORED fetchStudents ---
-  // This function is now the single source of truth for fetching data
-  // It's wrapped in useCallback to prevent re-renders
+  // Main data fetch function
   const fetchStudents = useCallback(async () => {
     if (!selectedYearId || !showStudentList) {
       setStudents([]);
       setTotalStudents(0);
-      return; // Don't fetch if no year is selected or list is hidden
+      return;
     }
-
     setIsLoading(true);
     try {
       const res = await api.get("/adminStudents", {
@@ -598,9 +548,7 @@ const StudentTable = ({ setToastMessage }) => {
     } catch (err) {
       console.error(err);
       setToastMessage({
-        content:
-          err.response?.data?.message ||
-          "Failed to load student data. Is backend running?",
+        content: err.response?.data?.message || "Failed to load student data.",
         type: "error",
       });
       setStudents([]);
@@ -618,20 +566,19 @@ const StudentTable = ({ setToastMessage }) => {
     setToastMessage,
   ]);
 
-  // ---  NEW EFFECT to call fetchStudents when filters change ---
+  // Effect to call fetchStudents
   useEffect(() => {
     fetchStudents();
-  }, [fetchStudents]); // This effect runs whenever any dependency of fetchStudents changes
+  }, [fetchStudents]);
+
+  // --- MODIFICATION: All handlers now use the new modal ---
 
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
-    // Reset to page 1 whenever filters change
     setCurrentPage(1);
-
     if (name === "year") {
       setSelectedYearId(value);
       if (!value) {
-        // If year is cleared, hide list
         setShowStudentList(false);
       }
     } else if (name === "program") {
@@ -649,17 +596,11 @@ const StudentTable = ({ setToastMessage }) => {
       });
       return;
     }
-    // Just toggle the state; the useEffect will handle the fetch
     setShowStudentList(!showStudentList);
     setCurrentPage(1);
     setSearchTerm("");
   };
 
-  // ---  REMOVED getFilteredStudents() ---
-  // We no longer filter on the client.
-  // The `students` array *is* the filtered list.
-
-  // --- Modal and Delete handlers (unchanged) ---
   const handleViewDetailsClick = (student) => {
     setSelectedStudent(student);
     setShowDetailsModal(true);
@@ -672,26 +613,31 @@ const StudentTable = ({ setToastMessage }) => {
 
   const handleEditSuccess = (updatedData) => {
     setShowEditModal(false);
-    fetchStudents(); // Just re-fetch the current page
+    fetchStudents();
     setToastMessage({
       type: "success",
       content: `Student details for ${updatedData.name} updated successfully.`,
     });
   };
 
+  // --- DELETE: Setup modal ---
   const handleDeleteClick = (student) => {
-    setActionToConfirm(() => () => deleteStudent(student.userid, student.name));
+    setConfirmModalText({
+      title: "Are you sure?",
+      content: `Do you really want to delete ${student.name}? This cannot be undone.`,
+    });
+    setActionToConfirm(() => () => executeDelete(student.userid, student.name));
     setShowConfirmModal(true);
   };
 
-  const deleteStudent = async (userid, studentName) => {
+  // --- DELETE: The actual API call ---
+  const executeDelete = async (userid, studentName) => {
     try {
       await api.delete(`/adminStudents/${userid}`);
       setToastMessage({
         type: "success",
         content: `${studentName}'s record has been deleted.`,
       });
-      // Re-fetch data to reflect deletion
       fetchStudents();
     } catch (err) {
       const errorMessage =
@@ -700,33 +646,79 @@ const StudentTable = ({ setToastMessage }) => {
     }
   };
 
+  // --- FREEZE: Setup modal ---
+  const handleFreezeClick = (student) => {
+    setConfirmModalText({
+      title: "Freeze Profile?",
+      content: `Are you sure you want to freeze ${student.name}'s profile? This will check all requirements and block them from making edits.`,
+    });
+    setActionToConfirm(() => () => executeFreeze(student));
+    setShowConfirmModal(true);
+  };
+
+  // --- FREEZE: The actual API call ---
+  const executeFreeze = async (student) => {
+    try {
+      const res = await api.put(`/adminStudents/${student.userid}/freeze`);
+      setToastMessage({ type: "success", content: res.data.message });
+      fetchStudents(); // Re-fetch the data from the server
+    } catch (err) {
+      setToastMessage({
+        type: "error",
+        content: err.response?.data?.message || "An error occurred.",
+      });
+    }
+  };
+
+  // --- UNFREEZE: Setup modal ---
+  const handleUnfreezeClick = (student) => {
+    setConfirmModalText({
+      title: "Unfreeze Profile?",
+      content: `Are you sure you want to unfreeze ${student.name}'s profile? They will be able to edit their details again.`,
+    });
+    setActionToConfirm(() => () => executeUnfreeze(student));
+    setShowConfirmModal(true);
+  };
+
+  // --- UNFREEZE: The actual API call ---
+  const executeUnfreeze = async (student) => {
+    try {
+      const res = await api.put(`/adminStudents/${student.userid}/unfreeze`);
+      setToastMessage({ type: "success", content: res.data.message });
+      fetchStudents(); // Re-fetch the data from the server
+    } catch (err) {
+      setToastMessage({
+        type: "error",
+        content: err.response?.data?.message || "An error occurred.",
+      });
+    }
+  };
+
+  // This one runs the action that was "queued" by the other handlers
   const confirmAction = () => {
     if (typeof actionToConfirm === "function") {
       actionToConfirm();
     }
     setShowConfirmModal(false);
+    setActionToConfirm(null);
   };
 
-  // --- Pagination Button Handlers ---
+  // --- Pagination and Export ---
   const handleNextPage = () => {
     if (currentPage < totalPages) {
       setCurrentPage(currentPage + 1);
     }
   };
-
   const handlePrevPage = () => {
     if (currentPage > 1) {
       setCurrentPage(currentPage - 1);
     }
   };
-
-  // --- Export to Excel (Unchanged, will now export current page) ---
   const exportToExcel = () => {
     if (students.length === 0) {
       setToastMessage({ type: "error", content: "No records to export." });
       return;
     }
-
     const headers = [
       "Roll No",
       "Name",
@@ -741,7 +733,6 @@ const StudentTable = ({ setToastMessage }) => {
       "Session",
       "Program",
     ];
-
     const formatDateForCsv = (dateString) => {
       if (!dateString) return "N/A";
       try {
@@ -749,10 +740,9 @@ const StudentTable = ({ setToastMessage }) => {
         if (isNaN(date.getTime())) return "N/A";
         return date.toISOString().split("T")[0];
       } catch (e) {
-        return "N/A";
+        return "N/T";
       }
     };
-
     const dataRows = students.map((student) =>
       [
         `"${(student.rollno || "N/A").toString().replace(/"/g, '""')}"`,
@@ -769,13 +759,11 @@ const StudentTable = ({ setToastMessage }) => {
         `"${(student.program_name || "N/A").replace(/"/g, '""')}"`,
       ].join(",")
     );
-
     const csvString = [headers.join(","), ...dataRows].join("\n");
     const blob = new Blob([csvString], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.setAttribute("href", url);
-
     const yearName =
       academicYears.find((y) => y.year_id === selectedYearId)?.year_name ||
       "Selected";
@@ -786,17 +774,33 @@ const StudentTable = ({ setToastMessage }) => {
           )?.program_name || "UnknownProgram"
         : "All";
     const fileName = `Students_${yearName}_${progName}_Page${currentPage}.csv`;
-
     link.setAttribute("download", fileName);
     link.style.visibility = "hidden";
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-
     setToastMessage({
       type: "success",
       content: `Exported ${students.length} records from current page.`,
     });
+  };
+
+  // HANDLER for Status text
+  const getStatusText = (is_profile_frozen) => {
+    if (is_profile_frozen === "Yes") {
+      return (
+        <span className="flex items-center justify-center font-semibold text-red-600">
+          <HiLockClosed className="mr-1" />
+          Frozen
+        </span>
+      );
+    }
+    return (
+      <span className="flex items-center justify-center font-semibold text-green-600">
+        <HiLockOpen className="mr-1" />
+        Active
+      </span>
+    );
   };
 
   const isToggleDisabled = isLoading || !selectedYearId;
@@ -808,9 +812,8 @@ const StudentTable = ({ setToastMessage }) => {
     <div className="bg-blue-200 py-2 px-4 rounded-xl shadow-md relative pb-2">
       <h2 className="text-2xl font-bold mb-3">Student Details</h2>
 
-      {/* ---  MODIFIED Filter and Action Controls  --- */}
+      {/* --- Filters and Action Controls --- */}
       <div className="flex flex-col md:flex-row md:justify-between md:items-end gap-3 mb-3">
-        {/* Filters & Toggle Button (Left side) */}
         <div className="flex items-end gap-2 flex-wrap">
           <div className="flex flex-col w-36 flex-shrink-0">
             <label
@@ -835,7 +838,6 @@ const StudentTable = ({ setToastMessage }) => {
               ))}
             </select>
           </div>
-
           <div className="flex flex-col w-36 flex-shrink-0">
             <label
               htmlFor="program-select"
@@ -859,7 +861,6 @@ const StudentTable = ({ setToastMessage }) => {
               ))}
             </select>
           </div>
-
           <button
             onClick={handleToggleClick}
             className={`px-3 py-1.5 rounded-lg text-white text-xs transition shadow-sm w-auto flex-shrink-0
@@ -877,8 +878,6 @@ const StudentTable = ({ setToastMessage }) => {
               : "Show Records"}
           </button>
         </div>
-
-        {/* Search Bar + Export (Right side) */}
         {showStudentList && (
           <div className="flex items-end gap-2 w-full md:w-auto">
             <input
@@ -905,7 +904,7 @@ const StudentTable = ({ setToastMessage }) => {
         )}
       </div>
 
-      {/* --- NEW PAGINATION CONTROLS (TOP) --- */}
+      {/* --- Pagination Controls (Top) --- */}
       {showStudentList && !isLoading && (
         <div className="flex flex-col sm:flex-row justify-between items-center gap-2 mb-2 text-sm">
           <div className="flex items-center gap-2">
@@ -922,10 +921,8 @@ const StudentTable = ({ setToastMessage }) => {
               <option value={10}>10</option>
               <option value={50}>50</option>
               <option value={100}>100</option>
-              <option value="all">All</option> {/*  ADDED "All" OPTION */}
+              <option value="all">All</option>
             </select>
-
-            {/*  Hide "Showing X-Y of Z" if "All" is selected */}
             {limit !== "all" && (
               <span className="text-gray-600">
                 Showing {Math.min(serialNoOffset + 1, totalStudents)} -{" "}
@@ -939,8 +936,6 @@ const StudentTable = ({ setToastMessage }) => {
               </span>
             )}
           </div>
-
-          {/*  Hide pagination buttons if "All" is selected */}
           {limit !== "all" && (
             <div className="flex items-center gap-2">
               <button
@@ -965,7 +960,7 @@ const StudentTable = ({ setToastMessage }) => {
         </div>
       )}
 
-      {/* The Conditional Student List / Loading Indicator */}
+      {/* --- TABLE STRUCTURE --- */}
       {showStudentList && (
         <div className="mt-1">
           {isLoading ? (
@@ -976,38 +971,63 @@ const StudentTable = ({ setToastMessage }) => {
             <div className="border rounded-lg overflow-hidden">
               {students.length > 0 ? (
                 <div className="overflow-x-auto no-scrollbar">
-                  <div className="min-w-[1200px]">
-                    {/* Headers (unchanged) */}
-                    <div className="grid grid-cols-[60px_2fr_1fr_1.5fr_1fr_1fr_1.2fr_1.5fr_1fr] bg-gray-300 p-2 font-semibold text-sm">
+                  <div className="min-w-[1300px]">
+                    {/* Headers */}
+                    <div className="grid grid-cols-[60px_2fr_1fr_1.5fr_1.5fr_1fr_1fr_1fr_1.5fr] bg-gray-300 p-2 font-semibold text-sm">
+                      {" "}
+                      {/* 9 columns */}
                       <div>Sl. no.</div>
-                      <div>Name</div>
-                      <div>Roll No.</div>
-                      <div>Program</div>
-                      <div>Mobile No.</div>
-                      <div>View More</div>
-                      <div>Modified By</div>
-                      <div>Last Modified</div>
-                      <div className="text-right">Actions</div>
+                      <div className="text-center">Name</div>
+                      <div className="text-center">Roll No.</div>
+                      <div className="text-center">Program</div>
+                      <div className="text-center">Admission Session</div>
+                      <div className="text-center">Mobile No.</div>
+                      <div className="text-center">Status</div>
+                      <div className="text-center">View More</div>
+                      <div className="text-right pr-4">Actions</div>
                     </div>
 
                     {/* Table Body */}
-                    <div className=" max-h-400 overflow-y-auto no-scrollbar">
+                    <div className="max-h-400 overflow-y-auto no-scrollbar">
                       {students.map((student, index) => (
                         <div
                           key={student.userid}
-                          className="grid grid-cols-[60px_2fr_1fr_1.5fr_1fr_1fr_1.2fr_1.5fr_1fr] items-center p-2 border-t bg-white text-sm"
+                          className={`grid grid-cols-[60px_2fr_1fr_1.5fr_1.5fr_1fr_1fr_1fr_1.5fr] items-center p-2 border-t text-sm ${
+                            student.is_profile_frozen === "Yes"
+                              ? "bg-gray-100 text-gray-500"
+                              : "bg-white"
+                          }`}
                         >
-                          {/*  Serial Number now respects pagination  */}
-                          <div className="pl-3">{serialNoOffset + index + 1}.</div>
-                          <div className="font-semibold break-words">
+                          {/* Sl. no. */}
+                          <div className="pl-3">
+                            {serialNoOffset + index + 1}.
+                          </div>
+                          {/* Name */}
+                          <div className="font-semibold break-words text-center">
                             {student.name}
                           </div>
-                          <div>{student.rollno || "N/A"}</div>
-                          <div className="break-words">
+                          {/* Roll No */}
+                          <div className="text-center">
+                            {student.rollno || "N/A"}
+                          </div>
+                          {/* Program */}
+                          <div className="break-words text-center">
                             {student.program_name || "N/A"}
                           </div>
-                          <div>{student.mobile || "N/A"}</div>
-                          <div>
+                          {/* Admission Session */}
+                          <div className="break-words text-center">
+                            {student.session_name || "N/A"}
+                          </div>
+                          {/* Mobile No */}
+                          <div className="text-center">
+                            {student.mobile || "N/A"}
+                          </div>
+                          {/* Status */}
+                          <div className="text-center">
+                            {getStatusText(student.is_profile_frozen)}
+                          </div>
+                          {/* View More */}
+                          <div className="text-center">
                             <button
                               onClick={() => handleViewDetailsClick(student)}
                               className="bg-purple-500 text-white px-2 py-0.5 rounded-md text-xs hover:bg-purple-600 transition"
@@ -1015,26 +1035,46 @@ const StudentTable = ({ setToastMessage }) => {
                               View Details
                             </button>
                           </div>
-                          <div className="break-words pr-2">
-                            {student.modified_by || "N/A"}
-                          </div>
-                          <div className="whitespace-nowrap">
-                            {student.mod_time
-                              ? new Date(student.mod_time)
-                                  .toLocaleString()
-                                  .replace(" ", "\u00A0")
-                              : "N/A"}
-                          </div>
-                          <div className="flex justify-end gap-2">
+
+                          {/* --- Actions Column --- */}
+                          <div className="flex justify-end gap-2 pr-2">
+                            {/* Freeze/Unfreeze Button */}
+                            {student.is_profile_frozen === "Yes" ? (
+                              <button
+                                onClick={() => handleUnfreezeClick(student)}
+                                className="w-18 bg-green-500 text-white px-2 py-0.5 rounded-md text-xs hover:bg-green-600 transition text-center"
+                                title="Unfreeze Profile"
+                              >
+                                Unfreeze
+                              </button>
+                            ) : (
+                              <button
+                                onClick={() => handleFreezeClick(student)}
+                                className="w-18 bg-blue-400 text-white px-2 py-0.5 rounded-md text-xs hover:bg-red-600 transition text-center"
+                                title="Freeze Profile"
+                              >
+                                Freeze
+                              </button>
+                            )}
+
+                            {/* Edit Button */}
                             <button
                               onClick={() => handleEditClick(student)}
-                              className="bg-blue-500 text-white px-2 py-0.5 rounded-md text-xs hover:bg-blue-600 transition"
+                              className={`px-2 py-0.5 rounded-md text-xs text-white transition ${
+                                student.is_profile_frozen === "Yes"
+                                  ? "bg-gray-400 cursor-not-allowed"
+                                  : "bg-blue-500 hover:bg-blue-600"
+                              }`}
+                              disabled={student.is_profile_frozen === "Yes"}
+                              title="Edit Student"
                             >
                               Edit
                             </button>
+                            {/* Delete Button */}
                             <button
                               onClick={() => handleDeleteClick(student)}
                               className="bg-red-500 text-white px-2 py-0.5 rounded-md text-xs hover:bg-red-600 transition"
+                              title="Delete Student"
                             >
                               Delete
                             </button>
@@ -1045,7 +1085,6 @@ const StudentTable = ({ setToastMessage }) => {
                   </div>
                 </div>
               ) : (
-                // This message now handles search failure too
                 <p className="text-center text-gray-500 p-4 text-sm bg-white w-full">
                   {totalStudents === 0 && searchTerm
                     ? `No students found matching "${searchTerm}".`
@@ -1057,7 +1096,7 @@ const StudentTable = ({ setToastMessage }) => {
         </div>
       )}
 
-      {/* Modals (UNCHANGED) */}
+      {/* --- Modals --- */}
       {showDetailsModal && (
         <StudentDetailsModal
           student={selectedStudent}
@@ -1072,16 +1111,15 @@ const StudentTable = ({ setToastMessage }) => {
           setToastMessage={setToastMessage}
         />
       )}
+
+      {/* --- CONFIRMATION MODAL --- */}
       {showConfirmModal && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/30 backdrop-blur-sm z-[1000]">
           <div className="bg-white w-full max-w-md rounded-xl shadow-2xl p-6 animate-fadeIn">
             <h3 className="text-xl font-bold text-gray-800 mb-4">
-              Are you sure?
+              {confirmModalText.title}
             </h3>
-            <p className="text-gray-600 mb-6">
-              Do you really want to delete this student record? This cannot be
-              undone.
-            </p>
+            <p className="text-gray-600 mb-6">{confirmModalText.content}</p>
             <div className="flex justify-end gap-3">
               <button
                 onClick={() => setShowConfirmModal(false)}
@@ -1093,14 +1131,14 @@ const StudentTable = ({ setToastMessage }) => {
                 onClick={confirmAction}
                 className="px-4 py-2 rounded-lg bg-red-500 text-white hover:bg-red-600 transition"
               >
-                Confirm Delete
+                Confirm
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Style for modal animation (kept here for simplicity) */}
+      {/* Style for modal animation (unchanged) */}
       <style>
         {`
           @keyframes fadeIn {
