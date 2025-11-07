@@ -3,9 +3,18 @@ import HeaderDashboard from "../../components/HeaderDashboard";
 import Footer from "../../components/Footer";
 import StudentInternshipTable from "../../components/StudentInternshipTable"; // Import the new student component
 import { Link } from "react-router-dom";
+import { HiExclamationTriangle } from "react-icons/hi2";
 
 const ManageInternships = () => {
   const [toastMessage, setToastMessage] = useState({ type: "", content: "" });
+  const [isFrozen, setIsFrozen] = useState(false);
+
+  useEffect(() => {
+    const status = JSON.parse(sessionStorage.getItem("studentStatus"));
+    if (status) {
+      setIsFrozen(status.isFrozen);
+    }
+  }, []);
 
   useEffect(() => {
     if (toastMessage.content) {
@@ -40,8 +49,19 @@ const ManageInternships = () => {
           </div>
         )}
 
+        {/* --- Frozen Warning Banner --- */}
+        {isFrozen && (
+          <div className="mb-6 p-4 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-800 rounded-lg flex items-center">
+            <HiExclamationTriangle className="h-5 w-5 mr-3" />
+            <p className="text-sm">
+              Your profile is frozen. You cannot add, edit, or delete internship
+              records.
+            </p>
+          </div>
+        )}
+
         {/* Use the new student-specific table */}
-        <StudentInternshipTable setToastMessage={setToastMessage} />
+        <StudentInternshipTable setToastMessage={setToastMessage} isFrozen={isFrozen} />
       </main>
       <Footer />
     </div>

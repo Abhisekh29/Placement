@@ -3,10 +3,11 @@ import { useParams } from "react-router-dom";
 import api from "../../api/axios";
 import HeaderDashboard from "../../components/HeaderDashboard";
 import Footer from "../../components/Footer";
+import { HiExclamationTriangle } from "react-icons/hi2";
 
 const StudentDriveDetails = () => {
   const { driveId } = useParams(); // Get driveId from URL
-  const user = JSON.parse(sessionStorage.getItem("user"));
+  
 
   // State for this page
   const [drive, setDrive] = useState(null);
@@ -20,6 +21,14 @@ const StudentDriveDetails = () => {
 
   // Toast message state
   const [toastMessage, setToastMessage] = useState({ type: "", content: "" });
+
+  const [isFrozen, setIsFrozen] = useState(false);
+  useEffect(() => {
+    const status = JSON.parse(sessionStorage.getItem("studentStatus"));
+    if (status) {
+      setIsFrozen(status.isFrozen);
+    }
+  }, []);
 
   useEffect(() => {
     if (toastMessage.content) {
@@ -103,6 +112,37 @@ const StudentDriveDetails = () => {
   // Check if student has already applied
   const hasApplied = appliedDriveIds.includes(Number(driveId));
 
+  const getButtonProps = () => {
+    if (isFrozen) {
+      return {
+        text: "Profile Frozen",
+        disabled: true,
+        className: "bg-gray-400 text-gray-700 cursor-not-allowed",
+      };
+    }
+    if (hasApplied) {
+      return {
+        text: "Applied",
+        disabled: true,
+        className: "bg-gray-400 text-gray-700 cursor-not-allowed",
+      };
+    }
+    if (isApplying) {
+      return {
+        text: "Applying...",
+        disabled: true,
+        className: "opacity-70 cursor-wait bg-blue-600 text-white",
+      };
+    }
+    return {
+      text: "Apply",
+      disabled: false,
+      className: "bg-blue-600 text-white hover:bg-blue-700",
+    };
+  };
+
+  const buttonProps = getButtonProps();
+
   const renderContent = () => {
     if (isLoading) {
       return (
@@ -119,21 +159,10 @@ const StudentDriveDetails = () => {
           <div className="absolute top-6 right-6">
             <button
               onClick={handleApplyClick}
-              disabled={hasApplied || isApplying}
-              className={`
-                px-6 py-2 rounded-lg font-semibold transition
-                ${hasApplied
-                  ? "bg-gray-400 text-gray-700 cursor-not-allowed"
-                  : "bg-blue-600 text-white hover:bg-blue-700"
-                }
-                ${isApplying ? "opacity-70 cursor-wait" : ""}
-              `}
+              disabled={buttonProps.disabled}
+              className={`px-6 py-2 rounded-lg font-semibold transition ${buttonProps.className}`}
             >
-              {hasApplied
-                ? "Applied"
-                : isApplying
-                  ? "Applying..."
-                  : "Apply"}
+              {buttonProps.text}
             </button>
           </div>
 
@@ -190,10 +219,18 @@ const StudentDriveDetails = () => {
       )}
 
       <main className="flex-grow p-6 md:p-10 flex flex-col">
+        {isFrozen && !isLoading && (
+          <div className="mb-6 p-4 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-800 rounded-lg flex items-center">
+            <HiExclamationTriangle className="h-5 w-5 mr-3" />
+            <p className="text-sm">
+              Your profile is frozen. You cannot apply for new placement drives.
+            </p>
+          </div>
+        )}
         {renderContent()}
       </main>
 
-      {/* --- MODIFICATION: Added new warning sentence --- */}
+      {/* --- Added new warning sentence --- */}
       {showConfirmModal && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/30 backdrop-blur-sm z-50">
           <div className="bg-white w-full max-w-md rounded-xl shadow-2xl p-6 animate-fadeIn">

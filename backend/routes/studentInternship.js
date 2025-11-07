@@ -6,14 +6,14 @@ import {
   deleteStudentInternship,
   upload,
 } from "../controllers/studentInternship.js";
-import { isStudent } from "../middleware/auth.js"; // Use isStudent, NOT isAdmin
+import { isStudent, isStudentAndActive} from "../middleware/auth.js"; // Use isStudent, NOT isAdmin
 
 const router = express.Router();
 
 // All routes are protected by isStudent, which adds req.user
 router.get("/", isStudent, getStudentInternships);
-router.post("/", isStudent, upload.single("certificate"), addStudentInternship);
-router.put("/:internshipId", isStudent, upload.single("certificate"), updateStudentInternship);
-router.delete("/:internshipId", isStudent, deleteStudentInternship);
+router.post("/", isStudentAndActive, upload.single("certificate"), addStudentInternship);
+router.put("/:internshipId", isStudentAndActive, upload.single("certificate"), updateStudentInternship);
+router.delete("/:internshipId", isStudentAndActive, deleteStudentInternship);
 
 export default router;

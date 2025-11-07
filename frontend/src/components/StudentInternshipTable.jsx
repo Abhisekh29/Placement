@@ -7,7 +7,7 @@ const initialFormState = {
   certificate: null,
 };
 
-const StudentInternshipTable = ({ setToastMessage }) => {
+const StudentInternshipTable = ({ setToastMessage, isFrozen }) => {
   const [internships, setInternships] = useState([]);
   const [companies, setCompanies] = useState([]);
 
@@ -239,17 +239,31 @@ const StudentInternshipTable = ({ setToastMessage }) => {
                   <div className="break-words text-center">
                     {internship.modified_by || "N/A"}
                   </div>
-                  <div className="text-center">{new Date(internship.mod_time).toLocaleString()}</div>
+                  <div className="text-center">
+                    {new Date(internship.mod_time).toLocaleString()}
+                  </div>
                   <div className="flex justify-end gap-2">
                     <button
                       onClick={() => handleEditClick(internship)}
-                      className="bg-blue-500 text-white px-2 py-0.5 rounded-md text-xs"
+                      disabled={isFrozen}
+                      title={isFrozen ? "Profile is frozen" : "Edit Internship"}
+                      className={`px-2 py-0.5 rounded-md text-xs text-white ${
+                        isFrozen
+                          ? "bg-gray-400 cursor-not-allowed"
+                          : "bg-blue-500 hover:bg-blue-600"
+                      }`}
                     >
                       Edit
                     </button>
                     <button
                       onClick={() => handleDeleteClick(internship)}
-                      className="bg-red-500 text-white px-2 py-0.5 rounded-md text-xs"
+                      disabled={isFrozen}
+                      title={isFrozen ? "Profile is frozen" : "Delete Internship"}
+                      className={`px-2 py-0.5 rounded-md text-xs text-white ${
+                        isFrozen
+                          ? "bg-gray-400 cursor-not-allowed"
+                          : "bg-red-500 hover:bg-red-600"
+                      }`}
                     >
                       Delete
                     </button>
@@ -268,7 +282,17 @@ const StudentInternshipTable = ({ setToastMessage }) => {
       <div className="mt-4 text-right">
         <button
           onClick={handleAddClick}
-          className="bg-purple-500 text-white px-4 py-2 rounded-lg shadow hover:bg-purple-600"
+          disabled={isFrozen}
+          title={
+            isFrozen
+              ? "Your profile is frozen and you cannot add internships."
+              : "Add New Internship"
+          }
+          className={`px-4 py-2 rounded-lg shadow text-white ${
+            isFrozen
+              ? "bg-gray-400 cursor-not-allowed"
+              : "bg-purple-500 hover:bg-purple-600"
+          }`}
         >
           ➕ Add New Internship
         </button>

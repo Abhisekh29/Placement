@@ -2,14 +2,20 @@ import React, { useState, useEffect } from "react";
 import api from "../api/axios";
 import { useNavigate, Link } from "react-router-dom";
 import { PiEye, PiEyeClosed } from "react-icons/pi";
+import { HiOutlineLockClosed } from "react-icons/hi2";
 
-const PlacementDashboardWidget = () => {
+const PlacementDashboardWidget = ({ isFrozen }) => {
   const [drives, setDrives] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
+    if (isFrozen) {
+      setIsLoading(false);
+      return;
+    }
+
     const fetchActiveDrives = async () => {
       setIsLoading(true);
       try {
@@ -24,13 +30,25 @@ const PlacementDashboardWidget = () => {
     };
 
     fetchActiveDrives();
-  }, []);
+  }, [isFrozen]);
 
   const handleViewDetails = (driveId) => {
     navigate(`/student/drive/${driveId}`);
   };
 
   const renderContent = () => {
+    if (isFrozen) {
+      return (
+        <div className="flex flex-col items-center justify-center text-center text-gray-500 h-full py-4">
+          <HiOutlineLockClosed className="w-10 h-10 text-yellow-500 mb-2" />
+          <p className="font-semibold text-red-700">Profile Frozen</p>
+          <p className="text-sm text-red-600">
+            Active drives are hidden while your profile is frozen.
+          </p>
+        </div>
+      );
+    }
+
     if (isLoading) {
       return <p className="text-gray-500 text-center">Loading drives...</p>;
     }

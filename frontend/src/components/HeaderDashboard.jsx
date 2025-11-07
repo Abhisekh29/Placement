@@ -16,6 +16,7 @@ const HeaderDashboard = () => {
       // Clear sessionStorage
       sessionStorage.removeItem("user");
       sessionStorage.removeItem("token");
+      sessionStorage.removeItem("studentStatus");
 
       // Redirect to homepage
       navigate("/");

@@ -3,9 +3,19 @@ import HeaderDashboard from "../../components/HeaderDashboard.jsx";
 import Footer from "../../components/Footer.jsx";
 import StudentPlacementTable from "../../components/StudentPlacementTable.jsx";
 import { Link } from "react-router-dom";
+import { HiExclamationTriangle } from "react-icons/hi2";
 
 const StudentMyPlacement = () => {
   const [toastMessage, setToastMessage] = useState({ type: "", content: "" });
+
+  const [isFrozen, setIsFrozen] = useState(false);
+
+  useEffect(() => {
+    const status = JSON.parse(sessionStorage.getItem("studentStatus"));
+    if (status) {
+      setIsFrozen(status.isFrozen);
+    }
+  }, []);
 
   useEffect(() => {
     if (toastMessage.content) {
@@ -39,7 +49,17 @@ const StudentMyPlacement = () => {
             {toastMessage.content}
           </div>
         )}
-        <StudentPlacementTable setToastMessage={setToastMessage} />
+
+        {isFrozen && (
+          <div className="mb-6 p-4 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-800 rounded-lg flex items-center">
+            <HiExclamationTriangle className="h-5 w-5 mr-3" />
+            <p className="text-sm">
+              Your profile is frozen. You cannot edit your applications.
+            </p>
+          </div>
+        )}
+
+        <StudentPlacementTable setToastMessage={setToastMessage} isFrozen={isFrozen}/>
       </main>
       <Footer />
     </div>

@@ -5,14 +5,14 @@ import {
   updateStudent,
   getStudentsList,
 } from "../controllers/student.js";
-import { isStudent, isAdmin } from "../middleware/auth.js";
+import { isStudent, isAdmin, isStudentAndActive } from "../middleware/auth.js";
 
 const router = express.Router();
 
 // General Routes
-router.post("/", isStudent, addStudent);
+router.post("/", isStudentAndActive, addStudent);
 router.get("/:userid", isStudent, getStudentDetails);
-router.put("/:userid", isStudent, updateStudent);
+router.put("/:userid", isStudentAndActive, updateStudent);
 
 // New route for admin to get all students
 router.get("/list/all", isAdmin, getStudentsList);

@@ -78,7 +78,7 @@ const ViewMoreModal = ({ placement, onClose }) => (
 );
 
 // --- Main Table Component ---
-const StudentPlacementTable = ({ setToastMessage }) => {
+const StudentPlacementTable = ({ setToastMessage, isFrozen }) => {
   const [placements, setPlacements] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -287,7 +287,13 @@ const StudentPlacementTable = ({ setToastMessage }) => {
                   <div className="text-right">
                     <button
                       onClick={() => handleEditClick(placement)}
-                      className="bg-blue-500 text-white px-3 py-1 rounded-md text-xs hover:bg-blue-600 transition"
+                      disabled={isFrozen}
+                      title={isFrozen ? "Profile is frozen" : "Edit Application"}
+                      className={`px-3 py-1 rounded-md text-xs text-white transition ${
+                        isFrozen
+                          ? "bg-gray-400 cursor-not-allowed"
+                          : "bg-blue-500 hover:bg-blue-600"
+                      }`}
                     >
                       Edit
                     </button>

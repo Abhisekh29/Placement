@@ -20,9 +20,16 @@ api.interceptors.response.use(
     }
     // Check if the error is for an expired token
     if (error.response && error.response.status === 401 || error.response.status === 403) {
+      const errorMsg = error.response.data?.message || "";
+      if (errorMsg.includes("profile is frozen")) {
+        // This is a "frozen" error, not a session error.
+        // Stop the interceptor here and let the component's 'catch' block handle it.
+        return Promise.reject(error);
+      }
       // Clear user from session storage
       sessionStorage.removeItem("user");
       sessionStorage.removeItem("token");
+      sessionStorage.removeItem("studentStatus")
       // Redirect to login page with a message
       window.location.href = "/login?sessionExpired=true";
     }

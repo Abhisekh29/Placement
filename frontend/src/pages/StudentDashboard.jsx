@@ -8,6 +8,7 @@ import InternshipDashboardWidget from "../components/InternshipDashboardWidget";
 import PlacementDashboardWidget from "../components/PlacementDashboardWidget";
 import { IoSettingsSharp } from "react-icons/io5"; //
 import ChangePasswordModal from "../components/ChangePasswordModal";
+import { HiExclamationTriangle } from "react-icons/hi2";
 
 const StudentDashboard = () => {
   const [studentData, setStudentData] = useState(null);
@@ -23,12 +24,21 @@ const StudentDashboard = () => {
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef(null); // Ref for detecting outside clicks
 
+  const [isFrozen, setIsFrozen] = useState(false);
+
   useEffect(() => {
     const fetchStudentDetails = async () => {
       try {
         const res = await api.get(`/student_master/${user.userid}`);
         if (res.data.length > 0) {
           setStudentData(res.data[0]);
+          // Save the frozen status to state and session storage
+          const frozen = res.data[0].is_profile_frozen === "Yes";
+          setIsFrozen(frozen);
+          sessionStorage.setItem(
+            "studentStatus",
+            JSON.stringify({ isFrozen: frozen })
+          );
         }
       } catch (err) {
         console.error(err);
@@ -164,12 +174,26 @@ const StudentDashboard = () => {
           </div>
         </div>
 
+        {/* --- ADDED FROZEN WARNING BANNER --- */}
+        {isFrozen && (
+          <div className="mb-6 p-4 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-800 rounded-lg flex items-center">
+            <HiExclamationTriangle className="h-6 w-6 mr-3" />
+            <div>
+              <p className="font-bold">Your profile is frozen.</p>
+              <p className="text-sm">
+                You can view your historical data but cannot edit your profile or
+                apply for new drives.
+              </p>
+            </div>
+          </div>
+        )}
+        
         {studentData && !editMode ? (
           <>
-            <Profile studentData={studentData} onEdit={handleEdit} />
+            <Profile studentData={studentData} onEdit={handleEdit} isFrozen={isFrozen}/>
             <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
               <InternshipDashboardWidget />
-              <PlacementDashboardWidget />
+              <PlacementDashboardWidget isFrozen={isFrozen}/>
             </div>
           </>
         ) : (

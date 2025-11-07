@@ -1,4 +1,5 @@
 import jwt from "jsonwebtoken";
+import { db } from "../db.js";
 
 export const verifyToken = (req, res, next) => {
   let token = req.cookies.access_token;
@@ -57,3 +58,32 @@ export const isStudent = (req, res, next) => {
     }
   });
 };
+
+export const isStudentAndActive = (req, res, next) => {
+  isStudent(req, res, () => {
+    // If they are a student, check the database for their frozen status
+    const q = "SELECT is_profile_frozen FROM student_master WHERE userid = ?";
+    
+    db.query(q, [req.user.userid], (err, data) => {
+      if (err) {
+        return res.status(500).json({ message: "Database error.", error: err });
+      }
+
+      if (data.length === 0) {
+        // This means they have a user account but no student profile
+        return res.status(404).json({ message: "Student profile not found." });
+      }
+
+      // Check the frozen status
+      if (data[0].is_profile_frozen === "Yes") {
+        return res.status(403).json({
+          message: "Forbidden: Your profile is frozen and you cannot perform this action.",
+        });
+      }
+
+      // If not frozen, allow the request to proceed
+      next();
+    });
+  });
+};
+
