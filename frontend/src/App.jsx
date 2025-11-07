@@ -26,6 +26,7 @@ import ManageInternships from "./pages/Student/ManageInternships";
 import StudentDriveDetail from "./pages/Student/StudentDriveDetails";
 import StudentMyPlacement from "./pages/Student/StudentMyPlacement";
 import IncompleteRegistrations from "./pages/AdminCards/IncompleteRegistrations";
+import InternshipRequirement from "./pages/AdminCards/InternshipRequirement";
 
 // Role-based wrappers
 const AdminRoute = ({ children }) => {
@@ -179,6 +180,14 @@ const App = () => {
       element: (
         <AdminRoute>
           <Internship />
+        </AdminRoute>
+      ),
+    },
+    {
+      path: "/admin/internship-requirements",
+      element: (
+        <AdminRoute>
+          <InternshipRequirement />
         </AdminRoute>
       ),
     },
