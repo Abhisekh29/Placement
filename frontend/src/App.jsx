@@ -27,6 +27,7 @@ import StudentDriveDetail from "./pages/Student/StudentDriveDetails";
 import StudentMyPlacement from "./pages/Student/StudentMyPlacement";
 import IncompleteRegistrations from "./pages/AdminCards/IncompleteRegistrations";
 import InternshipRequirement from "./pages/AdminCards/InternshipRequirement";
+import Reports from "./pages/AdminCards/Reports";
 
 // Role-based wrappers
 const AdminRoute = ({ children }) => {
@@ -228,7 +229,7 @@ const App = () => {
       path: "/admin/reports",
       element: (
         <AdminRoute>
-          
+          <Reports />
         </AdminRoute>
       ),
     },

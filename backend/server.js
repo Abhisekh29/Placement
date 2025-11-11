@@ -25,6 +25,7 @@ import internshipRequirementRoutes from "./routes/internshipRequirement.js";
 import adminRoutes from "./routes/admin.js";
 import cors from "cors";
 import cookieParser from "cookie-parser";
+import reportRoutes from "./routes/reports.js";
 
 const app = express()
 
@@ -65,6 +66,7 @@ app.use("/api/filters", filterRoutes);
 app.use("/api/placementDrive", placementDriveRoutes);
 app.use("/api/internships", internshipRoutes);
 app.use("/api/internship-requirements", internshipRequirementRoutes);
+app.use("/api/reports", reportRoutes);
 
 // Both Student & Admin Routes
 

@@ -10,7 +10,7 @@ import { isStudent, isAdmin, isStudentAndActive } from "../middleware/auth.js";
 const router = express.Router();
 
 // General Routes
-router.post("/", isStudentAndActive, addStudent);
+router.post("/", isStudent, addStudent);
 router.get("/:userid", isStudent, getStudentDetails);
 router.put("/:userid", isStudentAndActive, updateStudent);
 

@@ -15,6 +15,10 @@
   width: 4px;
 }
 
+.scrollbar-hover::-webkit-scrollbar-track {
+  background: transparent;
+}
+
 .scrollbar-hover::-webkit-scrollbar-thumb {
   background-color: transparent;
   border-radius: 9999px;
