@@ -57,7 +57,7 @@ export const getStudentPlacementStats = (req, res) => {
         COUNT(sp.drive_id) AS count_apply,
         SUM(CASE WHEN sp.is_selected = 'Yes' THEN 1 ELSE 0 END) AS count_selected
     FROM student_master AS s
-    INNER JOIN student_placement AS sp ON s.userid = sp.user_id
+    LEFT JOIN student_placement AS sp ON s.userid = sp.user_id
     JOIN session_master AS ss ON s.session_id = ss.session_id
     JOIN program_master AS p ON s.program_id = p.program_id
     WHERE ${whereClauses.join(" AND ")}
@@ -311,6 +311,7 @@ export const getStudentInternshipReport = (req, res) => {
     rollno,
     program_name,
     semester,
+    session_name,
     internship_count,
   } = req.query;
 
@@ -321,10 +322,10 @@ export const getStudentInternshipReport = (req, res) => {
   }
 
   let values = [yearId];
+  // sm represents the student's admission session/batch
   let whereClauses = ["sm.year_id = ?"];
-  let havingClauses = []; // For aggregated columns
+  let havingClauses = [];
 
-  // 'WHERE' clauses for base table filters
   if (student_name) {
     whereClauses.push("s.name LIKE ?");
     values.push(`%${student_name}%`);
@@ -337,9 +338,13 @@ export const getStudentInternshipReport = (req, res) => {
     whereClauses.push("p.program_name LIKE ?");
     values.push(`%${program_name}%`);
   }
+  
+  // Filter by the session name of the INTERNSHIP
+  if (session_name) {
+    whereClauses.push("iss.session_name LIKE ?");
+    values.push(`%${session_name}%`);
+  }
 
-  // 'HAVING' clauses for grouped/calculated columns
-  // This handles filtering by semester, including NULLs (which we treat as 'N/A' or '0')
   if (semester) {
     if (semester.toLowerCase() === "n/a" || semester === "0") {
       havingClauses.push("semester IS NULL");
@@ -361,6 +366,7 @@ export const getStudentInternshipReport = (req, res) => {
         s.rollno, 
         p.program_name, 
         si.semester, 
+        iss.session_name AS internship_session, 
         COUNT(si.internship_id) AS internship_count
     FROM 
         student_master AS s
@@ -370,10 +376,12 @@ export const getStudentInternshipReport = (req, res) => {
         program_master AS p ON s.program_id = p.program_id
     LEFT JOIN 
         student_internship AS si ON s.userid = si.user_id
+    LEFT JOIN
+        session_master AS iss ON si.session_id = iss.session_id 
     WHERE 
         ${whereClauses.join(" AND ")}
     GROUP BY 
-        s.userid, s.name, s.rollno, p.program_name, si.semester
+        s.userid, s.name, s.rollno, p.program_name, si.semester, iss.session_name
     ${
       havingClauses.length > 0 ? "HAVING " + havingClauses.join(" AND ") : ""
     }
