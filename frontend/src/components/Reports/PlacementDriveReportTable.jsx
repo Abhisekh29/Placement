@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import api from "../../api/axios";
 import { debounce } from "lodash";
@@ -100,8 +101,6 @@ const PlacementDriveReportTable = ({ setToastMessage, selectedYear }) => {
   }, [fetchData, selectedYear, isActiveFilter]);
 
   // --- Sorting Logic ---
-
-  // --- Sorting Logic ---
   const sortedData = useMemo(() => {
     let sortableData = [...data];
 
@@ -132,8 +131,19 @@ const PlacementDriveReportTable = ({ setToastMessage, selectedYear }) => {
     return sortableData;
   }, [data, sortConfig]);
 
+  // --- handleSort and SortButton ---
+  const handleSort = (key) => {
+    let direction = "ascending";
+    if (
+      sortConfig.key === key &&
+      sortConfig.direction === "ascending"
+    ) {
+      direction = "descending";
+    }
+    setSortConfig({ key, direction });
+    setCurrentPage(1); // Reset to first page on sort
+  };
 
-  // --- SortButton Component ---
   const SortButton = ({ columnKey, columnName }) => {
     const isActive = sortConfig.key === columnKey;
     const isDesc = isActive && sortConfig.direction === "descending";
