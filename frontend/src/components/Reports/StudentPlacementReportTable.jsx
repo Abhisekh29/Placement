@@ -83,20 +83,23 @@ const StudentPlacementReportTable = ({ setToastMessage, selectedYear }) => {
     let sortableData = [...data];
     if (sortConfig.key) {
       sortableData.sort((a, b) => {
-        const aValue = a[sortConfig.key] || "";
-        const bValue = b[sortConfig.key] || "";
+        const aValue = a[sortConfig.key] ?? "";
+        const bValue = b[sortConfig.key] ?? "";
 
-        // Attempt to convert to number for numeric fields, fall back to string comparison
-        let comparison = 0;
-        if (!isNaN(aValue) && !isNaN(bValue) && aValue !== "" && bValue !== "") {
-          comparison = Number(aValue) - Number(bValue);
-        } else if (aValue > bValue) {
-          comparison = 1;
-        } else if (aValue < bValue) {
-          comparison = -1;
+        // Check if both values are numeric
+        const aNum = Number(aValue);
+        const bNum = Number(bValue);
+        if (!isNaN(aNum) && !isNaN(bNum) && aValue !== "" && bValue !== "") {
+          // Numeric comparison
+          const comparison = aNum - bNum;
+          return sortConfig.direction === "ascending" ? comparison : -comparison;
         }
+        // String comparison (case-insensitive)
+        const comparison = String(aValue).localeCompare(String(bValue), undefined, {
+          sensitivity: "base",
+        });
 
-        return sortConfig.direction === "ascending" ? comparison : comparison * -1;
+        return sortConfig.direction === "ascending" ? comparison : -comparison;
       });
     }
     return sortableData;
@@ -115,35 +118,35 @@ const StudentPlacementReportTable = ({ setToastMessage, selectedYear }) => {
   };
 
   const SortButton = ({ columnKey, columnName }) => {
-  const isActive = sortConfig.key === columnKey;
-  const isDesc = isActive && sortConfig.direction === "descending";
+    const isActive = sortConfig.key === columnKey;
+    const isDesc = isActive && sortConfig.direction === "descending";
 
-  const nextSortText = isActive
-    ? isDesc
-      ? `Sort ${columnName} by desc`
-      : `Sort ${columnName} by asc`
-    : `Sort ${columnName} by asc`;
+    const nextSortText = isActive
+      ? isDesc
+        ? `Sort ${columnName} by desc`
+        : `Sort ${columnName} by asc`
+      : `Sort ${columnName} by asc`;
 
-  return (
-    <div className="flex items-center gap-1 relative overflow-visible">
-      <span>{columnName}</span>
+    return (
+      <div className="flex items-center gap-1 relative overflow-visible">
+        <span>{columnName}</span>
 
-      <div className="relative group overflow-visible">
+        <div className="relative group overflow-visible">
 
-        <button onClick={() => handleSort(columnKey)}>
-          <ArrowUp
-            size={18}
-            className={`
+          <button onClick={() => handleSort(columnKey)}>
+            <ArrowUp
+              size={18}
+              className={`
               transition-transform duration-300 ease-in-out
               ${isActive ? "text-blue-600" : "text-gray-400"}
               ${isDesc ? "rotate-180" : "rotate-0"}
             `}
-          />
-        </button>
+            />
+          </button>
 
-        {/* Tooltip bottom-right */}
-        <div
-          className="
+          {/* Tooltip bottom-right */}
+          <div
+            className="
             absolute
             top-full right-full
             mt-1 ml-1
@@ -156,13 +159,13 @@ const StudentPlacementReportTable = ({ setToastMessage, selectedYear }) => {
             transition-opacity duration-150
             z-50
           "
-        >
-          {nextSortText}
+          >
+            {nextSortText}
+          </div>
         </div>
       </div>
-    </div>
-  );
-};
+    );
+  };
 
 
   // --- Client-side pagination logic ---
@@ -373,7 +376,7 @@ const StudentPlacementReportTable = ({ setToastMessage, selectedYear }) => {
                 value={filters.student_name}
                 onChange={handleFilterChange}
                 placeholder="Search Name..."
-                className="w-full lg:w-44 bg-white text-xs p-1 border rounded-lg"
+                className="w-full lg:w-39 bg-white text-xs p-1 border rounded-lg"
               />
             </div>
             <div className="p-2">
@@ -393,7 +396,7 @@ const StudentPlacementReportTable = ({ setToastMessage, selectedYear }) => {
                 value={filters.program_name}
                 onChange={handleFilterChange}
                 placeholder="Search Program..."
-                className="w-full lg:w-48 bg-white text-xs p-1 border rounded-lg"
+                className="w-full lg:w-39 bg-white text-xs p-1 border rounded-lg"
               />
             </div>
             <div className="p-2">
@@ -403,10 +406,10 @@ const StudentPlacementReportTable = ({ setToastMessage, selectedYear }) => {
                 value={filters.session_name}
                 onChange={handleFilterChange}
                 placeholder="Search Session..."
-                className="w-full lg:w-40 bg-white text-xs p-1 border rounded-lg"
+                className="w-full lg:w-45 bg-white text-xs p-1 border rounded-lg"
               />
             </div>
-            <div className="p-2 lg:pr-12 flex justify-center">
+            <div className="p-2">
               <input
                 type="text"
                 name="count_apply"
@@ -416,7 +419,7 @@ const StudentPlacementReportTable = ({ setToastMessage, selectedYear }) => {
                 className="w-26 bg-white text-xs p-1 border rounded-lg"
               />
             </div>
-            <div className="p-2 flex justify-end">
+            <div className="p-2">
               <input
                 type="text"
                 name="count_selected"
@@ -472,16 +475,16 @@ const StudentPlacementReportTable = ({ setToastMessage, selectedYear }) => {
                 paginatedData.map((item, index) => (
                   <div
                     key={serialNoOffset + index} // Use offset + index for unique key
-                    className="grid grid-cols-[0.5fr_1.3fr_0.8fr_1.5fr_1.5fr_1fr_0.5fr] items-center border-t bg-white text-sm"
+                    className="grid grid-cols-[0.5fr_1.3fr_0.8fr_1.5fr_1.5fr_1fr_0.5fr] items-center border-t bg-white text-sm hover:bg-gray-50"
                   >
                     <div className="pl-5">{serialNoOffset + index + 1}.</div>
                     <div className="pl-8 py-2 font-medium">
                       {item.student_name}
                     </div>
                     <div className="p-2 lg:pl-3">{item.rollno}</div>
-                    <div className="p-2 pl-4 lg:pl-8 ">{item.program_name}</div>
+                    <div className="p-2 pl-4 lg:pl-9 ">{item.program_name}</div>
                     <div className="p-2">{item.session_name}</div>
-                    <div className="p-2 lg:pl-5 text-left">{item.count_apply}</div>
+                    <div className="p-2 text-left">{item.count_apply}</div>
                     <div className="p-2 pr-16 text-center">
                       {item.count_selected}
                     </div>

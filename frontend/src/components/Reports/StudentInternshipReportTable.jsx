@@ -82,21 +82,25 @@ const StudentInternshipReportTable = ({ setToastMessage, selectedYear }) => {
     let sortableData = [...data];
     if (sortConfig.key) {
       sortableData.sort((a, b) => {
-        // Note: Key 'internship_session' from data, not 'session_name' from filter
-        const aValue = a[sortConfig.key] || "";
-        const bValue = b[sortConfig.key] || "";
+        const aValue = a[sortConfig.key] ?? "";
+        const bValue = b[sortConfig.key] ?? "";
 
-        // Attempt to convert to number for numeric fields, fall back to string comparison
-        let comparison = 0;
-        if (!isNaN(aValue) && !isNaN(bValue) && aValue !== "" && bValue !== "") {
-          comparison = Number(aValue) - Number(bValue);
-        } else if (aValue > bValue) {
-          comparison = 1;
-        } else if (aValue < bValue) {
-          comparison = -1;
+        // Check if both values are numeric
+        const aNum = Number(aValue);
+        const bNum = Number(bValue);
+
+        if (!isNaN(aNum) && !isNaN(bNum) && aValue !== "" && bValue !== "") {
+          // Numeric comparison
+          const comparison = aNum - bNum;
+          return sortConfig.direction === "ascending" ? comparison : -comparison;
         }
 
-        return sortConfig.direction === "ascending" ? comparison : comparison * -1;
+        // String comparison (case-insensitive)
+        const comparison = String(aValue).localeCompare(String(bValue), undefined, {
+          sensitivity: "base",
+        });
+
+        return sortConfig.direction === "ascending" ? comparison : -comparison;
       });
     }
     return sortableData;
@@ -263,8 +267,8 @@ const StudentInternshipReportTable = ({ setToastMessage, selectedYear }) => {
           onClick={handleExportExcel}
           disabled={isLoading || isExporting || data.length === 0}
           className={`px-3 py-1.5 rounded-lg text-white text-xs transition shadow-sm ${isLoading || isExporting || data.length === 0
-              ? "bg-gray-400 cursor-not-allowed"
-              : "bg-green-600 hover:bg-green-700"
+            ? "bg-gray-400 cursor-not-allowed"
+            : "bg-green-600 hover:bg-green-700"
             }`}
           title="Export current table data to CSV"
         >
@@ -429,12 +433,12 @@ const StudentInternshipReportTable = ({ setToastMessage, selectedYear }) => {
                       className="grid items-center border-t bg-white text-sm hover:bg-gray-50"
                       style={{ gridTemplateColumns: TABLE_GRID_COLS }}
                     >
-                      <div className="p-2 pl-5 sticky left-0 bg-white hover:bg-gray-50 z-10">
+                      <div className="p-2 pl-5 sticky left-0">
                         {serialNoOffset + index + 1}.
                       </div>
                       <div className="p-2 font-medium">{item.student_name}</div>
-                      <div className="p-2">{item.rollno}</div>
-                      <div className="p-2 pl-4">{item.program_name}</div>
+                      <div className="p-2 pl-4">{item.rollno}</div>
+                      <div className="p-2 pl-5">{item.program_name}</div>
                       <div className="p-2  text-center whitespace-nowrap">{item.internship_session || "N/A"}</div>
                       <div className="p-2 pr-15 text-center">{item.semester || "N/A"}</div>
                       <div className="p-2 text-center pr-15">{item.internship_count}</div>

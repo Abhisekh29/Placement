@@ -68,26 +68,29 @@ const ExpenditureReportTable = ({ setToastMessage, selectedYear }) => {
   useEffect(() => {
     fetchData();
   }, [fetchData, selectedYear]); // USE PROP
-
   // --- Sorting Logic ---
   const sortedData = useMemo(() => {
     let sortableData = [...data];
     if (sortConfig.key) {
       sortableData.sort((a, b) => {
-        const aValue = a[sortConfig.key] || "";
-        const bValue = b[sortConfig.key] || "";
+        const aValue = a[sortConfig.key] ?? "";
+        const bValue = b[sortConfig.key] ?? "";
 
-        // Attempt to convert to number for numeric fields, fall back to string comparison
-        let comparison = 0;
-        if (!isNaN(aValue) && !isNaN(bValue) && aValue !== "" && bValue !== "") {
-          comparison = Number(aValue) - Number(bValue);
-        } else if (aValue > bValue) {
-          comparison = 1;
-        } else if (aValue < bValue) {
-          comparison = -1;
+        // Check if both values are numeric
+        const aNum = Number(aValue);
+        const bNum = Number(bValue);
+
+        if (!isNaN(aNum) && !isNaN(bNum) && aValue !== "" && bValue !== "") {
+          // Numeric comparison
+          const comparison = aNum - bNum;
+          return sortConfig.direction === "ascending" ? comparison : -comparison;
         }
+        // String comparison (case-insensitive)
+        const comparison = String(aValue).localeCompare(String(bValue), undefined, {
+          sensitivity: "base",
+        });
 
-        return sortConfig.direction === "ascending" ? comparison : comparison * -1;
+        return sortConfig.direction === "ascending" ? comparison : -comparison;
       });
     }
     return sortableData;
@@ -163,7 +166,7 @@ const ExpenditureReportTable = ({ setToastMessage, selectedYear }) => {
   // --- totalPages ---
   const totalPages =
     rowsPerPage === "all" ? 1 : Math.ceil(sortedData.length / rowsPerPage);
-  
+
   // --- serialNoOffset ---
   const serialNoOffset =
     rowsPerPage === "all" ? 0 : (currentPage - 1) * parseInt(rowsPerPage, 10);
@@ -194,7 +197,7 @@ const ExpenditureReportTable = ({ setToastMessage, selectedYear }) => {
     }
     setIsExporting(true);
     const headers = ["Sl. No.", "Expense On", "Session Name", "Amount", "Bill File Path"];
-    const exportSerialNoOffset = rowsPerPage === "all" ? 0 : serialNoOffset;   
+    const exportSerialNoOffset = rowsPerPage === "all" ? 0 : serialNoOffset;
     const dataRows = dataToExport.map((item, index) =>
       [
         `"${exportSerialNoOffset + index + 1}"`,
@@ -232,7 +235,7 @@ const ExpenditureReportTable = ({ setToastMessage, selectedYear }) => {
     rowsPerPage,
     currentPage,
     serialNoOffset,
-    selectedYear, 
+    selectedYear,
     setToastMessage
   ]); // USE PROP
 
@@ -262,11 +265,10 @@ const ExpenditureReportTable = ({ setToastMessage, selectedYear }) => {
         <button
           onClick={handleExportExcel}
           disabled={isLoading || isExporting || data.length === 0}
-          className={`px-3 py-1.5 rounded-lg text-white text-xs transition shadow-sm ${
-            isLoading || isExporting || data.length === 0
+          className={`px-3 py-1.5 rounded-lg text-white text-xs transition shadow-sm ${isLoading || isExporting || data.length === 0
               ? "bg-gray-400 cursor-not-allowed"
               : "bg-green-600 hover:bg-green-700"
-          }`}
+            }`}
           title="Export current table data to CSV"
         >
           {isExporting ? "Exporting..." : "Export to Excel"}
@@ -385,7 +387,7 @@ const ExpenditureReportTable = ({ setToastMessage, selectedYear }) => {
                   paginatedData.map((item, index) => (
                     <div
                       key={item.expenditure_id}
-                      className="grid items-center border-t bg-white text-sm"
+                      className="grid items-center border-t bg-white text-sm hover:bg-gray-50"
                       style={{ gridTemplateColumns: TABLE_GRID_COLS }}
                     >
                       <div className="p-2 pl-5">{serialNoOffset + index + 1}.</div>

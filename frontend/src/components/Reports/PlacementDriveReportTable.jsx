@@ -100,37 +100,38 @@ const PlacementDriveReportTable = ({ setToastMessage, selectedYear }) => {
   }, [fetchData, selectedYear, isActiveFilter]);
 
   // --- Sorting Logic ---
+
+  // --- Sorting Logic ---
   const sortedData = useMemo(() => {
     let sortableData = [...data];
+
     if (sortConfig.key) {
       sortableData.sort((a, b) => {
-        const aValue = a[sortConfig.key] || "";
-        const bValue = b[sortConfig.key] || "";
-        let comparison = 0;
-        if (!isNaN(aValue) && !isNaN(bValue) && aValue !== "" && bValue !== "") {
-          comparison = Number(aValue) - Number(bValue);
-        } else if (aValue > bValue) {
-          comparison = 1;
-        } else if (aValue < bValue) {
-          comparison = -1;
+        const aValue = a[sortConfig.key] ?? "";
+        const bValue = b[sortConfig.key] ?? "";
+
+        // Check if both values are numeric
+        const aNum = Number(aValue);
+        const bNum = Number(bValue);
+
+        if (!isNaN(aNum) && !isNaN(bNum) && aValue !== "" && bValue !== "") {
+          // Numeric comparison
+          const comparison = aNum - bNum;
+          return sortConfig.direction === "ascending" ? comparison : -comparison;
         }
-        return sortConfig.direction === "ascending" ? comparison : comparison * -1;
+
+        // String comparison (case-insensitive)
+        const comparison = String(aValue).localeCompare(String(bValue), undefined, {
+          sensitivity: "base",
+        });
+
+        return sortConfig.direction === "ascending" ? comparison : -comparison;
       });
     }
+
     return sortableData;
   }, [data, sortConfig]);
 
-  const handleSort = (key) => {
-    let direction = "ascending";
-    if (
-      sortConfig.key === key &&
-      sortConfig.direction === "ascending"
-    ) {
-      direction = "descending";
-    }
-    setSortConfig({ key, direction });
-    setCurrentPage(1);
-  };
 
   // --- SortButton Component ---
   const SortButton = ({ columnKey, columnName }) => {
@@ -181,7 +182,7 @@ const PlacementDriveReportTable = ({ setToastMessage, selectedYear }) => {
 
   const totalPages =
     rowsPerPage === "all" ? 1 : Math.ceil(sortedData.length / rowsPerPage);
-  
+
   const serialNoOffset =
     rowsPerPage === "all" ? 0 : (currentPage - 1) * parseInt(rowsPerPage, 10);
 
@@ -284,11 +285,10 @@ const PlacementDriveReportTable = ({ setToastMessage, selectedYear }) => {
         <button
           onClick={handleExportExcel}
           disabled={isLoading || isExporting || data.length === 0}
-          className={`px-3 py-1.5 rounded-lg text-white text-xs transition shadow-sm ${
-            isLoading || isExporting || data.length === 0
+          className={`px-3 py-1.5 rounded-lg text-white text-xs transition shadow-sm ${isLoading || isExporting || data.length === 0
               ? "bg-gray-400 cursor-not-allowed"
               : "bg-green-600 hover:bg-green-700"
-          }`}
+            }`}
           title="Export current table data to CSV"
         >
           {isExporting ? "Exporting..." : "Export to Excel"}
@@ -373,14 +373,14 @@ const PlacementDriveReportTable = ({ setToastMessage, selectedYear }) => {
                   className="w-full lg:w-33 bg-white text-xs p-1 border rounded-lg"
                 />
               </div>
-              <div className="p-2 pl-13">
+              <div className="p-2 pl-9">
                 <input
                   type="text"
                   name="ctc"
                   value={filters.ctc}
                   onChange={handleFilterChange}
                   placeholder="Search CTC..."
-                  className="w-20 bg-white text-xs p-1 border rounded-lg"
+                  className="w-24 bg-white text-xs p-1 border rounded-lg"
                 />
               </div>
               <div className="p-2 pl-7 text-center">
@@ -469,7 +469,7 @@ const PlacementDriveReportTable = ({ setToastMessage, selectedYear }) => {
                   paginatedData.map((item, index) => (
                     <div
                       key={item.drive_id}
-                      className="grid grid-cols-[0.8fr_2fr_2fr_1fr_1fr_1.2fr_1fr_0.5fr] items-center border-t bg-white text-sm"
+                      className="grid grid-cols-[0.8fr_2fr_2fr_1fr_1fr_1.2fr_1fr_0.5fr] items-center border-t bg-white text-sm hover:bg-gray-50"
                     >
                       <div className="p-2 text-left pl-5">
                         {serialNoOffset + index + 1}.
@@ -479,11 +479,10 @@ const PlacementDriveReportTable = ({ setToastMessage, selectedYear }) => {
                       <div className="p-2 whitespace-nowrap text-left">{formatCTC(item.ctc)}</div>
                       <div className="p-2 text-left">
                         <span
-                          className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
-                            item.is_active === "1"
+                          className={`px-2 py-0.5 rounded-full text-xs font-semibold ${item.is_active === "1"
                               ? "bg-green-100 text-green-800"
                               : "bg-red-100 text-red-800"
-                          }`}
+                            }`}
                         >
                           {item.is_active === "1" ? "Active" : "Closed"}
                         </span>

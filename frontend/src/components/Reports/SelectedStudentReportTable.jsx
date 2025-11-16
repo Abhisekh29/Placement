@@ -84,29 +84,31 @@ const SelectedStudentReportTable = ({ setToastMessage, selectedYear }) => {
     fetchData();
   }, [fetchData, selectedYear]); // USE PROP
 
-  // --- Sorting Logic ---
-  const sortedData = useMemo(() => {
-    let sortableData = [...data];
-    if (sortConfig.key) {
-      sortableData.sort((a, b) => {
-        const aValue = a[sortConfig.key] || "";
-        const bValue = b[sortConfig.key] || "";
+// --- Sorting Logic ---
+const sortedData = useMemo(() => {
+  let sortableData = [...data];
+  if (sortConfig.key) {
+    sortableData.sort((a, b) => {
+      const aValue = a[sortConfig.key] ?? "";
+      const bValue = b[sortConfig.key] ?? "";
 
-        // Attempt to convert to number for numeric fields, fall back to string comparison
-        let comparison = 0;
-        if (!isNaN(aValue) && !isNaN(bValue) && aValue !== "" && bValue !== "") {
-          comparison = Number(aValue) - Number(bValue);
-        } else if (aValue > bValue) {
-          comparison = 1;
-        } else if (aValue < bValue) {
-          comparison = -1;
-        }
-
-        return sortConfig.direction === "ascending" ? comparison : comparison * -1;
+      // Check if both values are numeric
+      const aNum = Number(aValue);
+      const bNum = Number(bValue);
+      if (!isNaN(aNum) && !isNaN(bNum) && aValue !== "" && bValue !== "") {
+        // Numeric comparison
+        const comparison = aNum - bNum;
+        return sortConfig.direction === "ascending" ? comparison : -comparison;
+      }
+      // String comparison (case-insensitive)
+      const comparison = String(aValue).localeCompare(String(bValue), undefined, {
+        sensitivity: "base",
       });
-    }
-    return sortableData;
-  }, [data, sortConfig]);
+      return sortConfig.direction === "ascending" ? comparison : -comparison;
+    });
+  }
+  return sortableData;
+}, [data, sortConfig]);
 
   // --- handleSort and SortButton ---
   const handleSort = (key) => {
@@ -501,7 +503,7 @@ const SelectedStudentReportTable = ({ setToastMessage, selectedYear }) => {
                   paginatedData.map((item, index) => (
                     <div
                       key={`${item.user_id}-${item.drive_id}-${index}`}
-                      className={`grid items-center border-t bg-white text-sm`}
+                      className={`grid items-center border-t bg-white text-sm hover:bg-gray-50`}
                       style={{ gridTemplateColumns: TABLE_GRID_COLS }}
                     >
                       <div className="p-2 pl-5">
