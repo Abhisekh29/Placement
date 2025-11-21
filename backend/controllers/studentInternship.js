@@ -42,12 +42,15 @@ export const getStudentInternships = (req, res) => {
 
   const q = `
     SELECT 
-      i.internship_id, i.user_id, i.company_id, i.semester, i.certificate,
+      i.internship_id, i.user_id, i.company_id, i.semester,
+      i.session_id, s.session_name,
+      i.certificate,
       c.company_name,
       i.mod_time,
       um.username AS modified_by
     FROM student_internship AS i
     JOIN company_master AS c ON i.company_id = c.company_id
+    LEFT JOIN session_master AS s ON i.session_id = s.session_id -- ADDED JOIN
     LEFT JOIN user_master AS um ON i.mod_by = um.userid
     WHERE i.user_id = ?
     ORDER BY i.internship_id DESC
@@ -64,11 +67,12 @@ export const addStudentInternship = (req, res) => {
   const loggedInUserId = req.user.userid;
 
   const q =
-    "INSERT INTO student_internship (`user_id`, `company_id`, `semester`, `certificate`, `mod_by`, `mod_time`) VALUES (?, ?, ?, ?, ?, NOW())";
+    "INSERT INTO student_internship (`user_id`, `company_id`, `semester`, `session_id`, `certificate`, `mod_by`, `mod_time`) VALUES (?, ?, ?, ?, ?, ?, NOW())";
   const values = [
     loggedInUserId, // user_id is from the token, not req.body
     req.body.company_id,
     req.body.semester,
+    req.body.session_id, 
     req.file ? req.file.filename : null,
     loggedInUserId, // The student is modifying their own record
   ];
@@ -131,12 +135,13 @@ export const updateStudentInternship = (req, res) => {
       }
     }
 
-    const q = "UPDATE student_internship SET `company_id` = ?, `semester` = ?, `certificate` = ?, `mod_by` = ?, `mod_time` = NOW() WHERE `internship_id` = ? AND `user_id` = ?";
+    const q = "UPDATE student_internship SET `company_id` = ?, `semester` = ?, `session_id` = ?, `certificate` = ?, `mod_by` = ?, `mod_time` = NOW() WHERE `internship_id` = ? AND `user_id` = ?";
     const values = [
       req.body.company_id,
       req.body.semester,
+      req.body.session_id, 
       newFileName,
-      loggedInUserId, // Student is the modifier
+      loggedInUserId,
       internshipId,
       loggedInUserId, // Final check
     ];

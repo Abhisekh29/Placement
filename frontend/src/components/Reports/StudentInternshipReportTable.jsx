@@ -376,8 +376,8 @@ const StudentInternshipReportTable = ({ setToastMessage, selectedYear }) => {
                   name="semester"
                   value={filters.semester}
                   onChange={handleFilterChange}
-                  placeholder="Sem..."
-                  className="w-15 bg-white text-xs p-1 border rounded-lg"
+                  placeholder="Semester..."
+                  className="w-21 bg-white text-xs p-1 border rounded-lg"
                 />
               </div>
               <div className="p-2 flex justify-end">
@@ -386,7 +386,7 @@ const StudentInternshipReportTable = ({ setToastMessage, selectedYear }) => {
                   name="internship_count"
                   value={filters.internship_count}
                   onChange={handleFilterChange}
-                  placeholder="Count..."
+                  placeholder="Search Count..."
                   className="w-35 bg-white text-xs p-1 border rounded-lg"
                 />
               </div>

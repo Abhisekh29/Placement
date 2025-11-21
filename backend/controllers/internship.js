@@ -43,17 +43,20 @@ export const getInternships = (req, res) => {
   // --- 2. Build Base Queries ---
   let q = `
     SELECT 
-      i.internship_id, i.user_id, i.company_id, i.semester, i.certificate,
+      i.internship_id, i.user_id, i.company_id, i.semester,
+      i.session_id, sess.session_name,
+      i.certificate,
       s.name AS student_name,
       c.company_name,
-      pm.program_name, --  ADDED PROGRAM NAME
+      pm.program_name,
       i.mod_time,
       um.username AS modified_by
     FROM student_internship AS i
     JOIN student_master AS s ON i.user_id = s.userid
     JOIN company_master AS c ON i.company_id = c.company_id
     LEFT JOIN user_master AS um ON i.mod_by = um.userid
-    LEFT JOIN program_master AS pm ON s.program_id = pm.program_id --  ADDED JOIN
+    LEFT JOIN program_master AS pm ON s.program_id = pm.program_id
+    LEFT JOIN session_master AS sess ON i.session_id = sess.session_id -- ADDED JOIN
   `;
 
   let countQuery = `
@@ -62,7 +65,8 @@ export const getInternships = (req, res) => {
     JOIN student_master AS s ON i.user_id = s.userid
     JOIN company_master AS c ON i.company_id = c.company_id
     LEFT JOIN user_master AS um ON i.mod_by = um.userid
-    LEFT JOIN program_master AS pm ON s.program_id = pm.program_id --  ADDED JOIN
+    LEFT JOIN program_master AS pm ON s.program_id = pm.program_id
+    LEFT JOIN session_master AS sess ON i.session_id = sess.session_id -- ADDED JOIN
   `;
 
   // --- 3. Add Dynamic WHERE Clause for Search ---
@@ -70,14 +74,12 @@ export const getInternships = (req, res) => {
   const countValues = [];
 
   if (search) {
-    //  ADDED program_name to search
     const whereClause = " WHERE (s.name LIKE ? OR c.company_name LIKE ? OR i.semester LIKE ? OR pm.program_name LIKE ?)";
     const searchTerm = `%${search}%`;
     
     q += whereClause;
     countQuery += whereClause;
     
-    //  Added 4th search term
     values.push(searchTerm, searchTerm, searchTerm, searchTerm);
     countValues.push(searchTerm, searchTerm, searchTerm, searchTerm);
   }
@@ -122,11 +124,12 @@ export const addInternship = (req, res) => {
     return res.status(400).json({ message: "Certificate file is required." });
   }
 
-  const q = "INSERT INTO student_internship (`user_id`, `company_id`, `semester`, `certificate`, `mod_by`, `mod_time`) VALUES (?, ?, ?, ?, ?, NOW())";
+  const q = "INSERT INTO student_internship (`user_id`, `company_id`, `semester`, `session_id`, `certificate`, `mod_by`, `mod_time`) VALUES (?, ?, ?, ?, ?, ?, NOW())";
   const values = [
     req.body.user_id,
     req.body.company_id,
     req.body.semester,
+    req.body.session_id, 
     req.file.filename,
     req.body.mod_by,
   ];
@@ -164,11 +167,12 @@ export const updateInternship = (req, res) => {
       }
     }
 
-    const q = "UPDATE student_internship SET `user_id` = ?, `company_id` = ?, `semester` = ?, `certificate` = ?, `mod_by` = ?, `mod_time` = NOW() WHERE `internship_id` = ?";
+    const q = "UPDATE student_internship SET `user_id` = ?, `company_id` = ?, `semester` = ?, `session_id` = ?, `certificate` = ?, `mod_by` = ?, `mod_time` = NOW() WHERE `internship_id` = ?";
     const values = [
       req.body.user_id,
       req.body.company_id,
       req.body.semester,
+      req.body.session_id,
       newFileName,
       req.body.mod_by,
       internshipId,

@@ -7,6 +7,7 @@ const initialFormState = {
   user_id: "",
   company_id: "",
   semester: "",
+  session_id: "",
   certificate: null,
 };
 
@@ -25,6 +26,7 @@ const InternshipTable = ({ setToastMessage }) => {
   // --- Modal State ---
   const [allStudents, setAllStudents] = useState([]);
   const [companies, setCompanies] = useState([]);
+  const [sessions, setSessions] = useState([]);
   const [departments, setDepartments] = useState([]);
   const [programs, setPrograms] = useState([]);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -79,14 +81,16 @@ const InternshipTable = ({ setToastMessage }) => {
   // --- Modal Data Fetching ---
   const fetchInitialData = async () => {
     try {
-      const [studentsRes, companiesRes, deptsRes] = await Promise.all([
+      const [studentsRes, companiesRes, deptsRes, sessionsRes] = await Promise.all([
         api.get("/student_master/list/all"),
         api.get("/adminCompany"),
         api.get("/filters/departments"),
+        api.get("/session_master"),
       ]);
       setAllStudents(studentsRes.data);
       setCompanies(companiesRes.data);
       setDepartments(deptsRes.data);
+      setSessions(sessionsRes.data);
     } catch (err) {
       console.error("Failed to fetch initial data for modals:", err);
     }
@@ -174,6 +178,7 @@ const InternshipTable = ({ setToastMessage }) => {
       user_id: internship.user_id,
       company_id: internship.company_id,
       semester: internship.semester,
+      session_id: internship.session_id, 
       certificate: null,
     });
     setShowEditModal(true);
@@ -194,7 +199,7 @@ const InternshipTable = ({ setToastMessage }) => {
     }
 
     const headers = [
-      "Student Name", "Company", "Program", "Semester", "Certificate", "Modified By", "Last Modified"
+      "Student Name", "Company", "Program", "Session", "Semester", "Certificate", "Modified By", "Last Modified"
     ];
 
     const dataRows = internships.map((internship) =>
@@ -202,6 +207,7 @@ const InternshipTable = ({ setToastMessage }) => {
         `"${(internship.student_name || "N/A").replace(/"/g, '""')}"`,
         `"${(internship.company_name || "N/A").replace(/"/g, '""')}"`,
         `"${(internship.program_name || "N/A").replace(/"/g, '""')}"`,
+        `"${(internship.session_name || "N/A").replace(/"/g, '""')}"`,
         `"${internship.semester || "N/A"}"`,
         `"${internship.certificate ? 'Yes' : 'No'}"`,
         `"${(internship.modified_by || "N/A").replace(/"/g, '""')}"`,
@@ -231,10 +237,10 @@ const InternshipTable = ({ setToastMessage }) => {
   // --- CRUD Functions ---
   const handleAddSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.user_id || !formData.company_id || !formData.semester || !formData.certificate) {
+    if (!formData.user_id || !formData.company_id || !formData.semester || !formData.session_id || !formData.certificate) {
       setToastMessage({
         type: "error",
-        content: "Student, Company, Semester, and Certificate are all required.",
+        content: "Student, Company, Semester, Session, and Certificate are all required.",
       });
       return;
     }
@@ -271,6 +277,7 @@ const InternshipTable = ({ setToastMessage }) => {
       Number(formData.user_id) === editingInternship.user_id &&
       Number(formData.company_id) === editingInternship.company_id &&
       Number(formData.semester) === editingInternship.semester &&
+      Number(formData.session_id) === editingInternship.session_id &&
       !formData.certificate;
     if (noChanges) {
       setToastMessage({ type: "info", content: "No changes were made." });
@@ -334,7 +341,7 @@ const InternshipTable = ({ setToastMessage }) => {
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full sm:w-76 h-8 p-2 bg-white border rounded-lg text-sm shadow-sm focus:ring-2 focus:ring-blue-400 focus:outline-none"
           />
-          {/*  NEW Export Button  */}
+          {/* NEW Export Button  */}
           <button
             onClick={exportToExcel}
             className={`px-3 py-1.5 rounded-lg text-white text-xs transition shadow-sm w-auto flex-shrink-0 
@@ -400,12 +407,13 @@ const InternshipTable = ({ setToastMessage }) => {
 
       {/* Table Layout */}
       <div className="max-h-400 border rounded-lg overflow-x-auto no-scrollbar">
-        <div className="min-w-[1400px]">
-          <div className="grid grid-cols-[0.5fr_1.2fr_1.2fr_1.2fr_0.8fr_1fr_1.5fr_1fr_1fr] bg-gray-300 p-2 font-semibold text-sm">
+        <div className="min-w-[1500px]">
+          <div className="grid grid-cols-[0.5fr_1.2fr_1.2fr_1.2fr_1fr_0.8fr_1fr_1.5fr_1fr_1fr] bg-gray-300 p-2 font-semibold text-sm">
             <div>Sl. No.</div>
             <div>Student Name</div>
             <div className="text-center">Company</div>
             <div className="text-center">Program</div>
+            <div className="text-center">Session</div>
             <div className="text-center">Semester</div>
             <div className="text-center">Certificate</div>
             <div>Modified By</div>
@@ -419,12 +427,13 @@ const InternshipTable = ({ setToastMessage }) => {
               internships.map((internship, index) => (
                 <div
                   key={internship.internship_id}
-                  className="grid grid-cols-[0.5fr_1.2fr_1.2fr_1.2fr_0.8fr_1fr_1.5fr_1fr_1fr] items-center p-2 border-t bg-white text-sm"
+                  className="grid grid-cols-[0.5fr_1.2fr_1.2fr_1.2fr_1fr_0.8fr_1fr_1.5fr_1fr_1fr] items-center p-2 border-t bg-white text-sm"
                 >
                   <div>{serialNoOffset + index + 1}.</div>
                   <div className="font-semibold">{internship.student_name}</div>
                   <div className="text-center">{internship.company_name}</div>
                   <div className="text-center">{internship.program_name || "N/A"}</div>
+                  <div className="text-center">{internship.session_name || "N/A"}</div>
                   <div className="text-center">{internship.semester}</div>
                   <div className="text-center">
                     {internship.certificate ? (
@@ -481,14 +490,14 @@ const InternshipTable = ({ setToastMessage }) => {
         </button>
       </div>
 
-      {/* --- Modals --- */}
+      {/* Add Modal */}
       {showAddModal && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/30 backdrop-blur-sm z-50 p-4">
           <div className="bg-white w-full max-w-2xl rounded-xl shadow-2xl p-6 animate-fadeIn">
             <h3 className="text-xl font-bold text-gray-800 border-b pb-3 mb-4">
               Add New Internship
             </h3>
-            <form onSubmit={handleAddSubmit}>
+            <form noValidate onSubmit={handleAddSubmit}>
               <div className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <select name="deptId" value={filters.deptId} onChange={handleFilterChange} className="w-full p-3 border rounded-lg">
@@ -501,7 +510,7 @@ const InternshipTable = ({ setToastMessage }) => {
                   </select>
                 </div>
                 <div className="relative">
-                  <input type="text" name="searchTerm" value={filters.searchTerm} onChange={handleFilterChange} className="w-full p-3 border rounded-lg" disabled={!filters.progId} />
+                  <input type="text" name="searchTerm" placeholder="3. Search Student by Name or Roll No." value={filters.searchTerm} onChange={handleFilterChange} className="w-full p-3 border rounded-lg" disabled={!filters.progId} />
                   {searchedStudents.length > 0 && filters.searchTerm && (
                     <ul className="absolute z-10 bg-white border rounded-lg mt-1 w-full max-h-48 overflow-y-auto shadow-md">
                       {searchedStudents.map((s) => (
@@ -519,12 +528,16 @@ const InternshipTable = ({ setToastMessage }) => {
                   )}
                 </div>
                 <select name="company_id" value={formData.company_id} onChange={handleInputChange} className="w-full p-3 border rounded-lg" required>
-                  <option value="">3. Select Company</option>
+                  <option value="">4. Select Company</option>
                   {companies.map((c) => (<option key={c.company_id} value={c.company_id}>{c.company_name}</option>))}
                 </select>
-                <input type="number" min={1} max={8} name="semester" value={formData.semester} onChange={handleInputChange} placeholder="Semester" className="w-full p-3 border rounded-lg" required />
+                <select name="session_id" value={formData.session_id} onChange={handleInputChange} className="w-full p-3 border rounded-lg" required>
+                  <option value="">5. Select Session</option>
+                  {sessions.map((s) => (<option key={s.session_id} value={s.session_id}>{s.session_name}</option>))}
+                </select>
+                <input type="number" min={1} max={10} name="semester" value={formData.semester} onChange={handleInputChange} placeholder="6. Semester" className="w-full p-3 border rounded-lg" required />
                 <label className="block text-sm font-medium text-gray-600 mb-1">
-                  Certificate (PDF, JPG, JPEG, PNG)
+                  7. Certificate (PDF, JPG, JPEG, PNG)
                 </label>
                 <input
                   type="file"
@@ -532,6 +545,7 @@ const InternshipTable = ({ setToastMessage }) => {
                   accept=".jpg,.jpeg,.png,.pdf"
                   onChange={handleInputChange}
                   className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100"
+                  required
                 />
               </div>
               <div className="flex justify-end mt-6 gap-2">
@@ -543,23 +557,28 @@ const InternshipTable = ({ setToastMessage }) => {
         </div>
       )}
 
+      {/* Edit Modal */}
       {showEditModal && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/30 backdrop-blur-sm z-50 p-4">
           <div className="bg-white w-full max-w-lg rounded-xl shadow-2xl p-6 animate-fadeIn">
             <h3 className="text-xl font-bold text-gray-800 border-b pb-3 mb-4">
               Edit Internship
             </h3>
-            <form onSubmit={handleUpdateSubmit}>
+            <form noValidate onSubmit={handleUpdateSubmit}>
               <div className="grid gap-4">
-                <select name="user_id" value={formData.user_id} onChange={handleInputChange} className="w-full p-3 border rounded-lg">
+                <select name="user_id" value={formData.user_id} onChange={handleInputChange} className="w-full p-3 border rounded-lg" required>
                   <option value="">Select Student</option>
                   {allStudents.map((s) => (<option key={s.userid} value={s.userid}>{s.name} ({s.rollno})</option>))}
                 </select>
-                <select name="company_id" value={formData.company_id} onChange={handleInputChange} className="w-full p-3 border rounded-lg">
+                <select name="company_id" value={formData.company_id} onChange={handleInputChange} className="w-full p-3 border rounded-lg" required>
                   <option value="">Select Company</option>
                   {companies.map((c) => (<option key={c.company_id} value={c.company_id}>{c.company_name}</option>))}
                 </select>
-                <input type="number" name="semester" value={formData.semester} onChange={handleInputChange} placeholder="Semester" className="w-full p-3 border rounded-lg" />
+                <select name="session_id" value={formData.session_id} onChange={handleInputChange} className="w-full p-3 border rounded-lg" required>
+                  <option value="">Select Session</option>
+                  {sessions.map((s) => (<option key={s.session_id} value={s.session_id}>{s.session_name}</option>))}
+                </select>
+                <input type="number" name="semester" value={formData.semester} onChange={handleInputChange} placeholder="Semester" className="w-full p-3 border rounded-lg" required />
                 <div>
                   <label className="block text-sm font-medium">Certificate (Optional)</label>
                   <input type="file" name="certificate" onChange={handleInputChange} accept=".pdf,.jpg,.jpeg,.png" className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100" />
@@ -582,11 +601,12 @@ const InternshipTable = ({ setToastMessage }) => {
         </div>
       )}
 
+      {/* ... Confirmation modal ... */}
       {showConfirmModal && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/30 backdrop-blur-sm z-50 p-4">
            <div className="bg-white w-full max-w-md rounded-xl shadow-2xl p-6 animate-fadeIn">
             <h3 className="text-xl font-bold text-gray-800 mb-4">Are you sure?</h3>
-            <p className="text-gray-600 mb-6">This action cannot be undone.</p>
+            <p className="text-gray-600 mb-6">Do you really want to perform this action?</p>
             <div className="flex justify-end gap-3">
               <button onClick={() => setShowConfirmModal(false)} className="px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300">Cancel</button>
               <button onClick={confirmAction} className="px-4 py-2 rounded-lg bg-red-500 text-white hover:bg-red-600">Confirm</button>
