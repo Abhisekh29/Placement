@@ -488,8 +488,11 @@ const StudentTable = ({ setToastMessage }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [totalStudents, setTotalStudents] = useState(0);
-  const totalPages = Math.ceil(totalStudents / limit);
+  
+  // Checkbox Selection State
+  const [selectedIds, setSelectedIds] = useState([]);
 
+  const totalPages = Math.ceil(totalStudents / limit);
   const user = JSON.parse(sessionStorage.getItem("user"));
 
   // Fetch static dropdown data
@@ -530,6 +533,7 @@ const StudentTable = ({ setToastMessage }) => {
     if (!selectedYearId || !showStudentList) {
       setStudents([]);
       setTotalStudents(0);
+      setSelectedIds([]); // Clear selection on filter change
       return;
     }
     setIsLoading(true);
@@ -545,6 +549,7 @@ const StudentTable = ({ setToastMessage }) => {
       });
       setStudents(res.data.data || []);
       setTotalStudents(res.data.total || 0);
+      setSelectedIds([]); // Clear selection on new data fetch
     } catch (err) {
       console.error(err);
       setToastMessage({
@@ -571,8 +576,25 @@ const StudentTable = ({ setToastMessage }) => {
     fetchStudents();
   }, [fetchStudents]);
 
-  // --- MODIFICATION: All handlers now use the new modal ---
+  // --- Checkbox Logic ---
+  const handleSelectAll = (e) => {
+    if (e.target.checked) {
+      const allIds = students.map((s) => s.userid);
+      setSelectedIds(allIds);
+    } else {
+      setSelectedIds([]);
+    }
+  };
 
+  const handleSelectRow = (userid) => {
+    setSelectedIds((prev) => 
+      prev.includes(userid) 
+        ? prev.filter((id) => id !== userid) 
+        : [...prev, userid]
+    );
+  };
+
+  // --- Handlers ---
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
     setCurrentPage(1);
@@ -646,22 +668,12 @@ const StudentTable = ({ setToastMessage }) => {
     }
   };
 
-  // --- FREEZE: Setup modal ---
-  const handleFreezeClick = (student) => {
-    setConfirmModalText({
-      title: "Freeze Profile?",
-      content: `Are you sure you want to freeze ${student.name}'s profile? This will check all requirements and block them from making edits.`,
-    });
-    setActionToConfirm(() => () => executeFreeze(student));
-    setShowConfirmModal(true);
-  };
-
-  // --- FREEZE: The actual API call ---
-  const executeFreeze = async (student) => {
+  // --- SINGLE Status Actions (Freeze/Unfreeze/Lock/Unlock) ---
+  const executeSingleAction = async (userid, action) => {
     try {
-      const res = await api.put(`/adminStudents/${student.userid}/freeze`);
+      const res = await api.put(`/adminStudents/${userid}/${action}`);
       setToastMessage({ type: "success", content: res.data.message });
-      fetchStudents(); // Re-fetch the data from the server
+      fetchStudents();
     } catch (err) {
       setToastMessage({
         type: "error",
@@ -670,31 +682,69 @@ const StudentTable = ({ setToastMessage }) => {
     }
   };
 
-  // --- UNFREEZE: Setup modal ---
-  const handleUnfreezeClick = (student) => {
+  // --- BULK ACTIONS ---
+  const handleBulkAction = (actionType) => {
+    if (selectedIds.length === 0) return;
+    
+    let actionVerb = "";
+    switch(actionType) {
+      case "freeze": actionVerb = "freeze"; break;
+      case "unfreeze": actionVerb = "unfreeze"; break;
+      case "lock": actionVerb = "lock"; break;
+      case "unlock": actionVerb = "unlock"; break;
+      default: actionVerb = "update";
+    }
+
     setConfirmModalText({
-      title: "Unfreeze Profile?",
-      content: `Are you sure you want to unfreeze ${student.name}'s profile? They will be able to edit their details again.`,
+      title: `Bulk ${actionVerb.charAt(0).toUpperCase() + actionVerb.slice(1)}?`,
+      content: `Are you sure you want to ${actionVerb} the ${selectedIds.length} selected student(s)?`
     });
-    setActionToConfirm(() => () => executeUnfreeze(student));
+    setActionToConfirm(() => () => executeBulkUpdate(actionType));
     setShowConfirmModal(true);
   };
 
-  // --- UNFREEZE: The actual API call ---
-  const executeUnfreeze = async (student) => {
+  const executeBulkUpdate = async (action) => {
     try {
-      const res = await api.put(`/adminStudents/${student.userid}/unfreeze`);
-      setToastMessage({ type: "success", content: res.data.message });
-      fetchStudents(); // Re-fetch the data from the server
-    } catch (err) {
-      setToastMessage({
-        type: "error",
-        content: err.response?.data?.message || "An error occurred.",
+      const res = await api.put('/adminStudents/bulk-status', { 
+        userids: selectedIds, 
+        action: action 
       });
+      
+      // Handle Failures (Partial Success)
+      if (res.data.failures && res.data.failures.length > 0) {
+        exportFailureReport(res.data.failures);
+        setToastMessage({ 
+          type: "warning", 
+          content: res.data.message 
+        });
+      } else {
+        setToastMessage({ type: "success", content: res.data.message });
+      }
+      
+      setSelectedIds([]); // Clear selection
+      fetchStudents();
+    } catch (err) {
+      setToastMessage({ type: "error", content: err.response?.data?.message || "Bulk update failed." });
     }
   };
 
-  // This one runs the action that was "queued" by the other handlers
+  // Helper: Export Failure Report
+  const exportFailureReport = (failures) => {
+    const headers = ["Roll No", "Name", "Reason for Failure"];
+    const dataRows = failures.map(f => `"${f.rollno}", "${f.name}", "${f.reason}"`);
+    const csvString = [headers.join(","), ...dataRows].join("\n");
+    
+    const blob = new Blob([csvString], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `Freeze_Failures_${new Date().toISOString().slice(0,10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  // Modal Confirmation Action
   const confirmAction = () => {
     if (typeof actionToConfirm === "function") {
       actionToConfirm();
@@ -703,7 +753,7 @@ const StudentTable = ({ setToastMessage }) => {
     setActionToConfirm(null);
   };
 
-  // --- Pagination and Export ---
+  // --- Helpers (Pagination, Export, Status Text) ---
   const handleNextPage = () => {
     if (currentPage < totalPages) {
       setCurrentPage(currentPage + 1);
@@ -714,6 +764,7 @@ const StudentTable = ({ setToastMessage }) => {
       setCurrentPage(currentPage - 1);
     }
   };
+  
   const exportToExcel = () => {
     if (students.length === 0) {
       setToastMessage({ type: "error", content: "No records to export." });
@@ -732,6 +783,7 @@ const StudentTable = ({ setToastMessage }) => {
       "12th Percentage",
       "Session",
       "Program",
+      "Status"
     ];
     const formatDateForCsv = (dateString) => {
       if (!dateString) return "N/A";
@@ -743,8 +795,12 @@ const StudentTable = ({ setToastMessage }) => {
         return "N/T";
       }
     };
-    const dataRows = students.map((student) =>
-      [
+    const dataRows = students.map((student) => {
+      let status = "Active";
+      if (student.is_profile_frozen === "Yes") status = "Frozen";
+      else if (student.is_profile_locked === "Yes") status = "Locked";
+
+      return [
         `"${(student.rollno || "N/A").toString().replace(/"/g, '""')}"`,
         `"${(student.name || "N/A").replace(/"/g, '""')}"`,
         `"${(student.mobile || "N/A").toString().replace(/"/g, '""')}"`,
@@ -757,24 +813,15 @@ const StudentTable = ({ setToastMessage }) => {
         `"${student.per_12 || "0"}%"`,
         `"${(student.session_name || "N/A").replace(/"/g, '""')}"`,
         `"${(student.program_name || "N/A").replace(/"/g, '""')}"`,
-      ].join(",")
-    );
+        `"${status}"`
+      ].join(",");
+    });
     const csvString = [headers.join(","), ...dataRows].join("\n");
     const blob = new Blob([csvString], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.setAttribute("href", url);
-    const yearName =
-      academicYears.find((y) => y.year_id === selectedYearId)?.year_name ||
-      "Selected";
-    const progName =
-      selectedProgramId !== "all"
-        ? programs.find(
-            (p) => String(p.program_id) === String(selectedProgramId)
-          )?.program_name || "UnknownProgram"
-        : "All";
-    const fileName = `Students_${yearName}_${progName}_Page${currentPage}.csv`;
-    link.setAttribute("download", fileName);
+    link.setAttribute("download", `Students_Export_Page${currentPage}.csv`);
     link.style.visibility = "hidden";
     document.body.appendChild(link);
     link.click();
@@ -785,13 +832,20 @@ const StudentTable = ({ setToastMessage }) => {
     });
   };
 
-  // HANDLER for Status text
-  const getStatusText = (is_profile_frozen) => {
+  const getStatusText = (is_profile_frozen, is_profile_locked) => {
     if (is_profile_frozen === "Yes") {
       return (
         <span className="flex items-center justify-center font-semibold text-red-600">
           <HiLockClosed className="mr-1" />
           Frozen
+        </span>
+      );
+    }
+    if (is_profile_locked === "Yes") {
+      return (
+        <span className="flex items-center justify-center font-semibold text-orange-500">
+          <HiLockClosed className="mr-1" />
+          Locked
         </span>
       );
     }
@@ -807,6 +861,7 @@ const StudentTable = ({ setToastMessage }) => {
   const serialNoOffset =
     limit === "all" || currentPage === 1 ? 0 : (currentPage - 1) * limit;
   const showPagination = showStudentList && !isLoading && limit !== "all";
+  const isAllSelected = students.length > 0 && selectedIds.length === students.length;
 
   return (
     <div className="bg-blue-200 py-2 px-4 rounded-xl shadow-md relative pb-2">
@@ -904,6 +959,39 @@ const StudentTable = ({ setToastMessage }) => {
         )}
       </div>
 
+      {/* --- BULK ACTION BAR --- */}
+      {selectedIds.length > 0 && (
+        <div className="bg-gray-100 p-2 rounded-lg mb-2 flex flex-wrap items-center gap-2 border border-gray-300 animate-fadeIn">
+          <span className="text-sm font-bold text-gray-700 mr-2">
+            {selectedIds.length} Selected
+          </span>
+          <button
+            onClick={() => handleBulkAction("freeze")}
+            className="px-3 py-1 bg-red-500 text-white text-xs rounded-2xl hover:bg-red-600 shadow-sm transition"
+          >
+            Freeze Selected
+          </button>
+          <button
+            onClick={() => handleBulkAction("unfreeze")}
+            className="px-3 py-1 bg-green-500 text-white text-xs rounded-2xl hover:bg-green-600 shadow-sm transition"
+          >
+            Unfreeze Selected
+          </button>
+          <button
+            onClick={() => handleBulkAction("lock")}
+            className="px-3 py-1 bg-orange-500 text-white text-xs rounded-2xl hover:bg-orange-600 shadow-sm transition"
+          >
+            Lock Selected
+          </button>
+          <button
+            onClick={() => handleBulkAction("unlock")}
+            className="px-3 py-1 bg-blue-500 text-white text-xs rounded-2xl hover:bg-blue-600 shadow-sm transition"
+          >
+            Unlock Selected
+          </button>
+        </div>
+      )}
+
       {/* --- Pagination Controls (Top) --- */}
       {showStudentList && !isLoading && (
         <div className="flex flex-col sm:flex-row justify-between items-center gap-2 mb-2 text-sm">
@@ -968,14 +1056,22 @@ const StudentTable = ({ setToastMessage }) => {
               Loading student data...
             </p>
           ) : (
-            <div className="border rounded-lg overflow-hidden">
+            <div className="border rounded-lg overflow-hidden bg-white">
               {students.length > 0 ? (
                 <div className="overflow-x-auto no-scrollbar">
                   <div className="min-w-[1300px]">
                     {/* Headers */}
-                    <div className="grid grid-cols-[60px_2fr_1fr_1.5fr_1.5fr_1fr_1fr_1fr_1.5fr] bg-gray-300 p-2 font-semibold text-sm">
-                      {" "}
-                      {/* 9 columns */}
+                    <div className="grid grid-cols-[40px_60px_1.2fr_0.8fr_1fr_1fr_1fr_1fr_1fr_1.5fr] bg-gray-300 p-2 font-semibold text-sm">
+                      {/* Checkbox Column */}
+                      <div className="text-center">
+                        <input 
+                          type="checkbox" 
+                          checked={isAllSelected} 
+                          onChange={handleSelectAll}
+                          className="w-4 h-4 accent-purple-600 cursor-pointer"
+                        />
+                      </div>
+                      
                       <div>Sl. no.</div>
                       <div className="text-center">Name</div>
                       <div className="text-center">Roll No.</div>
@@ -989,98 +1085,165 @@ const StudentTable = ({ setToastMessage }) => {
 
                     {/* Table Body */}
                     <div className="max-h-400 overflow-y-auto no-scrollbar">
-                      {students.map((student, index) => (
-                        <div
-                          key={student.userid}
-                          className={`grid grid-cols-[60px_2fr_1fr_1.5fr_1.5fr_1fr_1fr_1fr_1.5fr] items-center p-2 border-t text-sm ${
-                            student.is_profile_frozen === "Yes"
-                              ? "bg-gray-100 text-gray-500"
-                              : "bg-white"
-                          }`}
-                        >
-                          {/* Sl. no. */}
-                          <div className="pl-3">
-                            {serialNoOffset + index + 1}.
-                          </div>
-                          {/* Name */}
-                          <div className="font-semibold break-words text-center">
-                            {student.name}
-                          </div>
-                          {/* Roll No */}
-                          <div className="text-center">
-                            {student.rollno || "N/A"}
-                          </div>
-                          {/* Program */}
-                          <div className="break-words text-center">
-                            {student.program_name || "N/A"}
-                          </div>
-                          {/* Admission Session */}
-                          <div className="break-words text-center">
-                            {student.session_name || "N/A"}
-                          </div>
-                          {/* Mobile No */}
-                          <div className="text-center">
-                            {student.mobile || "N/A"}
-                          </div>
-                          {/* Status */}
-                          <div className="text-center">
-                            {getStatusText(student.is_profile_frozen)}
-                          </div>
-                          {/* View More */}
-                          <div className="text-center">
-                            <button
-                              onClick={() => handleViewDetailsClick(student)}
-                              className="bg-purple-500 text-white px-2 py-0.5 rounded-md text-xs hover:bg-purple-600 transition"
-                            >
-                              View Details
-                            </button>
-                          </div>
+                      {students.map((student, index) => {
+                        const isFrozen = student.is_profile_frozen === "Yes";
+                        const isLocked = student.is_profile_locked === "Yes";
+                        const isSelected = selectedIds.includes(student.userid);
 
-                          {/* --- Actions Column --- */}
-                          <div className="flex justify-end gap-2 pr-2">
-                            {/* Freeze/Unfreeze Button */}
-                            {student.is_profile_frozen === "Yes" ? (
-                              <button
-                                onClick={() => handleUnfreezeClick(student)}
-                                className="w-18 bg-green-500 text-white px-2 py-0.5 rounded-md text-xs hover:bg-green-600 transition text-center"
-                                title="Unfreeze Profile"
-                              >
-                                Unfreeze
-                              </button>
-                            ) : (
-                              <button
-                                onClick={() => handleFreezeClick(student)}
-                                className="w-18 bg-blue-400 text-white px-2 py-0.5 rounded-md text-xs hover:bg-red-600 transition text-center"
-                                title="Freeze Profile"
-                              >
-                                Freeze
-                              </button>
-                            )}
+                        return (
+                          <div
+                            key={student.userid}
+                            className={`grid grid-cols-[40px_60px_1.2fr_0.8fr_1fr_1fr_1fr_1fr_1fr_1.5fr] items-center p-2 border-t text-sm ${
+                              isFrozen || isLocked
+                                ? "bg-gray-100 text-gray-500"
+                                : "bg-white"
+                            }`}
+                          >
+                            {/* Row Checkbox */}
+                            <div className="text-center">
+                              <input 
+                                type="checkbox" 
+                                checked={isSelected} 
+                                onChange={() => handleSelectRow(student.userid)}
+                                className="w-4 h-4 accent-purple-600 cursor-pointer"
+                              />
+                            </div>
 
-                            {/* Edit Button */}
-                            <button
-                              onClick={() => handleEditClick(student)}
-                              className={`px-2 py-0.5 rounded-md text-xs text-white transition ${
-                                student.is_profile_frozen === "Yes"
-                                  ? "bg-gray-400 cursor-not-allowed"
-                                  : "bg-blue-500 hover:bg-blue-600"
-                              }`}
-                              disabled={student.is_profile_frozen === "Yes"}
-                              title="Edit Student"
-                            >
-                              Edit
-                            </button>
-                            {/* Delete Button */}
-                            <button
-                              onClick={() => handleDeleteClick(student)}
-                              className="bg-red-500 text-white px-2 py-0.5 rounded-md text-xs hover:bg-red-600 transition"
-                              title="Delete Student"
-                            >
-                              Delete
-                            </button>
+                            {/* Sl. no. */}
+                            <div className="pl-3">
+                              {serialNoOffset + index + 1}.
+                            </div>
+                            {/* Name */}
+                            <div className="font-semibold break-words text-center">
+                              {student.name}
+                            </div>
+                            {/* Roll No */}
+                            <div className="text-center">
+                              {student.rollno || "N/A"}
+                            </div>
+                            {/* Program */}
+                            <div className="break-words text-center">
+                              {student.program_name || "N/A"}
+                            </div>
+                            {/* Admission Session */}
+                            <div className="break-words text-center">
+                              {student.session_name || "N/A"}
+                            </div>
+                            {/* Mobile No */}
+                            <div className="text-center">
+                              {student.mobile || "N/A"}
+                            </div>
+                            {/* Status */}
+                            <div className="text-center">
+                              {getStatusText(student.is_profile_frozen, student.is_profile_locked)}
+                            </div>
+                            {/* View More */}
+                            <div className="text-center">
+                              <button
+                                onClick={() => handleViewDetailsClick(student)}
+                                className="bg-purple-500 text-white px-2 py-0.5 rounded-md text-xs hover:bg-purple-600 transition"
+                              >
+                                View Details
+                              </button>
+                            </div>
+
+                            {/* --- Actions Column --- */}
+                            <div className="flex justify-end gap-0.5">
+                              
+                              {/* Freeze/Unfreeze Button */}
+                              {isFrozen ? (
+                                <button
+                                  onClick={() => {
+                                    setConfirmModalText({
+                                      title: "Unfreeze Profile?",
+                                      content: `Are you sure you want to unfreeze ${student.name}'s profile? They will be able to edit their details again.`,
+                                    });
+                                    setActionToConfirm(() => () => executeSingleAction(student.userid, 'unfreeze'));
+                                    setShowConfirmModal(true);
+                                  }}
+                                  className="w-16 bg-green-500 text-white px-2 py-0.5 rounded-md text-xs hover:bg-green-600 transition text-center"
+                                  title="Unfreeze Profile"
+                                >
+                                  Unfreeze
+                                </button>
+                              ) : (
+                                <button
+                                  onClick={() => {
+                                    setConfirmModalText({
+                                      title: "Freeze Profile?",
+                                      content: `Are you sure you want to freeze ${student.name}'s profile? This will check all requirements.`,
+                                    });
+                                    setActionToConfirm(() => () => executeSingleAction(student.userid, 'freeze'));
+                                    setShowConfirmModal(true);
+                                  }}
+                                  className="w-16 bg-blue-400 text-white px-2 py-0.5 rounded-md text-xs hover:bg-blue-500 transition text-center"
+                                  title="Freeze Profile"
+                                >
+                                  Freeze
+                                </button>
+                              )}
+
+                              {/* Lock/Unlock Button (Only visible if not frozen, or disables if frozen) */}
+                              {isLocked ? (
+                                <button
+                                  onClick={() => {
+                                    setConfirmModalText({
+                                      title: "Unlock Profile?",
+                                      content: `Unlock ${student.name}'s basic profile details?`,
+                                    });
+                                    setActionToConfirm(() => () => executeSingleAction(student.userid, 'unlock'));
+                                    setShowConfirmModal(true);
+                                  }}
+                                  disabled={isFrozen} // Cannot unlock if frozen (freeze has priority)
+                                  className="w-14 bg-pink-500 text-white px-2 py-0.5 rounded-md text-xs hover:bg-pink-600 transition text-center disabled:opacity-50 disabled:cursor-not-allowed"
+                                  title={isFrozen ? "Unfreeze first" : "Unlock Profile"}
+                                >
+                                  Unlock
+                                </button>
+                              ) : (
+                                <button
+                                  onClick={() => {
+                                    setConfirmModalText({
+                                      title: "Lock Profile?",
+                                      content: `Lock ${student.name}'s basic profile details? They can still apply for drives.`,
+                                    });
+                                    setActionToConfirm(() => () => executeSingleAction(student.userid, 'lock'));
+                                    setShowConfirmModal(true);
+                                  }}
+                                  disabled={isFrozen}
+                                  className="w-14 bg-orange-400 text-white px-2 py-0.5 rounded-md text-xs hover:bg-orange-500 transition text-center disabled:opacity-50 disabled:cursor-not-allowed"
+                                  title={isFrozen ? "Unfreeze first" : "Lock Profile"}
+                                >
+                                  Lock
+                                </button>
+                              )}
+
+                              {/* Edit Button */}
+                              <button
+                                onClick={() => handleEditClick(student)}
+                                className={`px-2 py-0.5 rounded-md text-xs text-white transition ${
+                                  isFrozen || isLocked
+                                    ? "bg-gray-400 cursor-not-allowed"
+                                    : "bg-blue-500 hover:bg-blue-600"
+                                }`}
+                                disabled={isFrozen || isLocked}
+                                title={isFrozen || isLocked ? "Profile Locked/Frozen" : "Edit Student"}
+                              >
+                                Edit
+                              </button>
+                              
+                              {/* Delete Button */}
+                              <button
+                                onClick={() => handleDeleteClick(student)}
+                                className="bg-red-500 text-white px-2 py-0.5 rounded-md text-xs hover:bg-red-600 transition"
+                                title="Delete Student"
+                              >
+                                Delete
+                              </button>
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
                 </div>

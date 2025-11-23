@@ -25,6 +25,7 @@ const StudentDashboard = () => {
   const dropdownRef = useRef(null); // Ref for detecting outside clicks
 
   const [isFrozen, setIsFrozen] = useState(false);
+  const [isLocked, setIsLocked] = useState(false);
 
   useEffect(() => {
     const fetchStudentDetails = async () => {
@@ -32,9 +33,13 @@ const StudentDashboard = () => {
         const res = await api.get(`/student_master/${user.userid}`);
         if (res.data.length > 0) {
           setStudentData(res.data[0]);
-          // Save the frozen status to state and session storage
+          // Save the statuses to state and session storage
           const frozen = res.data[0].is_profile_frozen === "Yes";
+          const locked = res.data[0].is_profile_locked === "Yes";
+          
           setIsFrozen(frozen);
+          setIsLocked(locked);
+          
           sessionStorage.setItem(
             "studentStatus",
             JSON.stringify({ isFrozen: frozen })
@@ -190,7 +195,12 @@ const StudentDashboard = () => {
         
         {studentData && !editMode ? (
           <>
-            <Profile studentData={studentData} onEdit={handleEdit} isFrozen={isFrozen}/>
+            <Profile 
+              studentData={studentData} 
+              onEdit={handleEdit} 
+              isFrozen={isFrozen} 
+              isLocked={isLocked} 
+            />
             <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
               <InternshipDashboardWidget />
               <PlacementDashboardWidget isFrozen={isFrozen}/>

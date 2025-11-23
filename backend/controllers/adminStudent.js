@@ -1,5 +1,51 @@
 import { db } from "../db.js";
 
+// --- HELPER: Validate Freeze Eligibility ---
+// Returns { valid: true } or { valid: false, reason: "..." }
+const validateFreezeEligibility = async (userid) => {
+  try {
+    // 1. Check Pending Placements
+    const placementCheckQuery =
+      "SELECT COUNT(*) as count FROM student_placement WHERE user_id = ? AND is_selected = 'Pending'";
+    const [placementData] = await db.promise().query(placementCheckQuery, [userid]);
+
+    if (placementData[0].count > 0) {
+      return { valid: false, reason: `Has ${placementData[0].count} pending placement application(s).` };
+    }
+
+    // 2. Check Internship Requirements
+    const studentQuery = "SELECT program_id FROM student_master WHERE userid = ?";
+    const [studentData] = await db.promise().query(studentQuery, [userid]);
+
+    if (studentData.length === 0) return { valid: false, reason: "Student profile not found." };
+    
+    const studentProgramId = studentData[0].program_id;
+    const reqQuery = "SELECT semester, internship_count FROM internship_requirement WHERE program_id = ?";
+    const [requirements] = await db.promise().query(reqQuery, [studentProgramId]);
+
+    if (requirements.length > 0) {
+      const completedQuery =
+        "SELECT semester, COUNT(*) as count FROM student_internship WHERE user_id = ? GROUP BY semester";
+      const [completedData] = await db.promise().query(completedQuery, [userid]);
+
+      const completedMap = new Map();
+      completedData.forEach((item) => completedMap.set(item.semester, item.count));
+
+      for (const req of requirements) {
+        const completedCount = completedMap.get(req.semester) || 0;
+        if (completedCount < req.internship_count) {
+          const needed = req.internship_count - completedCount;
+          return { valid: false, reason: `Missing ${needed} internship(s) for Semester ${req.semester}.` };
+        }
+      }
+    }
+
+    return { valid: true };
+  } catch (error) {
+    return { valid: false, reason: "Database error during validation." };
+  }
+};
+
 // Fetching active students (is_enable = '1') WITH PAGINATION
 export const getStudents = (req, res) => {
   // --- Pagination & Filter Parameters ---
@@ -25,6 +71,7 @@ export const getStudents = (req, res) => {
       ss.session_name,
       p.program_name,
       s.is_profile_frozen,
+      s.is_profile_locked, -- Added Lock Status
       s.mod_time,
       um.username AS modified_by
     FROM student_master AS s
@@ -288,5 +335,102 @@ export const unfreezeStudent = async (req, res) => {
     return res
       .status(500)
       .json({ message: "An internal server error occurred.", error: err });
+  }
+};
+
+// --- LOCK / UNLOCK FUNCTIONS (Manual) ---
+export const lockStudent = async (req, res) => {
+  const { userid } = req.params;
+  const mod_by = req.user.userid;
+
+  try {
+    const q = "UPDATE student_master SET is_profile_locked = 'Yes', mod_by = ?, mod_time = NOW() WHERE userid = ?";
+    await db.promise().query(q, [mod_by, userid]);
+    return res.status(200).json({ message: "Student profile has been locked." });
+  } catch (err) {
+    return res.status(500).json({ message: "Error locking student.", error: err });
+  }
+};
+
+export const unlockStudent = async (req, res) => {
+  const { userid } = req.params;
+  const mod_by = req.user.userid;
+
+  try {
+    const q = "UPDATE student_master SET is_profile_locked = 'No', mod_by = ?, mod_time = NOW() WHERE userid = ?";
+    await db.promise().query(q, [mod_by, userid]);
+    return res.status(200).json({ message: "Student profile has been unlocked." });
+  } catch (err) {
+    return res.status(500).json({ message: "Error unlocking student.", error: err });
+  }
+};
+
+// --- CENTRAL BULK UPDATE FUNCTION ---
+export const bulkUpdateStudentStatus = async (req, res) => {
+  const { userids, action } = req.body; // action: 'freeze', 'unfreeze', 'lock', 'unlock'
+  const mod_by = req.user.userid;
+
+  if (!userids || userids.length === 0) {
+    return res.status(400).json({ message: "No students selected." });
+  }
+
+  try {
+    // === Case 1: Bulk Freeze (PARTIAL SUCCESS LOGIC) ===
+    // We verify everyone. We freeze the good ones. We list the bad ones.
+    if (action === "freeze") {
+      const failures = [];
+      const successIds = [];
+
+      // Validate ALL selected students
+      for (const id of userids) {
+        const check = await validateFreezeEligibility(id);
+        if (!check.valid) {
+          // Add to failure report
+          const [sData] = await db.promise().query("SELECT rollno, name FROM student_master WHERE userid = ?", [id]);
+          failures.push({
+            userid: id,
+            rollno: sData[0]?.rollno || "N/A",
+            name: sData[0]?.name || "Unknown",
+            reason: check.reason
+          });
+        } else {
+          // Add to success list
+          successIds.push(id);
+        }
+      }
+
+      // Execute freeze for the successful ones (if any)
+      if (successIds.length > 0) {
+        const q = "UPDATE student_master SET is_profile_frozen = 'Yes', mod_by = ?, mod_time = NOW() WHERE userid IN (?)";
+        await db.promise().query(q, [mod_by, successIds]);
+      }
+
+      // Return results (Successful count + Failure details)
+      return res.status(200).json({
+        message: `Processed: ${successIds.length} frozen, ${failures.length} skipped due to requirements.`,
+        failures: failures, // Frontend will generate Excel from this
+        successCount: successIds.length
+      });
+    }
+
+    // === Case 2: Simple Bulk Actions (Unfreeze, Lock, Unlock) - Direct Update ===
+    let field = "";
+    let status = "";
+
+    if (action === "unfreeze") { field = "is_profile_frozen"; status = "No"; }
+    else if (action === "lock") { field = "is_profile_locked"; status = "Yes"; }
+    else if (action === "unlock") { field = "is_profile_locked"; status = "No"; }
+    else { return res.status(400).json({ message: "Invalid action." }); }
+
+    const q = `UPDATE student_master SET ${field} = ?, mod_by = ?, mod_time = NOW() WHERE userid IN (?)`;
+    await db.promise().query(q, [status, mod_by, userids]);
+
+    return res.status(200).json({ 
+      message: `Bulk ${action} successful for ${userids.length} student(s).` 
+    });
+
+  } catch (err) {
+    console.error("Bulk update error:", err);
+    return res.status(500).json({ message: "Bulk update failed.", error: err });
   }
 };

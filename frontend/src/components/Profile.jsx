@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { HiPencil } from "react-icons/hi";
 import api from "../api/axios";
 
-const Profile = ({ studentData, onEdit, isFrozen }) => {
+const Profile = ({ studentData, onEdit, isFrozen, isLocked }) => {
   const [sessions, setSessions] = useState([]);
   const [programs, setPrograms] = useState([]);
 
@@ -32,15 +32,31 @@ const Profile = ({ studentData, onEdit, isFrozen }) => {
     <div className="bg-blue-100 p-6 md:p-8 rounded-xl shadow-md max-w mx-auto border-blue-400 border-2">
       {/* Header */}
       <div className="flex justify-between items-center mb-6 border-b pb-4">
-        <h2 className="text-2xl font-bold text-gray-800">Student Profile</h2>
+        <div className="flex items-center gap-3">
+          <h2 className="text-2xl font-bold text-gray-800">Student Profile</h2>
+          {/* Show Locked badge if locked but NOT frozen (since Frozen has its own big banner) */}
+          {isLocked && !isFrozen && (
+            <span className="text-xs bg-orange-200 text-orange-800 px-2 py-1 rounded-full font-semibold border border-orange-400">
+              Locked
+            </span>
+          )}
+        </div>
+        
         <button
           onClick={onEdit}
-          disabled={isFrozen}
+          disabled={isFrozen || isLocked}
           className={`flex items-center text-white px-4 py-2 rounded-lg transition ${
-            isFrozen
+            isFrozen || isLocked
               ? "bg-gray-400 cursor-not-allowed"
               : "bg-blue-500 hover:bg-blue-600"
           }`}
+          title={
+            isFrozen
+              ? "Profile is Frozen"
+              : isLocked
+              ? "Profile details are Locked"
+              : "Edit Profile"
+          }
         >
           <HiPencil className="h-5 w-5 mr-2" />
           Edit

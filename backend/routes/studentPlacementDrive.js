@@ -3,12 +3,12 @@ import {
   getActiveDrives, 
   getDriveDetails, 
 } from "../controllers/studentPlacementDrive.js";
-import { isStudent } from "../middleware/auth.js"; 
+import { isStudent, isStudentAndActive } from "../middleware/auth.js"; 
 
 const router = express.Router();
 
 // --- Student Routes ---
-router.get("/active", isStudent, getActiveDrives);
+router.get("/active", isStudentAndActive, getActiveDrives);
 router.get("/details/:driveId", isStudent, getDriveDetails);
 
 export default router;
