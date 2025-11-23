@@ -135,6 +135,13 @@ export const addInternship = (req, res) => {
   ];
   db.query(q, values, (err, data) => {
     if (err) {
+        // FIX: Delete file if DB error to prevent orphaned files
+        if (req.file) {
+            fs.unlink(req.file.path, (unlinkErr) => {
+                if (unlinkErr) console.error("Failed to delete orphaned file:", unlinkErr);
+            });
+        }
+
         if (err.code === 'ER_DUP_ENTRY') {
             return res.status(409).json({ message: "Error: This student already has an internship for this company and semester." });
         }
@@ -149,22 +156,21 @@ export const updateInternship = (req, res) => {
   const getOldFileQuery = "SELECT certificate FROM student_internship WHERE internship_id = ?";
 
   db.query(getOldFileQuery, [internshipId], (err, data) => {
-    if (err) return res.status(500).json(err);
-    if (data.length === 0) return res.status(404).json({ message: "Internship record not found." });
+    if (err) {
+        // Cleanup new file if initial query fails
+        if(req.file) fs.unlink(req.file.path, () => {});
+        return res.status(500).json(err);
+    }
+    if (data.length === 0) {
+        if(req.file) fs.unlink(req.file.path, () => {});
+        return res.status(404).json({ message: "Internship record not found." });
+    }
 
     const oldFileName = data[0].certificate;
     let newFileName = oldFileName;
 
     if (req.file) {
       newFileName = req.file.filename;
-      if (oldFileName) {
-        const oldFilePath = path.resolve("uploads/certificates", oldFileName);
-        if (fs.existsSync(oldFilePath)) {
-          fs.unlink(oldFilePath, (unlinkErr) => {
-            if (unlinkErr) console.error("Could not delete old certificate:", unlinkErr);
-          });
-        }
-      }
     }
 
     const q = "UPDATE student_internship SET `user_id` = ?, `company_id` = ?, `semester` = ?, `session_id` = ?, `certificate` = ?, `mod_by` = ?, `mod_time` = NOW() WHERE `internship_id` = ?";
@@ -177,13 +183,32 @@ export const updateInternship = (req, res) => {
       req.body.mod_by,
       internshipId,
     ];
-    db.query(q, values, (err, data) => {
-        if (err) {
-            if (err.code === 'ER_DUP_ENTRY') {
+    
+    db.query(q, values, (updateErr, updateData) => {
+        if (updateErr) {
+            // FIX: Delete NEW file if DB update fails
+            if (req.file) {
+                fs.unlink(req.file.path, (unlinkErr) => {
+                    if (unlinkErr) console.error("Failed to delete orphaned new file:", unlinkErr);
+                });
+            }
+
+            if (updateErr.code === 'ER_DUP_ENTRY') {
                 return res.status(409).json({ message: "Error: This student already has an internship for this company and semester." });
             }
-            return res.status(500).json(err);
+            return res.status(500).json(updateErr);
         }
+
+        // FIX: Only delete OLD file after successful DB update
+        if (req.file && oldFileName && oldFileName !== newFileName) {
+            const oldFilePath = path.resolve("uploads/certificates", oldFileName);
+            if (fs.existsSync(oldFilePath)) {
+              fs.unlink(oldFilePath, (unlinkErr) => {
+                if (unlinkErr) console.error("Could not delete old certificate:", unlinkErr);
+              });
+            }
+        }
+
       return res.status(200).json({ message: "Internship record updated successfully." });
     });
   });
@@ -195,19 +220,23 @@ export const deleteInternship = (req, res) => {
 
   db.query(getFileQuery, [internshipId], (err, data) => {
     if (err) return res.status(500).json(err);
-    if (data.length > 0 && data[0].certificate) {
-      const fileName = data[0].certificate;
-      const filePath = path.resolve("uploads/certificates", fileName);
-      if (fs.existsSync(filePath)) {
-        fs.unlink(filePath, (unlinkErr) => {
-          if (unlinkErr) console.error("Could not delete certificate file:", unlinkErr);
-        });
-      }
-    }
+    
+    const fileName = (data.length > 0) ? data[0].certificate : null;
 
     const q = "DELETE FROM student_internship WHERE internship_id = ?";
-    db.query(q, [internshipId], (err, data) => {
-      if (err) return res.status(500).json({ message: "Failed to delete internship.", error: err });
+    db.query(q, [internshipId], (deleteErr, deleteData) => {
+      if (deleteErr) return res.status(500).json({ message: "Failed to delete internship.", error: deleteErr });
+      
+      // FIX: Only delete file AFTER DB record is deleted
+      if (fileName) {
+        const filePath = path.resolve("uploads/certificates", fileName);
+        if (fs.existsSync(filePath)) {
+          fs.unlink(filePath, (unlinkErr) => {
+            if (unlinkErr) console.error("Could not delete certificate file:", unlinkErr);
+          });
+        }
+      }
+
       return res.status(200).json({ message: "Internship record deleted successfully." });
     });
   });
