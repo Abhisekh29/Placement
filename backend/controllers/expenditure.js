@@ -6,7 +6,10 @@ import fs from "fs"; // Import the File System module
 // Multer setup
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, "uploads/expenditure/");
+    // Ensure directory exists
+    const dest = "uploads/expenditure/";
+    fs.mkdirSync(dest, { recursive: true });
+    cb(null, dest);
   },
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now();
@@ -125,7 +128,13 @@ export const addExpenditure = (req, res) => {
     req.body.mod_by,
   ];
   db.query(q, values, (err, data) => {
-    if (err) return res.status(500).json(err);
+    if (err) {
+        // FIX: Delete file if DB insert fails
+        if (req.file) {
+            fs.unlink(req.file.path, () => {}); 
+        }
+        return res.status(500).json(err);
+    }
     return res.status(201).json({ message: "Expenditure added successfully." });
   });
 };
@@ -135,21 +144,20 @@ export const updateExpenditure = (req, res) => {
   
   const getOldFileQuery = "SELECT bill_file FROM expenditure WHERE exp_id = ?";
   db.query(getOldFileQuery, [expId], (err, data) => {
-    if (err) return res.status(500).json(err);
-    if (data.length === 0) return res.status(404).json({ message: "Expenditure not found." });
+    if (err) {
+        if(req.file) fs.unlink(req.file.path, () => {});
+        return res.status(500).json(err);
+    }
+    if (data.length === 0) {
+        if(req.file) fs.unlink(req.file.path, () => {});
+        return res.status(404).json({ message: "Expenditure not found." });
+    }
 
     const oldFileName = data[0].bill_file;
     let newFileName = oldFileName;
 
     if (req.file) {
       newFileName = req.file.filename;
-      
-      const oldFilePath = path.join("uploads/expenditure", oldFileName);
-      if (fs.existsSync(oldFilePath)) {
-        fs.unlink(oldFilePath, (unlinkErr) => {
-          if (unlinkErr) console.error("Error deleting old file:", unlinkErr);
-        });
-      }
     }
 
     const q = "UPDATE expenditure SET `session_id` = ?, `expense_on` = ?, `amount` = ?, `bill_file` = ?, `mod_by` = ?, `mod_time` = NOW() WHERE `exp_id` = ?";
@@ -163,7 +171,24 @@ export const updateExpenditure = (req, res) => {
     ];
 
     db.query(q, values, (err, data) => {
-      if (err) return res.status(500).json(err);
+      if (err) {
+        // FIX: DB failed, delete the new orphaned file
+        if (req.file) {
+            fs.unlink(req.file.path, () => {}); 
+        }
+        return res.status(500).json(err);
+      }
+
+      // FIX: DB Success, NOW delete the old file
+      if (req.file && oldFileName && oldFileName !== newFileName) {
+        const oldFilePath = path.join("uploads/expenditure", oldFileName);
+        if (fs.existsSync(oldFilePath)) {
+          fs.unlink(oldFilePath, (unlinkErr) => {
+            if (unlinkErr) console.error("Error deleting old file:", unlinkErr);
+          });
+        }
+      }
+
       return res.status(200).json({ message: "Expenditure updated successfully." });
     });
   });
@@ -176,21 +201,25 @@ export const deleteExpenditure = (req, res) => {
   const getFileQuery = "SELECT bill_file FROM expenditure WHERE exp_id = ?";
   db.query(getFileQuery, [expId], (err, data) => {
     if (err) return res.status(500).json(err);
-    if (data.length > 0) {
-      const fileName = data[0].bill_file;
-      const filePath = path.join("uploads/expenditure", fileName);
-      if (fs.existsSync(filePath)) {
-        fs.unlink(filePath, (unlinkErr) => {
-          if (unlinkErr) console.error("Error deleting file:", unlinkErr);
-        });
-      }
-    }
+    
+    const fileName = (data.length > 0) ? data[0].bill_file : null;
 
     const q = "DELETE FROM expenditure WHERE exp_id = ?";
     db.query(q, [expId], (err, data) => {
       if (err) {
         return res.status(500).json({ message: "Failed to delete expenditure record.", error: err });
       }
+      
+      // FIX: Only delete file after successful DB delete
+      if (fileName) {
+        const filePath = path.join("uploads/expenditure", fileName);
+        if (fs.existsSync(filePath)) {
+          fs.unlink(filePath, (unlinkErr) => {
+            if (unlinkErr) console.error("Error deleting file:", unlinkErr);
+          });
+        }
+      }
+
       return res.status(200).json({ message: "Expenditure deleted successfully." });
     });
   });

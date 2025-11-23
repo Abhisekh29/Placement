@@ -6,10 +6,13 @@ import fs from "fs";
 // --- 1. Multer Configuration for Offer Letters ---
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    // 🌟 FIX: Corrected folder path
     const dest = "uploads/offer_letters/";
-    fs.mkdirSync(dest, { recursive: true });
-    cb(null, dest);
+    try {
+      fs.mkdirSync(dest, { recursive: true });
+      cb(null, dest);
+    } catch (err) {
+      cb(err, dest);
+    }
   },
   filename: (req, file, cb) => {
     const uniqueSuffix = req.user.userid + "-" + req.params.driveId + "-" + Date.now();
@@ -33,7 +36,7 @@ export const uploadOfferLetter = multer({ storage, fileFilter });
 
 
 // --- 2. getMyPlacements (FIXED) ---
-// Now selects all the columns from your database screenshot
+// Now selects all the columns from your database
 export const getMyPlacements = (req, res) => {
   const user_id = req.user.userid; 
 
@@ -69,7 +72,7 @@ export const getMyPlacements = (req, res) => {
 };
 
 // --- 3. updateMyPlacement (FIXED) ---
-// Matches your schema: 'is_selected', 'role', 'place', 'offerletter_file_name'
+// Matches schema: 'is_selected', 'role', 'place', 'offerletter_file_name'
 export const updateMyPlacement = (req, res) => {
   const user_id = req.user.userid;
   const { driveId } = req.params;
@@ -78,26 +81,26 @@ export const updateMyPlacement = (req, res) => {
   const getOldFileQuery = "SELECT offerletter_file_name FROM student_placement WHERE drive_id = ? AND user_id = ?";
   
   db.query(getOldFileQuery, [driveId, user_id], (err, data) => {
-    if (err) return res.status(500).json({ message: "Database error", error: err });
-    if (data.length === 0) return res.status(404).json({ message: "Application not found." });
+    if (err) {
+        // Cleanup new file if initial query fails
+        if(req.file) fs.unlink(req.file.path, () => {});
+        return res.status(500).json({ message: "Database error", error: err });
+    }
+    if (data.length === 0) {
+        if(req.file) fs.unlink(req.file.path, () => {});
+        return res.status(404).json({ message: "Application not found." });
+    }
 
     const oldFileName = data[0].offerletter_file_name;
     let newFileName = oldFileName;
 
     if (req.file) {
       newFileName = req.file.filename;
-      if (oldFileName) {
-        const oldFilePath = path.resolve("uploads/offer_letters", oldFileName);
-        if (fs.existsSync(oldFilePath)) {
-          fs.unlink(oldFilePath, (unlinkErr) => {
-            if (unlinkErr) console.error("Could not delete old offer letter:", unlinkErr);
-          });
-        }
-      }
     }
 
     let updateQuery, values;
 
+    // Logic: If 'No' or 'Pending', we clear the data.
     if (String(is_selected) === 'Yes') {
       // If "Yes" is selected, update all fields
       updateQuery = `
@@ -127,30 +130,45 @@ export const updateMyPlacement = (req, res) => {
         driveId,
         user_id
       ];
-      
-      // If status is set to No/Pending, delete the old offer letter file
-      if (oldFileName) {
-        const oldFilePath = path.resolve("uploads/offer_letters", oldFileName);
-        if (fs.existsSync(oldFilePath)) {
-          fs.unlink(oldFilePath, (unlinkErr) => {
-            if (unlinkErr) console.error("Could not delete old offer letter:", unlinkErr);
-          });
-        }
-      }
     }
 
-    db.query(updateQuery, values, (err, data) => {
-      if (err) {
-        console.error("DB Error updating placement:", err);
-        return res.status(500).json(err);
+    db.query(updateQuery, values, (updateErr, updateData) => {
+      if (updateErr) {
+        // DB update failed -> Delete the NEW file (orphaned)
+        if (req.file) {
+            fs.unlink(req.file.path, (unlinkErr) => {
+                if (unlinkErr) console.error("Failed to delete orphaned offer letter:", unlinkErr);
+            });
+        }
+        console.error("DB Error updating placement:", updateErr);
+        return res.status(500).json(updateErr);
       }
+
+      // DB Success -> NOW handle old file deletion
+      // Case A: Replaced file (Yes -> Yes with new file)
+      if (String(is_selected) === 'Yes' && req.file && oldFileName && oldFileName !== newFileName) {
+        const oldFilePath = path.resolve("uploads/offer_letters", oldFileName);
+        if (fs.existsSync(oldFilePath)) {
+            fs.unlink(oldFilePath, () => {});
+        }
+      }
+      // Case B: Cleared file (Yes -> No/Pending)
+      if (String(is_selected) !== 'Yes' && oldFileName) {
+        const oldFilePath = path.resolve("uploads/offer_letters", oldFileName);
+        if (fs.existsSync(oldFilePath)) {
+            fs.unlink(oldFilePath, (unlinkErr) => {
+                if (unlinkErr) console.error("Could not delete old offer letter:", unlinkErr);
+            });
+        }
+      }
+
       return res.status(200).json({ message: "Application updated successfully." });
     });
   });
 };
 
 
-// --- 4. applyForDrive (CRITICAL FIX) ---
+// --- 4. applyForDrive (CRITICAL ) ---
 // This now finds the CTC and saves it to your 'student_placement' table
 export const applyForDrive = (req, res) => {
   const user_id = req.user.userid; 
