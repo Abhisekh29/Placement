@@ -46,7 +46,8 @@ export const getMyPlacements = (req, res) => {
       sp.drive_id,
       pd.drive_name,
       cm.company_name,
-      pd.ctc,
+      sp.ctc,
+      pd.ctc AS drive_ctc,
       pd.drive_description,
       sp.is_selected,
       sp.role,
@@ -76,7 +77,7 @@ export const getMyPlacements = (req, res) => {
 export const updateMyPlacement = (req, res) => {
   const user_id = req.user.userid;
   const { driveId } = req.params;
-  const { is_selected, role, place } = req.body; 
+  const { is_selected, role, place, ctc } = req.body; 
 
   const getOldFileQuery = "SELECT offerletter_file_name FROM student_placement WHERE drive_id = ? AND user_id = ?";
   
@@ -105,13 +106,14 @@ export const updateMyPlacement = (req, res) => {
       // If "Yes" is selected, update all fields
       updateQuery = `
         UPDATE student_placement 
-        SET is_selected = ?, role = ?, place = ?, offerletter_file_name = ?, mod_by = ?, mod_time = NOW() 
+        SET is_selected = ?, role = ?, place = ?, ctc = ?, offerletter_file_name = ?, mod_by = ?, mod_time = NOW() 
         WHERE drive_id = ? AND user_id = ?
       `;
       values = [
         is_selected,
         role || null,
         place || null, 
+        ctc || null,
         newFileName,
         user_id,
         driveId,
@@ -121,7 +123,7 @@ export const updateMyPlacement = (req, res) => {
       // If "No" or "Pending" is selected, reset fields to NULL
       updateQuery = `
         UPDATE student_placement 
-        SET is_selected = ?, role = NULL, place = NULL, offerletter_file_name = NULL, mod_by = ?, mod_time = NOW() 
+        SET is_selected = ?, role = NULL, place = NULL, ctc = NULL, offerletter_file_name = NULL, mod_by = ?, mod_time = NOW() 
         WHERE drive_id = ? AND user_id = ?
       `;
       values = [

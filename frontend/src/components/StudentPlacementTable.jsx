@@ -93,6 +93,7 @@ const StudentPlacementTable = ({ setToastMessage, isFrozen }) => {
     is_selected: "No",
     role: "",
     place: "",
+    ctc: "",
     offerletter_file_name: null,
   });
 
@@ -124,6 +125,7 @@ const StudentPlacementTable = ({ setToastMessage, isFrozen }) => {
       is_selected: placement.is_selected || "No",
       role: placement.role || "",
       place: placement.place || "",
+      ctc: placement.ctc || "",
       offerletter_file_name: null,
     });
     setShowEditModal(true);
@@ -143,6 +145,21 @@ const StudentPlacementTable = ({ setToastMessage, isFrozen }) => {
     const { name, value, files } = e.target;
     if (name === "offerletter_file_name") {
       setFormData((prev) => ({ ...prev, [name]: files[0] }));
+    } else if (name === "is_selected") {
+      setFormData((prev) => {
+        let newCtc = prev.ctc;
+        
+        if (value === "Yes") {
+            if (!newCtc && selectedPlacement) {
+                newCtc = selectedPlacement.drive_ctc;
+            }
+        }
+        return {
+           ...prev,
+           [name]: value,
+           ctc: newCtc
+        };
+      });
     } else {
       setFormData((prev) => ({ ...prev, [name]: value }));
     }
@@ -155,6 +172,7 @@ const StudentPlacementTable = ({ setToastMessage, isFrozen }) => {
       const missingFields = [];
       if (!formData.role.trim()) missingFields.push("Role");
       if (!formData.place.trim()) missingFields.push("Place");
+      if (!formData.ctc) missingFields.push("CTC");
       if (!formData.offerletter_file_name && !selectedPlacement.offerletter_file_name)
         missingFields.push("Offer Letter");
 
@@ -173,6 +191,7 @@ const StudentPlacementTable = ({ setToastMessage, isFrozen }) => {
       formData.is_selected === selectedPlacement.is_selected &&
       formData.role.trim() === (selectedPlacement.role || "").trim() &&
       formData.place.trim() === (selectedPlacement.place || "").trim() &&
+      Number(formData.ctc) === Number(selectedPlacement.ctc || 0) &&
       !formData.offerletter_file_name;
 
     if (noChanges) {
@@ -194,6 +213,7 @@ const StudentPlacementTable = ({ setToastMessage, isFrozen }) => {
     data.append("is_selected", formData.is_selected);
     data.append("role", formData.role);
     data.append("place", formData.place);
+    data.append("ctc", formData.ctc);
     if (formData.offerletter_file_name) {
       data.append("offerletter_file_name", formData.offerletter_file_name);
     }
@@ -266,7 +286,9 @@ const StudentPlacementTable = ({ setToastMessage, isFrozen }) => {
                   <div className="font-semibold pr-2">{placement.drive_name}</div>
                   <div className="pr-2">{placement.company_name}</div>
                   <div className="pr-2">
-                    {placement.ctc ? `₹${Number(placement.ctc || 0).toFixed(2)} LPA` : "N/A"}
+                    {placement.is_selected === "Yes" && placement.ctc
+                      ? `₹${Number(placement.ctc).toFixed(2)} LPA`
+                      : "N/A"}
                   </div>
                   <div
                     className="pr-2 text-gray-700 hover:underline truncate cursor-pointer"
@@ -373,6 +395,22 @@ const StudentPlacementTable = ({ setToastMessage, isFrozen }) => {
                         value={formData.place}
                         onChange={handleFormChange}
                         placeholder="e.g., Bangalore, Remote"
+                        className="w-full p-2 border rounded-lg"
+                      />
+                    </div>
+
+                    {/* CTC Input */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        CTC (in LPA)
+                      </label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        name="ctc"
+                        value={formData.ctc}
+                        onChange={handleFormChange}
+                        placeholder="e.g., 12.5"
                         className="w-full p-2 border rounded-lg"
                       />
                     </div>
