@@ -187,7 +187,7 @@ const Homepage = () => {
               </h2>
             </Link>
           </div>
-          <div className="p-6 pt-4 bg-gradient-to-br from-white to-blue-50 rounded-2xl shadow-lg border border-blue-100 overflow-hidden h-90 flex flex-col backdrop-blur-sm">
+          <div className="p-6 pt-4 bg-gradient-to-br from-white to-blue-50 rounded-2xl shadow-lg border border-blue-100 overflow-hidden h-84 flex flex-col backdrop-blur-sm">
             <div className="flex items-center justify-between pb-3 border-b border-blue-200">
               <h3 className="text-xl font-bold text-blue-600 flex items-center gap-2">
                 🔔 Latest Notifications
