@@ -43,7 +43,8 @@ const ViewMoreModal = ({ placement, onClose }) => (
           <p className="text-sm font-semibold text-gray-500">Offer Letter</p>
           {placement.offerletter_file_name ? (
             <a
-              href={`http://localhost:8000/uploads/offer_letters/${placement.offerletter_file_name}`}
+              /* href={`http://localhost:8000/uploads/offer_letters/${placement.offerletter_file_name}`} --> Development */
+              href={`/uploads/offer_letters/${placement.offerletter_file_name}`}
               target="_blank"
               rel="noopener noreferrer"
               className="pl-1 text-blue-500 hover:underline"
@@ -431,7 +432,8 @@ const StudentPlacementTable = ({ setToastMessage, isFrozen }) => {
                         <p className="text-xs text-gray-500 mt-2">
                           Current Offer Letter:{" "}
                           <a
-                            href={`http://localhost:8000/uploads/offer_letters/${selectedPlacement.offerletter_file_name}`}
+                            /* href={`http://localhost:8000/uploads/offer_letters/${selectedPlacement.offerletter_file_name}`} --> Development */
+                            href={`/uploads/offer_letters/${selectedPlacement.offerletter_file_name}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-blue-500 hover:underline"

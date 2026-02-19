@@ -398,7 +398,8 @@ const ExpenditureReportTable = ({ setToastMessage, selectedYear }) => {
                         {item.bill_file_path ? (
                           <a
                             // Assuming a placeholder URL structure
-                            href={`http://localhost:8000/uploads/expenditure/${item.bill_file_path}`}
+                            /* href={`http://localhost:8000/uploads/expenditure/${item.bill_file_path}`} --> Development */
+                            href={`/uploads/expenditure/${item.bill_file_path}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-blue-600 hover:underline"

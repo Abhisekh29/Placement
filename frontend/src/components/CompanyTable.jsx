@@ -232,7 +232,7 @@ const CompanyTable = ({ setToastMessage }) => {
     <div className="bg-blue-200 py-2 px-4 rounded-xl shadow-md">
       {/*  --- SEARCH & EXPORT BAR ---  */}
       <div className="mb-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-        <h2 className="text-2xl font-bold">Manage Companies</h2>
+        <h2 className="text-2xl font-bold">Companies</h2>
         <div className="flex items-center gap-2 w-full sm:w-auto">
           <input
             type="text"

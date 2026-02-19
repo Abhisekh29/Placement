@@ -349,7 +349,8 @@ const ExpenditureTable = ({ setToastMessage }) => {
                   </div>
                   <div>
                     <a
-                      href={`http://localhost:8000/uploads/expenditure/${exp.bill_file}`}
+                      /* href={`http://localhost:8000/uploads/expenditure/${exp.bill_file}`} --> Development */ 
+                      href={`/uploads/expenditure/${exp.bill_file}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-blue-500 hover:underline"
@@ -455,7 +456,8 @@ const ExpenditureTable = ({ setToastMessage }) => {
                     <p className="text-xs text-gray-500 mt-1">
                       Current Bill:
                       <a
-                        href={`http://localhost:8000/uploads/expenditure/${editingExpenditure.bill_file}`}
+                        /* href={`http://localhost:8000/uploads/expenditure/${editingExpenditure.bill_file}`} --> Development */
+                        href={`/uploads/expenditure/${editingExpenditure.bill_file}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-blue-500 hover:underline ml-1"

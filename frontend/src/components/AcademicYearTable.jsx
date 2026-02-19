@@ -131,7 +131,7 @@ const AcademicYearTable = ({ setToastMessage }) => {
 
   return (
     <div className="bg-blue-200 py-2 px-4 rounded-xl shadow-md">
-      <h2 className="text-2xl font-bold mb-3">Departments</h2>
+      <h2 className="text-2xl font-bold mb-3">Academic Years</h2>
       <div className="border rounded-lg overflow-x-auto no-scrollbar">
         <div className="min-w-[800px]">
           <div className="grid grid-cols-12 bg-gray-300 p-2 font-semibold text-sm">
