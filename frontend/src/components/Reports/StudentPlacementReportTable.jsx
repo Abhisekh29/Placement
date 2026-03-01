@@ -13,7 +13,7 @@ const StudentPlacementReportTable = ({ setToastMessage, selectedYear }) => {
     student_name: "",
     rollno: "",
     program_name: "",
-    session_name: "",
+    drive_session: "", // Changed from session_name
     count_apply: "",
     count_selected: "",
   });
@@ -54,7 +54,7 @@ const StudentPlacementReportTable = ({ setToastMessage, selectedYear }) => {
         studentName: debouncedFilters.student_name,
         rollNo: debouncedFilters.rollno,
         programName: debouncedFilters.program_name,
-        sessionName: debouncedFilters.session_name,
+        sessionName: debouncedFilters.drive_session, // Map to backend's sessionName param
         countApply: debouncedFilters.count_apply,
         countSelected: debouncedFilters.count_selected,
       };
@@ -201,13 +201,8 @@ const StudentPlacementReportTable = ({ setToastMessage, selectedYear }) => {
     setCurrentPage((prev) => Math.max(prev - 1, 1));
   };
 
-  {/* --- 
-    EXPORT FUNCTION 
-    This function now exports 'paginatedData' if a page size (10, 50) is selected,
-    and 'sortedData' (all filtered data) if 'all' is selected.
-  --- */}
+  {/* --- EXPORT FUNCTION --- */}
   const handleExportExcel = useCallback(() => {
-    // 1. Determine which data set to export
     const dataToExport = rowsPerPage === "all" ? sortedData : paginatedData;
 
     if (dataToExport.length === 0) {
@@ -221,23 +216,20 @@ const StudentPlacementReportTable = ({ setToastMessage, selectedYear }) => {
       "Student Name",
       "Roll No.",
       "Program Name",
-      "Academic Session",
+      "Placement Session",
       "Count Apply",
       "Count Selected",
     ];
 
-    // 2. Determine the correct starting serial number for the export
-    // If exporting a specific page, use the page's offset
-    // If exporting "all", start from 0
     const exportSerialNoOffset = rowsPerPage === "all" ? 0 : serialNoOffset;
 
-    const dataRows = dataToExport.map((item, index) => // 3. Use dataToExport
+    const dataRows = dataToExport.map((item, index) => 
       [
-        `"${exportSerialNoOffset + index + 1}"`, // 4. Use offset for correct Sl. No.
+        `"${exportSerialNoOffset + index + 1}"`,
         `"${(item.student_name || "N/A").replace(/"/g, '""')}"`,
         `"${(item.rollno || "N/A").replace(/"/g, '""')}"`,
         `"${(item.program_name || "N/A").replace(/"/g, '""')}"`,
-        `"${(item.session_name || "N/A").replace(/"/g, '""')}"`,
+        `"${(item.drive_session || "N/A").replace(/"/g, '""')}"`, // Changed to drive_session
         `"${item.count_apply || 0}"`,
         `"${item.count_selected || 0}"`,
       ].join(",")
@@ -252,7 +244,6 @@ const StudentPlacementReportTable = ({ setToastMessage, selectedYear }) => {
       ? selectedYear.year_name.replace(/[^a-zA-Z0-9]/g, "_")
       : "Report";
 
-    // 5. (Optional) Add page number or "All" to file name
     const exportType = rowsPerPage === "all" ? "All_Records" : `Page_${currentPage}`;
     const fileName = `Student_Placement_Stats_${yearName}_${exportType}.csv`;
 
@@ -265,19 +256,19 @@ const StudentPlacementReportTable = ({ setToastMessage, selectedYear }) => {
     setIsExporting(false);
     setToastMessage({
       type: "success",
-      content: `Exported ${dataToExport.length} records.`, // 6. Use dataToExport.length
+      content: `Exported ${dataToExport.length} records.`,
     });
   }, [
-    paginatedData, // Dependency added
+    paginatedData,
     sortedData,
-    rowsPerPage, // Dependency added
-    currentPage, // Dependency added
-    serialNoOffset, // Dependency added
+    rowsPerPage,
+    currentPage,
+    serialNoOffset,
     selectedYear,
     setToastMessage
-  ]); // 7. Updated dependencies
+  ]); 
 
-  // --- Render (Design kept, Control bar removed) ---
+  // --- Render ---
   if (!selectedYear) {
     return (
       <div className="text-center text-gray-500 italic py-6">
@@ -293,17 +284,19 @@ const StudentPlacementReportTable = ({ setToastMessage, selectedYear }) => {
         <h2 className="text-2xl font-bold mb-3">
           Student Placement Application Stats
         </h2>
-        <button
-          onClick={handleExportExcel}
-          disabled={isLoading || isExporting || paginatedData.length === 0} // Check paginatedData
-          className={`px-3 py-1.5 rounded-lg text-white text-xs transition shadow-sm ${isLoading || isExporting || paginatedData.length === 0
-            ? "bg-gray-400 cursor-not-allowed"
-            : "bg-green-600 hover:bg-green-700"
-            }`}
-          title="Export current table data to CSV"
-        >
-          {isExporting ? "Exporting..." : "Export to Excel"}
-        </button>
+        <div className="flex gap-2">
+           <button
+             onClick={handleExportExcel}
+             disabled={isLoading || isExporting || paginatedData.length === 0} 
+             className={`px-3 py-1.5 rounded-lg text-white text-xs transition shadow-sm ${isLoading || isExporting || paginatedData.length === 0
+               ? "bg-gray-400 cursor-not-allowed"
+               : "bg-green-600 hover:bg-green-700"
+               }`}
+             title="Export current table data to CSV"
+           >
+             {isExporting ? "Exporting..." : "Export to Excel"}
+           </button>
+        </div>
       </div>
 
       {/* --- Pagination Controls --- */}
@@ -402,8 +395,8 @@ const StudentPlacementReportTable = ({ setToastMessage, selectedYear }) => {
             <div className="p-2">
               <input
                 type="text"
-                name="session_name"
-                value={filters.session_name}
+                name="drive_session" // Changed to drive_session
+                value={filters.drive_session} // Changed to drive_session
                 onChange={handleFilterChange}
                 placeholder="Search Session..."
                 className="w-full lg:w-45 bg-white text-xs p-1 border rounded-lg"
@@ -451,9 +444,10 @@ const StudentPlacementReportTable = ({ setToastMessage, selectedYear }) => {
                 />
               </div>
               <div className="p-2 text-left whitespace-nowrap">
+                {/* Changed columnKey to drive_session */}
                 <SortButton
-                  columnKey="session_name"
-                  columnName="Academic Session"
+                  columnKey="drive_session"
+                  columnName="Placement Session"
                 />
               </div>
               <div className="p-2 text-center whitespace-nowrap">
@@ -474,7 +468,7 @@ const StudentPlacementReportTable = ({ setToastMessage, selectedYear }) => {
               ) : sortedData.length > 0 ? (
                 paginatedData.map((item, index) => (
                   <div
-                    key={serialNoOffset + index} // Use offset + index for unique key
+                    key={serialNoOffset + index} 
                     className="grid grid-cols-[0.5fr_1.3fr_0.8fr_1.5fr_1.5fr_1fr_0.5fr] items-center border-t bg-white text-sm hover:bg-gray-50"
                   >
                     <div className="pl-5">{serialNoOffset + index + 1}.</div>
@@ -483,7 +477,8 @@ const StudentPlacementReportTable = ({ setToastMessage, selectedYear }) => {
                     </div>
                     <div className="p-2 lg:pl-3">{item.rollno}</div>
                     <div className="p-2 pl-4 lg:pl-9 ">{item.program_name}</div>
-                    <div className="p-2">{item.session_name}</div>
+                    {/* Render drive_session instead of session_name */}
+                    <div className="p-2">{item.drive_session}</div>
                     <div className="p-2 text-left">{item.count_apply}</div>
                     <div className="p-2 pr-16 text-center">
                       {item.count_selected}

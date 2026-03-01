@@ -1,6 +1,6 @@
 import { db } from "../db.js";
 
-// 1. Student Placement Stats Report (Unchanged)
+// 1. Student Placement Stats Report
 export const getStudentPlacementStats = (req, res) => {
   const {
     yearId,
@@ -19,7 +19,9 @@ export const getStudentPlacementStats = (req, res) => {
   }
 
   let values = [yearId];
-  let whereClauses = ["ss.year_id = ?"];
+  
+  // FIX 1: Filter by the Drive's session year (ds) instead of the student's admission session (ss)
+  let whereClauses = ["ds.year_id = ?"];
   let havingClauses = [];
 
   if (studentName) {
@@ -34,34 +36,41 @@ export const getStudentPlacementStats = (req, res) => {
     whereClauses.push("p.program_name LIKE ?");
     values.push(`%${programName}%`);
   }
+  
+  // FIX 2: Filter by the Drive's session name
   if (sessionName) {
-    whereClauses.push("ss.session_name LIKE ?");
+    whereClauses.push("ds.session_name LIKE ?");
     values.push(`%${sessionName}%`);
   }
 
+  // FIX 3: Use the aggregate functions directly in HAVING to avoid alias resolution issues in MySQL
   if (countApply) {
-    havingClauses.push("CAST(count_apply AS CHAR) LIKE ?");
+    havingClauses.push("CAST(COUNT(sp.drive_id) AS CHAR) LIKE ?");
     values.push(`${countApply}%`);
   }
   if (countSelected) {
-    havingClauses.push("CAST(count_selected AS CHAR) LIKE ?");
+    havingClauses.push("CAST(SUM(CASE WHEN sp.is_selected = 'Yes' THEN 1 ELSE 0 END) AS CHAR) LIKE ?");
     values.push(`${countSelected}%`);
   }
 
+  // FIX 4: Join placement_drive (pd) and the drive's session (ds). Changed LEFT JOIN to JOIN.
   const q = `
     SELECT
         s.name AS student_name,
         s.rollno, 
         p.program_name,
-        ss.session_name,
+        ss.session_name AS admission_session,
+        ds.session_name AS drive_session,
         COUNT(sp.drive_id) AS count_apply,
         SUM(CASE WHEN sp.is_selected = 'Yes' THEN 1 ELSE 0 END) AS count_selected
     FROM student_master AS s
-    LEFT JOIN student_placement AS sp ON s.userid = sp.user_id
+    JOIN student_placement AS sp ON s.userid = sp.user_id
+    JOIN placement_drive AS pd ON sp.drive_id = pd.drive_id
+    JOIN session_master AS ds ON pd.session_id = ds.session_id
     JOIN session_master AS ss ON s.session_id = ss.session_id
     JOIN program_master AS p ON s.program_id = p.program_id
     WHERE ${whereClauses.join(" AND ")}
-    GROUP BY s.userid, s.name, s.rollno, p.program_name, ss.session_name 
+    GROUP BY s.userid, s.name, s.rollno, p.program_name, ss.session_name, ds.session_name 
     ${havingClauses.length > 0 ? `HAVING ${havingClauses.join(" AND ")}` : ""}
     ORDER BY s.name;
   `;
@@ -178,7 +187,8 @@ export const getSelectedStudentsReport = (req, res) => {
   }
 
   let values = [yearId];
-  // Filter by year AND only selected students
+  
+  // FIX 1: Still filtering by sm.year_id, but we will change what 'sm' refers to below
   let whereClauses = ["sm.year_id = ?", "sp.is_selected = 'Yes'"];
 
   if (studentName) {
@@ -217,8 +227,8 @@ export const getSelectedStudentsReport = (req, res) => {
     whereClauses.push("sp.place LIKE ?");
     values.push(`%${place}%`);
   }
-  // --- END OF ADDED LOGIC ---
 
+  // FIX 2: Changed the JOIN condition for session_master to use pd.session_id
   const q = `
     SELECT 
         s.name AS student_name,
@@ -236,7 +246,7 @@ export const getSelectedStudentsReport = (req, res) => {
     JOIN company_master AS cm ON pd.company_id = cm.company_id
     JOIN company_type_master AS ct ON cm.type_id = ct.type_id
     JOIN program_master AS pm ON s.program_id = pm.program_id
-    JOIN session_master AS sm ON s.session_id = sm.session_id
+    JOIN session_master AS sm ON pd.session_id = sm.session_id 
     WHERE ${whereClauses.join(" AND ")}
     ORDER BY s.name, pd.drive_name;
   `;
@@ -322,8 +332,7 @@ export const getStudentInternshipReport = (req, res) => {
   }
 
   let values = [yearId];
-  // sm represents the student's admission session/batch
-  let whereClauses = ["sm.year_id = ?"];
+  let whereClauses = ["iss.year_id = ?"];
   let havingClauses = [];
 
   if (student_name) {
@@ -347,18 +356,19 @@ export const getStudentInternshipReport = (req, res) => {
 
   if (semester) {
     if (semester.toLowerCase() === "n/a" || semester === "0") {
-      havingClauses.push("semester IS NULL");
+      havingClauses.push("si.semester IS NULL"); // Added 'si.' for clarity
     } else {
-      havingClauses.push("CAST(semester AS CHAR) LIKE ?");
+      havingClauses.push("CAST(si.semester AS CHAR) LIKE ?");
       values.push(`${semester}%`);
     }
   }
 
   if (internship_count) {
-    havingClauses.push("CAST(internship_count AS CHAR) LIKE ?");
+    havingClauses.push("CAST(COUNT(si.internship_id) AS CHAR) LIKE ?"); // Fixed to count aggregate
     values.push(`${internship_count}%`);
   }
 
+  // FIX 2: Changed LEFT JOIN to JOIN for internships, as we only want records with actual internships in the selected year
   const q = `
     SELECT 
         s.userid, 
@@ -374,9 +384,9 @@ export const getStudentInternshipReport = (req, res) => {
         session_master AS sm ON s.session_id = sm.session_id
     JOIN 
         program_master AS p ON s.program_id = p.program_id
-    LEFT JOIN 
+    JOIN 
         student_internship AS si ON s.userid = si.user_id
-    LEFT JOIN
+    JOIN
         session_master AS iss ON si.session_id = iss.session_id 
     WHERE 
         ${whereClauses.join(" AND ")}

@@ -193,7 +193,7 @@ export const getRejectedStudents = (req, res) => {
 export const updateStudent = (req, res) => {
   const { userid } = req.params;
   const q =
-    "UPDATE Student_master SET `rollno` = ?, `name` = ?, `mobile` = ?, `email` = ?, `dob` = ?, `gender` = ? , `caste` = ? , `address` = ? , `per_10` = ? , `per_12` = ? , `session_id` = ?, `program_id` = ?, `mod_by` = ?, `mod_time` = NOW() WHERE userid = ?";
+    "UPDATE student_master SET `rollno` = ?, `name` = ?, `mobile` = ?, `email` = ?, `dob` = ?, `gender` = ? , `caste` = ? , `address` = ? , `per_10` = ? , `per_12` = ? , `session_id` = ?, `program_id` = ?, `mod_by` = ?, `mod_time` = NOW() WHERE userid = ?";
   const values = [
     req.body.rollno,
     req.body.name,
@@ -223,7 +223,7 @@ export const deleteStudent = (req, res) => {
     if (err) return res.status(500).json({ message: "Transaction failed." });
 
     // 1. Delete from student_master
-    const q1 = "DELETE FROM Student_master WHERE userid = ?";
+    const q1 = "DELETE FROM student_master WHERE userid = ?";
     db.query(q1, [userid], (err, data) => {
       // Check for foreign key constraints on student_master
       if (err && err.code === "ER_ROW_IS_REFERENCED_2") {

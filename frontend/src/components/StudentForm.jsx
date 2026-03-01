@@ -395,7 +395,7 @@ const StudentForm = ({
 
         {/* Session */}
         <div>
-          <label className="block mb-1 font-medium">Session</label>
+          <label className="block mb-1 font-medium">Admission Session</label>
           <select
             {...register("session_id", { valueAsNumber: true })}
             className={`w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 ${
@@ -404,7 +404,7 @@ const StudentForm = ({
                 : "focus:ring-blue-200"
             }`}
           >
-            <option value="">Select Session</option>
+            <option value="">Select Admission Session</option>
             {sessions.map((s) => (
               <option key={s.session_id} value={s.session_id}>
                 {s.session_name}

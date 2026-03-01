@@ -226,16 +226,16 @@ const ProgramTable = ({ setToastMessage }) => {
                 className="grid grid-cols-12 items-center p-2 border-t bg-white text-sm"
               >
                 <div className="col-span-1">{index + 1}</div>
-                <div className="col-span-3 whitespace-nowrap pl-14">
+                <div className="col-span-3 pl-14">
                   {program.program_name}
                 </div>
-                <div className="col-span-2 whitespace-nowrap">
+                <div className="col-span-2">
                   {program.department_name}
                 </div>
-                <div className="col-span-2 whitespace-nowrap">
+                <div className="col-span-2">
                   {program.modified_by || "N/A"}
                 </div>
-                <div className="col-span-2 whitespace-nowrap">
+                <div className="col-span-2">
                   {program.mod_time
                     ? new Date(program.mod_time).toLocaleString()
                     : "N/A"}

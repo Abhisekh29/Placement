@@ -117,7 +117,7 @@ const Profile = ({ studentData, onEdit, isFrozen, isLocked }) => {
           <p className="text-lg">{studentData.per_12}%</p>
         </div>
         <div>
-          <p className="text-sm font-semibold text-gray-500">Session</p>
+          <p className="text-sm font-semibold text-gray-500">Admission Session</p>
           <p className="text-lg">{sessionName}</p>
         </div>
         <div>

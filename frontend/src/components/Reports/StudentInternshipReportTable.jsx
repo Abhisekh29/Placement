@@ -413,7 +413,7 @@ const StudentInternshipReportTable = ({ setToastMessage, selectedYear }) => {
                 </div>
                 <div className="p-2 pl-32 text-center whitespace-nowrap">
                   {/* Note: sorting by data key 'internship_session' */}
-                  <SortButton columnKey="internship_session" columnName="Session" />
+                  <SortButton columnKey="internship_session" columnName="Internship Session" />
                 </div>
                 <div className="p-2 pl-11 text-center whitespace-nowrap">
                   <SortButton columnKey="semester" columnName="Semester" />
