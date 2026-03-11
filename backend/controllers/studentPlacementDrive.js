@@ -1,4 +1,5 @@
 import { db } from "../db.js";
+
 export const getDriveDetails = (req, res) => {
   const { driveId } = req.params;
   const q = `
@@ -7,6 +8,7 @@ export const getDriveDetails = (req, res) => {
       pd.drive_name,
       cm.company_name,
       pd.drive_description,
+      pd.jd_file,
       pd.ctc
     FROM placement_drive AS pd
     JOIN company_master AS cm ON pd.company_id = cm.company_id
@@ -31,6 +33,7 @@ export const getActiveDrives = (req, res) => {
       pd.drive_name,
       cm.company_name,
       pd.drive_description,
+      pd.jd_file,
       pd.ctc
     FROM placement_drive AS pd
     JOIN company_master AS cm ON pd.company_id = cm.company_id

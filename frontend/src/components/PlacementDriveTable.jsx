@@ -629,6 +629,7 @@ const initialForm = {
   drive_description: "",
   ctc: "",
   is_active: "1", // '1' = Active
+  jd_file: null,
 };
 
 // --- Description Modal ---
@@ -640,6 +641,18 @@ const DescriptionModal = ({ drive, onClose }) => (
       </h3>
       <div className="text-base text-gray-700 whitespace-pre-wrap break-words overflow-y-auto flex-1 min-h-0">
         {drive.drive_description || "No description provided."}
+        {drive.jd_file && (
+          <div className="mt-4 pt-4 border-t">
+            <a 
+              href={`/uploads/placement_drive_files/${drive.jd_file}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center text-blue-600 hover:text-blue-800 font-semibold"
+            >
+              📄 View Attached PDF
+            </a>
+          </div>
+        )}
       </div>
       <div className="flex justify-end mt-4 flex-shrink-0">
         <button
@@ -776,8 +789,12 @@ const PlacementDriveTable = ({ setToastMessage }) => {
 
   // --- Original handlers ---
   const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((p) => ({ ...p, [name]: value }));
+    const { name, value, files } = e.target;
+    if (name === "jd_file") {
+      setFormData((p) => ({ ...p, [name]: files[0] }));
+    } else {
+      setFormData((p) => ({ ...p, [name]: value }));
+    }
   };
 
   const handleAddClick = () => {
@@ -794,7 +811,7 @@ const PlacementDriveTable = ({ setToastMessage }) => {
       company_id: drive.company_id,
       drive_description: drive.drive_description || "",
       ctc: drive.ctc,
-      is_active: drive.is_active,
+      is_active: drive.is_active, jd_file: null,
     });
     setShowEditModal(true);
   };
@@ -892,11 +909,25 @@ const PlacementDriveTable = ({ setToastMessage }) => {
       return;
     }
     try {
-      await api.post("/placementDrive", {
-        ...formData,
-        ctc: Number(formData.ctc),
-        mod_by: user.userid,
-      });
+      // 1. Create a new FormData container
+      const data = new FormData();
+      
+      // 2. Add all the text fields one by one
+      data.append("drive_name", formData.drive_name);
+      data.append("session_id", formData.session_id);
+      data.append("company_id", formData.company_id);
+      data.append("drive_description", formData.drive_description);
+      data.append("ctc", Number(formData.ctc));
+      data.append("mod_by", user.userid);
+      
+      // 3. Add the PDF file ONLY if the user selected one
+      if (formData.jd_file) {
+        data.append("jd_file", formData.jd_file);
+      }
+
+      // 4. Send it to the backend. Axios auto-generates the correct header with the required boundary when it detects FormData.
+      await api.post("/placementDrive", data);
+
       setShowAddModal(false);
       fetchPlacementDrives();
       setToastMessage &&
@@ -922,7 +953,7 @@ const PlacementDriveTable = ({ setToastMessage }) => {
       Number(formData.session_id) === Number(editingDrive.session_id) &&
       Number(formData.company_id) === Number(editingDrive.company_id) &&
       Number(formData.ctc) === Number(editingDrive.ctc) &&
-      formData.drive_description.trim() === (editingDrive.drive_description || "");
+      formData.drive_description.trim() === (editingDrive.drive_description || "") && !formData.jd_file;
     
     if (noChanges) {
       setToastMessage && setToastMessage({ type: "info", content: "No changes detected." });
@@ -938,11 +969,24 @@ const PlacementDriveTable = ({ setToastMessage }) => {
     if (!editingDrive) return;
     const id = editingDrive.drive_id;
     try {
-      await api.put(`/placementDrive/${id}`, {
-        ...formData,
-        ctc: Number(formData.ctc),
-        mod_by: user.userid,
-      });
+      // 1. Create a new FormData container
+      const data = new FormData();
+      
+      // 2. Add all the text fields one by one
+      data.append("drive_name", formData.drive_name);
+      data.append("session_id", formData.session_id);
+      data.append("company_id", formData.company_id);
+      data.append("drive_description", formData.drive_description);
+      data.append("ctc", Number(formData.ctc));
+      data.append("mod_by", user.userid);
+      
+      // 3. Add the PDF file ONLY if the user selected a new one
+      if (formData.jd_file) {
+        data.append("jd_file", formData.jd_file);
+      }
+
+      await api.put(`/placementDrive/${id}`, data);
+
       fetchPlacementDrives();
       setEditingDrive(null);
       setToastMessage &&
@@ -1278,6 +1322,22 @@ const PlacementDriveTable = ({ setToastMessage }) => {
                   rows="4"
                   className="w-full md:col-span-2 p-3 border rounded-lg"
                 />
+                <div className="w-full md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Upload File (PDF only)</label>
+                  <input
+                    type="file"
+                    name="jd_file"
+                    accept=".pdf"
+                    onChange={handleInputChange}
+                    className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100"
+                  />
+                  {showEditModal && editingDrive?.jd_file && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      Current file: 
+                      <a href={`/uploads/placement_drive_files/${editingDrive.jd_file}`} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline ml-1">View PDF</a>
+                    </p>
+                  )}
+                </div>
               </div>
               <div className="flex justify-end gap-3 mt-4">
                 <button

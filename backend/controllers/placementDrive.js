@@ -1,4 +1,29 @@
 import { db } from "../db.js";
+import multer from "multer";
+import path from "path";
+import fs from "fs";
+
+// --- Multer Configuration for Job Description PDFs ---
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const dest = "uploads/placement_drive_files/";
+    fs.mkdirSync(dest, { recursive: true });
+    cb(null, dest);
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now();
+    cb(null, "jd-" + uniqueSuffix + path.extname(file.originalname));
+  },
+});
+
+const fileFilter = (req, file, cb) => {
+  if (file.mimetype === "application/pdf") {
+    cb(null, true);
+  } else {
+    cb(new Error("Invalid file type, only PDF is allowed!"), false);
+  }
+};
+export const uploadJD = multer({ storage, fileFilter });
 
 // Fetch all placement drives with joined data
 export const getPlacementDrives = (req, res) => {
@@ -17,6 +42,7 @@ export const getPlacementDrives = (req, res) => {
       sm.session_name,
       cm.company_name,
       pd.drive_description,
+      pd.jd_file,
       pd.ctc,
       pd.is_active,
       pd.mod_time,
@@ -93,12 +119,13 @@ export const getPlacementDrives = (req, res) => {
 // Add a new placement drive
 export const addPlacementDrive = (req, res) => {
   const q =
-    "INSERT INTO placement_drive (`session_id`, `drive_name`, `company_id`, `drive_description`, `ctc`, `is_active`, `mod_by`, `mod_time`) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())";
+    "INSERT INTO placement_drive (`session_id`, `drive_name`, `company_id`, `drive_description`, `jd_file`, `ctc`, `is_active`, `mod_by`, `mod_time`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())";
   const values = [
     req.body.session_id,
     req.body.drive_name,
     req.body.company_id,
     req.body.drive_description,
+    req.file ? req.file.filename : null, // Store only filename
     req.body.ctc,
     "1", // Default status: '1' (Closed) as requested
     req.body.mod_by,
@@ -106,6 +133,9 @@ export const addPlacementDrive = (req, res) => {
 
   db.query(q, values, (err, data) => {
     if (err) {
+      if (req.file) { // Cleanup orphaned file on failure
+        fs.unlink(req.file.path, () => {});
+      }
       if (err.code === "ER_DUP_ENTRY") {
         return res.status(409).json({
           message:
@@ -124,58 +154,89 @@ export const addPlacementDrive = (req, res) => {
 // Update an existing placement drive
 export const updatePlacementDrive = (req, res) => {
   const { driveId } = req.params;
-  // Note: is_active status is not part of this update, it has a separate endpoint
-  const q =
-    "UPDATE placement_drive SET `session_id` = ?, `drive_name` = ?, `company_id` = ?, `drive_description` = ?, `ctc` = ?, `mod_by` = ?, `mod_time` = NOW() WHERE drive_id = ?";
-  const values = [
-    req.body.session_id,
-    req.body.drive_name,
-    req.body.company_id,
-    req.body.drive_description,
-    req.body.ctc,
-    req.body.mod_by,
-  ];
 
-  db.query(q, [...values, driveId], (err, data) => {
+  // First fetch the old record to get the old filename
+  const getOldFileQuery = "SELECT jd_file FROM placement_drive WHERE drive_id = ?";
+  db.query(getOldFileQuery, [driveId], (err, data) => {
     if (err) {
-      if (err.code === "ER_DUP_ENTRY") {
-        return res
-          .status(409)
-          .json({
-            message:
-              "Error: This drive already exists for this company and session.",
-          });
-      }
-      console.error("DB Error updating placement drive:", err);
+      if (req.file) fs.unlink(req.file.path, () => {});
       return res.status(500).json(err);
     }
-    return res
-      .status(200)
-      .json({ message: "Placement drive updated successfully." });
+
+    const oldFileName = data[0]?.jd_file;
+    const newFileName = req.file ? req.file.filename : oldFileName;
+
+    // Note: is_active status is not part of this update, it has a separate endpoint
+    const q =
+      "UPDATE placement_drive SET `session_id` = ?, `drive_name` = ?, `company_id` = ?, `drive_description` = ?, `jd_file` = ?, `ctc` = ?, `mod_by` = ?, `mod_time` = NOW() WHERE drive_id = ?";
+    const values = [
+      req.body.session_id,
+      req.body.drive_name,
+      req.body.company_id,
+      req.body.drive_description,
+      newFileName,
+      req.body.ctc,
+      req.body.mod_by,
+    ];
+
+    db.query(q, [...values, driveId], (err, data) => {
+      if (err) {
+        if (req.file) fs.unlink(req.file.path, () => {});
+        if (err.code === "ER_DUP_ENTRY") {
+          return res
+            .status(409)
+            .json({
+              message:
+                "Error: This drive already exists for this company and session.",
+            });
+        }
+        console.error("DB Error updating placement drive:", err);
+        return res.status(500).json(err);
+      }
+      // Cleanup old file if it was replaced
+      if (req.file && oldFileName && oldFileName !== newFileName) {
+        const oldFilePath = path.resolve("uploads/placement_drive_files", oldFileName);
+        if (fs.existsSync(oldFilePath)) fs.unlink(oldFilePath, () => {});
+      }
+      return res
+        .status(200)
+        .json({ message: "Placement drive updated successfully." });
+    });
   });
 };
 
 // Delete a placement drive
 export const deletePlacementDrive = (req, res) => {
   const { driveId } = req.params;
-  const q = "DELETE FROM placement_drive WHERE drive_id = ?";
-
-  db.query(q, [driveId], (err, data) => {
-    if (err) {
-      if (err.code === "ER_ROW_IS_REFERENCED_2") {
-        return res.status(400).json({
-          message:
-            "Cannot delete this drive as it has linked student placements.",
-        });
+  
+  const getFileQuery = "SELECT jd_file FROM placement_drive WHERE drive_id = ?";
+  db.query(getFileQuery, [driveId], (err, data) => {
+    if (err) return res.status(500).json(err);
+    const oldFileName = data[0]?.jd_file;
+    
+    const q = "DELETE FROM placement_drive WHERE drive_id = ?";
+    db.query(q, [driveId], (err, data) => {
+      if (err) {
+        if (err.code === "ER_ROW_IS_REFERENCED_2") {
+          return res.status(400).json({
+            message:
+              "Cannot delete this drive as it has linked student placements.",
+          });
+        }
+        console.error("DB Error deleting placement drive:", err);
+        return res
+          .status(500)
+          .json({ message: "Failed to delete placement drive.", error: err });
       }
-      console.error("DB Error deleting placement drive:", err);
+      // Delete the actual file from the system
+      if (oldFileName) {
+        const filePath = path.resolve("uploads/placement_drive_files", oldFileName);
+        if (fs.existsSync(filePath)) fs.unlink(filePath, () => {});
+      }
       return res
-        .status(500)
-        .json({ message: "Failed to delete placement drive.", error: err });
-    }
-    return res
-      .status(200)
-      .json({ message: "Placement drive deleted successfully." });
+        .status(200)
+        .json({ message: "Placement drive deleted successfully." });
+    });
   });
 };
 

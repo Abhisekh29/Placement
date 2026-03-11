@@ -194,6 +194,18 @@ const StudentDriveDetails = () => {
                 <p className="text-gray-900 whitespace-pre-wrap">
                   {drive.drive_description || "No description provided."}
                 </p>
+                {drive.jd_file && (
+                  <div className="mt-4 pt-4 border-t border-gray-200">
+                    <a 
+                      href={`/uploads/placement_drive_files/${drive.jd_file}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center text-blue-600 hover:text-blue-800 font-semibold"
+                    >
+                      📄 View Attached PDF
+                    </a>
+                  </div>
+                )}
               </div>
             </div>
 
