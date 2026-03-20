@@ -239,7 +239,8 @@ export const getSelectedStudentsReport = (req, res) => {
         ct.type_name AS company_type,
         sp.ctc,
         sp.role,
-        sp.place
+        sp.place,
+        sp.offerletter_file_name
     FROM student_placement AS sp
     JOIN student_master AS s ON sp.user_id = s.userid
     JOIN placement_drive AS pd ON sp.drive_id = pd.drive_id

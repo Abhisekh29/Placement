@@ -6,7 +6,7 @@ import { ArrowUp } from "lucide-react";
 
 // Define the 10 columns structure
 const TABLE_GRID_COLS =
-  "0.5fr 1.8fr 1fr 1.2fr 1.5fr 1.5fr 0.9fr 0.8fr 1.2fr 1fr";
+  "0.5fr 1.8fr 1fr 1.2fr 1.5fr 1.5fr 0.9fr 0.8fr 1.2fr 1fr 1fr";
 const MIN_TABLE_WIDTH = "min-w-[1400px] lg:min-w-0";
 const TABLE_WRAPPER_CLASSES = `w-full ${MIN_TABLE_WIDTH}`;
 
@@ -492,6 +492,9 @@ const sortedData = useMemo(() => {
                 <div className="p-2 text-left whitespace-nowrap">
                   <SortButton columnKey="place" columnName="Place" />
                 </div>
+                <div className="p-2 text-center whitespace-nowrap">
+                  Offer Letter 
+                </div>
               </div>
 
               {/* Body */}
@@ -521,6 +524,20 @@ const sortedData = useMemo(() => {
                       <div className="p-2">{formatCTC(item.ctc)}</div>
                       <div className="p-2">{item.role || "N/A"}</div>
                       <div className="p-2">{item.place || "N/A"}</div>
+                      <div className="p-2 text-center">
+                        {item.offerletter_file_name ? (
+                          <a
+                            href={`http://localhost:8000/uploads/offer_letters/${item.offerletter_file_name}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-500 hover:underline text-xs"
+                          >
+                            View
+                          </a>
+                        ) : (
+                          <span className="text-gray-400 text-xs">N/A</span>
+                        )}
+                      </div>
                     </div>
                   ))
                 ) : (
