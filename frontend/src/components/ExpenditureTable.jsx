@@ -349,8 +349,8 @@ const ExpenditureTable = ({ setToastMessage }) => {
                   </div>
                   <div>
                     <a
-                      /* href={`http://localhost:8000/uploads/expenditure/${exp.bill_file}`} --> Development */ 
-                      href={`/uploads/expenditure/${exp.bill_file}`}
+                      href={`http://localhost:8000/uploads/expenditure/${exp.bill_file}`} /* --> Development */ 
+                      // href={`/uploads/expenditure/${exp.bill_file}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-blue-500 hover:underline"

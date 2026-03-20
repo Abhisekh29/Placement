@@ -8,6 +8,7 @@ export const getCompanies = (req, res) => {
       c.hr_name,
       c.company_mobile,
       c.company_email,
+      c.type_id,
       ct.type_name,
       c.company_description,
       c.mod_time,

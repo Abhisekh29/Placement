@@ -644,7 +644,8 @@ const DescriptionModal = ({ drive, onClose }) => (
         {drive.jd_file && (
           <div className="mt-4 pt-4 border-t">
             <a 
-              href={`/uploads/placement_drive_files/${drive.jd_file}`}
+              href={`http://localhost:8000/uploads/placement_drive_files/${drive.jd_file}`}
+              // href={`/uploads/placement_drive_files/${drive.jd_file}`}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center text-blue-600 hover:text-blue-800 font-semibold"
@@ -1334,7 +1335,8 @@ const PlacementDriveTable = ({ setToastMessage }) => {
                   {showEditModal && editingDrive?.jd_file && (
                     <p className="text-xs text-gray-500 mt-1">
                       Current file: 
-                      <a href={`/uploads/placement_drive_files/${editingDrive.jd_file}`} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline ml-1">View PDF</a>
+                      <a href={`http://localhost:8000/uploads/placement_drive_files/${editingDrive.jd_file}`} 
+                      target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline ml-1">View PDF</a>
                     </p>
                   )}
                 </div>

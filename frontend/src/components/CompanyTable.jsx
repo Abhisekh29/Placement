@@ -150,6 +150,16 @@ const CompanyTable = ({ setToastMessage }) => {
       return;
     }
 
+    // Phone number validation
+    const phoneRegex = /^[0-9]{10}$/;
+    if (!phoneRegex.test(formData.company_mobile)) {
+      setToastMessage({
+        type: "error",
+        content: "Mobile number must be exactly 10 digits.",
+      });
+      return;
+    }
+
     try {
       await api.post("/adminCompany", { ...formData, mod_by: user.userid });
       setShowAddModal(false);
@@ -167,6 +177,17 @@ const CompanyTable = ({ setToastMessage }) => {
 
   const handleUpdateSubmit = (e) => {
     e.preventDefault();
+
+    // Phone number validation
+    const phoneRegex = /^[0-9]{10}$/;
+    if (!phoneRegex.test(formData.company_mobile)) {
+      setToastMessage({
+        type: "error",
+        content: "Mobile number must be exactly 10 digits.",
+      });
+      return;
+    }
+
     const noChanges =
       formData.company_name.trim() === editingCompany.company_name &&
       formData.hr_name.trim() === editingCompany.hr_name &&
@@ -183,6 +204,7 @@ const CompanyTable = ({ setToastMessage }) => {
 
     setShowEditModal(false);
     setActionToConfirm(() => () => updateCompany());
+    setShowConfirmModal(true);
   };
 
   const updateCompany = async () => {
