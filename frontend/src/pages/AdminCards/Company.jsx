@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import HeaderDashboard from "../../components/HeaderDashboard";
 import Footer from "../../components/Footer";
 import CompanyTable from "../../components/CompanyTable";
+import { Link } from "react-router-dom";
+import { HiCollection } from "react-icons/hi";
 
 const Company = () => {
   const [toastMessage, setToastMessage] = useState({ type: "", content: "" });
@@ -19,7 +21,23 @@ const Company = () => {
     <div className="min-h-screen flex flex-col bg-white">
       <HeaderDashboard />
       <main className="flex-grow p-6">
-        <h1 className="text-3xl font-bold mb-6">Manage Companies</h1>
+        
+        {/* --- Updated Header Layout --- */}
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-3xl font-bold text-gray-800">
+            Manage Companies
+          </h1>
+          <div className="flex gap-4">
+            <Link
+              to="/admin/company-type" /* Adjust to your exact company types route if different */
+              className="flex items-center gap-1 px-4 rounded-lg font-medium text-purple-500 hover:text-purple-600 transition"
+              title="Manage Company Types"
+            >
+              <HiCollection size={20} />
+              Manage Type
+            </Link>
+          </div>
+        </div>
 
         {toastMessage.content && (
           <div

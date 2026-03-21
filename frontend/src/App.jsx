@@ -11,23 +11,24 @@ import AdminDashboard from "./pages/AdminDashboard";
 import { createBrowserRouter, RouterProvider, Navigate } from "react-router-dom";
 
 import AcademicYear from "./pages/AdminCards/AcademicYear";
-import Department from "./pages/AdminCards/Department";
-import CompanyType from "./pages/AdminCards/CompanyType";
 import AcademicSession from "./pages/AdminCards/AcademicSession";
+import Department from "./pages/AdminCards/Department";
 import Program from "./pages/AdminCards/Program";
-import Student from "./pages/AdminCards/Students";
 import Company from "./pages/AdminCards/Company";
-import Expenditure from "./pages/AdminCards/Expenditure";
+import CompanyType from "./pages/AdminCards/CompanyType";
 import Notification from "./pages/AdminCards/Notification";
-import Internship from "./pages/AdminCards/Internship";
-import RejectedStudent from "./pages/AdminCards/RejectedStudent"; 
 import PlacementDrive from "./pages/AdminCards/PlacementDrive";
+import Placement from "./pages/AdminCards/Placement";
+import Internship from "./pages/AdminCards/Internship";
+import InternshipRequirement from "./pages/AdminCards/InternshipRequirement";
+import Expenditure from "./pages/AdminCards/Expenditure";
+import Student from "./pages/AdminCards/Students";
+import Reports from "./pages/AdminCards/Reports";
+import RejectedStudent from "./pages/AdminCards/RejectedStudent"; 
 import ManageInternships from "./pages/Student/ManageInternships";
 import StudentDriveDetail from "./pages/Student/StudentDriveDetails";
 import StudentMyPlacement from "./pages/Student/StudentMyPlacement";
 import IncompleteRegistrations from "./pages/AdminCards/IncompleteRegistrations";
-import InternshipRequirement from "./pages/AdminCards/InternshipRequirement";
-import Reports from "./pages/AdminCards/Reports";
 
 // Role-based wrappers
 const AdminRoute = ({ children }) => {
@@ -145,6 +146,14 @@ const App = () => {
       ),
     },
     {
+      path: "/admin/company",
+      element: (
+        <AdminRoute>
+          <Company />
+        </AdminRoute>
+      ),
+    },
+    {
       path: "/admin/company-type",
       element: (
         <AdminRoute>
@@ -153,10 +162,10 @@ const App = () => {
       ),
     },
     {
-      path: "/admin/company",
+      path: "/admin/notifications",
       element: (
         <AdminRoute>
-          <Company />
+          <Notification />
         </AdminRoute>
       ),
     },
@@ -169,10 +178,10 @@ const App = () => {
       ),
     },
     {
-      path: "/admin/notifications",
+      path: "/admin/placement",
       element: (
         <AdminRoute>
-          <Notification />
+          <Placement />
         </AdminRoute>
       ),
     },

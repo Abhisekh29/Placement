@@ -18,6 +18,7 @@ import internshipRoutes from "./routes/internship.js";
 import filterRoutes from "./routes/filters.js";
 import homeNotificationRoutes from "./routes/homeNotification.js"
 import placementDriveRoutes from "./routes/placementDrive.js"
+import adminPlacementRoutes from "./routes/adminPlacement.js";
 import studentInternshipRoutes from "./routes/studentInternship.js"
 import studentPlacementDriveRoute from "./routes/studentPlacementDrive.js"
 import studentPlacementRoute from "./routes/studentPlacement.js"
@@ -65,6 +66,7 @@ app.use("/api/expenditure", expenditureRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/filters", filterRoutes);
 app.use("/api/placementDrive", placementDriveRoutes);
+app.use("/api/admin/placements", adminPlacementRoutes);
 app.use("/api/internships", internshipRoutes);
 app.use("/api/internship-requirements", internshipRequirementRoutes);
 app.use("/api/reports", reportRoutes);

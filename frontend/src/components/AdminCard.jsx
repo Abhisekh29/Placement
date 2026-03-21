@@ -93,13 +93,13 @@ import {
   HiCalendar,
   HiOfficeBuilding,
   HiBriefcase,
-  HiCollection,
   HiAcademicCap,
   HiBell,
   HiCurrencyDollar,
   HiUsers,
   HiIdentification,
   HiClipboardList,
+  HiBadgeCheck
 } 
 from "react-icons/hi";
 import { HiBuildingOffice2 } from "react-icons/hi2"
@@ -111,10 +111,10 @@ const AdminCard = () => {
     { name: "Academic Session", path: "/admin/academic-session", icon: <FaTimeline /> },
     { name: "Department", path: "/admin/department", icon: <HiBuildingOffice2 /> },
     { name: "Program", path: "/admin/program", icon: <HiAcademicCap /> },
-    { name: "Company Type", path: "/admin/company-type", icon: <HiCollection /> },
     { name: "Company", path: "/admin/company", icon: <HiOfficeBuilding /> },
-    { name: "Placement Drive", path: "/admin/placement-drive", icon: <HiBriefcase /> },
     { name: "Notifications", path: "/admin/notifications", icon: <HiBell /> },
+    { name: "Placement Drive", path: "/admin/placement-drive", icon: <HiBriefcase /> },
+    { name: "Placement", path: "/admin/placement", icon: <HiBadgeCheck /> },
     { name: "Internship", path: "/admin/internship", icon: <HiIdentification /> },
     { name: "Expenditure", path: "/admin/expenditure", icon: <HiCurrencyDollar /> },
     { name: "Students", path: "/admin/students", icon: <HiUsers /> },

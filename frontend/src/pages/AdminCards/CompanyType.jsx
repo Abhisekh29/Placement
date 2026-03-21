@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import HeaderDashboard from "../../components/HeaderDashboard";
 import Footer from "../../components/Footer";
 import CompanyTypeTable from "../../components/CompanyTypeTable";
+import { Link } from "react-router-dom";
 
 const CompanyType = () => {
   const [toastMessage, setToastMessage] = useState({ type: "", content: "" });
@@ -19,7 +20,17 @@ const CompanyType = () => {
     <div className="min-h-screen flex flex-col bg-white">
       <HeaderDashboard />
       <main className="flex-grow p-6">
-        <h1 className="text-3xl font-bold mb-6">Manage Company Types</h1>
+        
+        {/* --- Updated Header Layout --- */}
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-3xl font-bold">Manage Company Types</h1>
+          <Link
+            to="/admin/company"
+            className="bg-blue-500 text-white px-4 py-2 rounded-lg shadow-xl transition hover:bg-blue-600 text-sm font-medium"
+          >
+            Back to Companies
+          </Link>
+        </div>
 
         {toastMessage.content && (
           <div
