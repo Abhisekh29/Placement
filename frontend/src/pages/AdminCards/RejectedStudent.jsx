@@ -25,9 +25,9 @@ const RejectedStudent = () => {
             <h1 className="text-3xl font-bold">Manage Rejected Users</h1>
             <Link 
                 to="/admin/students" 
-                className="bg-blue-500 text-white px-12 py-2 rounded-lg shadow-xl transition hover:bg-blue-600 text-sm font-medium"
+                className="bg-blue-500 text-white px-4 py-2 rounded-lg shadow-xl transition hover:bg-blue-600 text-sm font-medium"
             >
-                Back
+                Back to Students
             </Link>
         </div>
 

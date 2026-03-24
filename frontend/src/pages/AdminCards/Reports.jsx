@@ -3,6 +3,7 @@ import { toast, Toaster } from "react-hot-toast";
 import api from "../../api/axios";
 import { Listbox, ListboxButton, ListboxOptions, ListboxOption } from "@headlessui/react";
 import { FaChevronDown, FaCheck } from "react-icons/fa";
+import { Link } from "react-router-dom";
 
 import HeaderDashboard from "../../components/HeaderDashboard";
 import Footer from "../../components/Footer";
@@ -71,9 +72,17 @@ const Reports = () => {
       <HeaderDashboard />
 
       <main className="grow p-6 bg-slate-50">
-        <h1 className="text-2xl font-bold text-slate-800 mb-2">
-          Admin Reports
-        </h1>
+        <div className="flex justify-between items-center mb-2">
+          <h1 className="text-2xl font-bold text-slate-800 mb-2">
+            Admin Reports
+          </h1>
+          <Link
+            to="/admin-dashboard"
+            className="bg-blue-500 text-white px-4 py-2 rounded-lg shadow-md transition hover:bg-blue-600 text-sm font-medium"
+          >
+            Back to Dashboard
+          </Link>
+        </div>
 
         {/* --- Global Filter Section --- */}
         <div className="flex flex-col sm:flex-row items-center gap-2 mb-6 bg-blue-100 p-1.5 rounded-xl shadow-md border border-gray-400 w-fit">

@@ -27,15 +27,25 @@ const Company = () => {
           <h1 className="text-3xl font-bold text-gray-800">
             Manage Companies
           </h1>
-          <div className="flex gap-4">
+          
+          {/* ---> Wrap both buttons in this flex container <--- */}
+          <div className="flex items-center gap-3">
+            
             <Link
-              to="/admin/company-type" /* Adjust to your exact company types route if different */
-              className="flex items-center gap-1 px-4 rounded-lg font-medium text-purple-500 hover:text-purple-600 transition"
-              title="Manage Company Types"
+              to="/admin-dashboard"
+              className="bg-blue-500 text-white px-4 py-2 rounded-lg shadow-md transition hover:bg-blue-600 text-sm font-medium"
+            >
+              Back to Dashboard
+            </Link>
+
+            <Link
+              to="/admin/company-type"
+              className="flex items-center gap-1 px-4 py-2 rounded-lg font-medium text-purple-500 bg-purple-100 hover:bg-purple-200 transition"
             >
               <HiCollection size={20} />
-              Manage Type
+              Company Types
             </Link>
+            
           </div>
         </div>
 

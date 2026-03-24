@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import HeaderDashboard from "../../components/HeaderDashboard";
 import Footer from "../../components/Footer";
 import PlacementDriveTable from "../../components/PlacementDriveTable";
+import { Link } from "react-router-dom";
 
 const PlacementDrive = () => {
   const [toastMessage, setToastMessage] = useState({ type: "", content: "" });
@@ -19,7 +20,17 @@ const PlacementDrive = () => {
     <div className="min-h-screen flex flex-col bg-white">
       <HeaderDashboard />
       <main className="flex-grow p-6">
-        <h1 className="text-3xl font-bold mb-6">Manage Placement Drive</h1>
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-3xl font-bold text-gray-800">
+             Manage Placement Drive
+          </h1>
+          <Link
+            to="/admin-dashboard"
+            className="bg-blue-500 text-white px-4 py-2 rounded-lg shadow-md transition hover:bg-blue-600 text-sm font-medium"
+          >
+            Back to Dashboard
+          </Link>
+        </div>
 
         {toastMessage.content && (
           <div

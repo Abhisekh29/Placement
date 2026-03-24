@@ -23,15 +23,27 @@ const Student = () => {
       <main className="flex-grow p-6 flex flex-col">
         {/* Header/Title Row, updated to include the link */}
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold">Manage Students</h1>
-
-          {/* The actual navigation link/button */}
-          <Link
-            to="/admin/rejected-students"
-            className="text-red-600 font-medium transition-transform transform hover:scale-110 hover:text-red-700"
-          >
-            Rejected Users
-          </Link>
+          <h1 className="text-3xl font-bold text-gray-800">
+             Manage Students
+          </h1>
+          
+          {/* ---> Wrap everything on the right in this flex container <--- */}
+          <div className="flex items-center gap-3">
+            <Link
+              to="/admin-dashboard"
+              className="bg-blue-500 text-white px-4 py-2 rounded-lg shadow-md transition hover:bg-blue-600 text-sm font-medium"
+            >
+              Back to Dashboard
+            </Link>
+            
+            <Link
+              to="/admin/rejected-students"
+              className="flex items-center gap-1 px-4 py-2 rounded-lg font-medium text-red-600 bg-red-100 hover:bg-red-200 transition"
+            >
+              Rejected Users
+            </Link>
+            
+          </div>
         </div>
 
         {toastMessage.content && (

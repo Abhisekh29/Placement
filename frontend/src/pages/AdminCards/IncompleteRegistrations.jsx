@@ -3,6 +3,7 @@ import HeaderDashboard from "../../components/HeaderDashboard";
 import Footer from "../../components/Footer";
 import api from "../../api/axios";
 import AdminResetPasswordModal from "../../components/AdminResetPasswordModal";
+import { Link } from "react-router-dom";
 
 const IncompleteRegistrations = () => {
   const [users, setUsers] = useState([]);
@@ -92,9 +93,17 @@ const IncompleteRegistrations = () => {
 
       <main className="flex-grow p-6">
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">
-            Incomplete Registrations
-          </h1>
+          <div className="flex justify-between items-center mb-4">
+            <h1 className="text-3xl font-bold text-gray-800">
+              Incomplete Registrations
+            </h1>
+            <Link
+              to="/admin-dashboard"
+              className="bg-blue-500 text-white px-4 py-2 rounded-lg shadow-md transition hover:bg-blue-600 text-sm font-medium"
+            >
+              Back to Dashboard
+            </Link>
+          </div>
 
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <p className="text-gray-600">
