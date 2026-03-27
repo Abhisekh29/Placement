@@ -378,7 +378,8 @@ export const getStudentInternshipReport = (req, res) => {
         p.program_name, 
         si.semester, 
         iss.session_name AS internship_session, 
-        COUNT(si.internship_id) AS internship_count
+        COUNT(si.internship_id) AS internship_count,
+        GROUP_CONCAT(si.certificate SEPARATOR ',') AS certificates
     FROM 
         student_master AS s
     JOIN 

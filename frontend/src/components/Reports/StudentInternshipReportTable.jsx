@@ -7,7 +7,7 @@ import { ArrowUp } from "lucide-react";
 
 // --- Define Table Structure ---
 // Sl. No | Name | Roll | Program | Semester | Session | Count
-const TABLE_GRID_COLS = "0.5fr 0.8fr 0.6fr 0.8fr 1.1fr 0.6fr 0.5fr";
+const TABLE_GRID_COLS = "0.5fr 0.8fr 0.6fr 1fr 1.1fr 0.6fr 0.5fr 0.4fr";
 
 const StudentInternshipReportTable = ({ setToastMessage, selectedYear }) => {
   const [data, setData] = useState([]);
@@ -408,7 +408,7 @@ const StudentInternshipReportTable = ({ setToastMessage, selectedYear }) => {
                 <div className="p-2 pl-4 text-left whitespace-nowrap">
                   <SortButton columnKey="rollno" columnName="Roll No." />
                 </div>
-                <div className="p-2 pl-6 text-left whitespace-nowrap">
+                <div className="p-2 pl-9 text-left whitespace-nowrap">
                   <SortButton columnKey="program_name" columnName="Program Name" />
                 </div>
                 <div className="p-2 pl-32 text-center whitespace-nowrap">
@@ -420,6 +420,9 @@ const StudentInternshipReportTable = ({ setToastMessage, selectedYear }) => {
                 </div>
                 <div className="p-2 text-right whitespace-nowrap pr-4">
                   <SortButton columnKey="internship_count" columnName="Internship Count" />
+                </div>
+                <div className="p-2 text-center whitespace-nowrap">
+                  Certificates
                 </div>
               </div>
               {/* Body */}
@@ -442,6 +445,27 @@ const StudentInternshipReportTable = ({ setToastMessage, selectedYear }) => {
                       <div className="p-2  text-center whitespace-nowrap">{item.internship_session || "N/A"}</div>
                       <div className="p-2 pr-15 text-center">{item.semester || "N/A"}</div>
                       <div className="p-2 text-center pr-15">{item.internship_count}</div>
+                      <div className="p-2 text-center">
+                        {item.certificates ? (
+                          <div className="flex flex-col gap-1 items-center">
+                            {item.certificates.split(',').map((cert, i) => (
+                              cert ? (
+                                <a
+                                  key={i}
+                                  href={`http://localhost:8000/uploads/certificates/${cert.trim()}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-blue-500 hover:underline text-xs"
+                                >
+                                  View {item.internship_count > 1 ? `(${i + 1})` : ''}
+                                </a>
+                              ) : null
+                            ))}
+                          </div>
+                        ) : (
+                          <span className="text-gray-400 text-xs">N/A</span>
+                        )}
+                      </div>
                     </div>
                   ))
                 ) : (

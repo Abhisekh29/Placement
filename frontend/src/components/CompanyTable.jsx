@@ -151,11 +151,11 @@ const CompanyTable = ({ setToastMessage }) => {
     }
 
     // Phone number validation
-    const phoneRegex = /^[0-9]{10}$/;
+    const phoneRegex = /^\+?[0-9]{5,12}$/;
     if (!phoneRegex.test(formData.company_mobile)) {
       setToastMessage({
         type: "error",
-        content: "Mobile number must be exactly 10 digits.",
+        content: "Invalid Contact Number Format.",
       });
       return;
     }
@@ -179,11 +179,11 @@ const CompanyTable = ({ setToastMessage }) => {
     e.preventDefault();
 
     // Phone number validation
-    const phoneRegex = /^[0-9]{10}$/;
+    const phoneRegex = /^\+?[0-9]{5,12}$/;
     if (!phoneRegex.test(formData.company_mobile)) {
       setToastMessage({
         type: "error",
-        content: "Mobile number must be exactly 10 digits.",
+        content: "Invalid Contact Number Format.",
       });
       return;
     }
@@ -436,7 +436,7 @@ const CompanyTable = ({ setToastMessage }) => {
             <h3 className="text-xl font-bold text-gray-800 mb-4">
               Are you sure?
             </h3>
-            <p className="text-gray-600 mb-6">This action cannot be undone.</p>
+            <p className="text-gray-600 mb-6">Do you really want to do this action?</p>
             <div className="flex justify-end gap-3">
               <button
                 onClick={() => setShowConfirmModal(false)}
