@@ -3,11 +3,11 @@ import { debounce } from "lodash";
 import api from "../../api/axios";
 import { ArrowUp } from "lucide-react";
 
-
-
 // --- Define Table Structure ---
-// Sl. No | Name | Roll | Program | Semester | Session | Count
-const TABLE_GRID_COLS = "0.5fr 0.8fr 0.6fr 1fr 1.1fr 0.6fr 0.5fr 0.4fr";
+// Sl. No | Name | Roll | Program | Session | Semester | Count | Certificates
+const TABLE_GRID_COLS = "0.5fr 1.8fr 1fr 1.5fr 1.2fr 1fr 1fr 1fr";
+const MIN_TABLE_WIDTH = "min-w-[1200px] lg:min-w-0";
+const TABLE_WRAPPER_CLASSES = `w-full ${MIN_TABLE_WIDTH}`;
 
 const StudentInternshipReportTable = ({ setToastMessage, selectedYear }) => {
   const [data, setData] = useState([]);
@@ -165,7 +165,6 @@ const StudentInternshipReportTable = ({ setToastMessage, selectedYear }) => {
     );
   };
 
-
   // --- paginatedData ---
   const paginatedData = useMemo(() => {
     if (rowsPerPage === "all") return sortedData;
@@ -205,7 +204,7 @@ const StudentInternshipReportTable = ({ setToastMessage, selectedYear }) => {
       return;
     }
     setIsExporting(true);
-    const headers = ["Sl. No.", "Student Name", "Roll No.", "Program Name", "Semester", "Session", "Internship Count"];
+    const headers = ["Sl. No.", "Student Name", "Roll No.", "Program Name", "Session", "Semester", "Internship Count", "Certificates"];
     const exportSerialNoOffset = rowsPerPage === "all" ? 0 : serialNoOffset;
     const dataRows = dataToExport.map((item, index) =>
       [
@@ -213,9 +212,10 @@ const StudentInternshipReportTable = ({ setToastMessage, selectedYear }) => {
         `"${(item.student_name || "").replace(/"/g, '""')}"`,
         `"${(item.rollno || "").replace(/"/g, '""')}"`,
         `"${(item.program_name || "").replace(/"/g, '""')}"`,
-        `"${(item.semester || "N/A").toString().replace(/"/g, '""')}"`,
         `"${(item.internship_session || "N/A").replace(/"/g, '""')}"`,
+        `"${(item.semester || "N/A").toString().replace(/"/g, '""')}"`,
         `"${item.internship_count || 0}"`,
+        `"${(item.certificates || "N/A").replace(/"/g, '""')}"`,
       ].join(",")
     );
 
@@ -249,6 +249,7 @@ const StudentInternshipReportTable = ({ setToastMessage, selectedYear }) => {
     selectedYear,
     setToastMessage
   ]);
+  
   if (!selectedYear) {
     return (
       <div className="text-center text-gray-500 italic py-6">
@@ -276,7 +277,7 @@ const StudentInternshipReportTable = ({ setToastMessage, selectedYear }) => {
         </button>
       </div>
 
-      <div className="animate-fadeIn">
+      <div>
         <div className="flex flex-col sm:flex-row justify-between items-center gap-2 text-sm mb-2">
           <div className="flex items-center gap-2">
             <label className="text-gray-700 text-sm">Records per page:</label>
@@ -304,7 +305,7 @@ const StudentInternshipReportTable = ({ setToastMessage, selectedYear }) => {
               <button
                 onClick={handlePrevPage}
                 disabled={currentPage === 1}
-                className="px-2 py-1 bg-white border rounded-lg shadow-sm text-xs hover:bg-gray-50 disabled:opacity-50"
+                className="px-2 py-1 bg-white border rounded-lg shadow-sm text-xs hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Prev
               </button>
@@ -314,7 +315,7 @@ const StudentInternshipReportTable = ({ setToastMessage, selectedYear }) => {
               <button
                 onClick={handleNextPage}
                 disabled={currentPage === totalPages || totalPages === 0}
-                className="px-2 py-1 bg-white border rounded-lg shadow-sm text-xs hover:bg-gray-50 disabled:opacity-50"
+                className="px-2 py-1 bg-white border rounded-lg shadow-sm text-xs hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Next
               </button>
@@ -322,35 +323,40 @@ const StudentInternshipReportTable = ({ setToastMessage, selectedYear }) => {
           )}
         </div>
 
-        <div className="overflow-x-auto no-scrollbar pb-2">
-          <div style={{ minWidth: "1200px" }}>
+        {/* Outer container for horizontal scroll on mobile/tablet */}
+        <div className="overflow-x-auto no-scrollbar">
+          {/* Inner div enforces minimum width */}
+          <div className={TABLE_WRAPPER_CLASSES}>
             {/* Filter Inputs */}
             <div
-              className="grid items-center pb-1"
+              className={`grid items-center pb-1`}
               style={{ gridTemplateColumns: TABLE_GRID_COLS }}
             >
-              <div className="p-2 sticky left-0  z-10"></div>
-              <div className="p-2">
+              <div className="p-2"></div>
+              
+              <div className="pl-10 pr-2 py-2">
                 <input
                   type="text"
                   name="student_name"
                   value={filters.student_name}
                   onChange={handleFilterChange}
                   placeholder="Search Name..."
-                  className="w-40 bg-white text-xs p-1 border rounded-lg"
+                  className="w-full lg:w-45 bg-white text-xs p-1 border rounded-lg"
                 />
               </div>
-              <div className="p-2 pl-4">
+              
+              <div className="p-2">
                 <input
                   type="text"
                   name="rollno"
                   value={filters.rollno}
                   onChange={handleFilterChange}
                   placeholder="Search Roll..."
-                  className="w-20 bg-white text-xs p-1 border rounded-lg"
+                  className="w-full lg:w-29 bg-white text-xs p-1 border rounded-lg"
                 />
               </div>
-              <div className="p-2 pl-6">
+              
+              <div className="p-2">
                 <input
                   type="text"
                   name="program_name"
@@ -360,71 +366,81 @@ const StudentInternshipReportTable = ({ setToastMessage, selectedYear }) => {
                   className="w-full bg-white text-xs p-1 border rounded-lg"
                 />
               </div>
-              <div className="p-2 pl-30">
+              
+              <div className="p-2">
                 <input
                   type="text"
                   name="session_name"
                   value={filters.session_name}
                   onChange={handleFilterChange}
-                  placeholder="Session..."
-                  className="w-20 bg-white text-xs p-1 border rounded-lg"
+                  placeholder="Search Session..."
+                  className="w-full lg:w-36 bg-white text-xs p-1 border rounded-lg"
                 />
               </div>
-              <div className="p-2 pl-5 lg:pr-6 text-center">
+              
+              <div className="p-2">
                 <input
                   type="text"
                   name="semester"
                   value={filters.semester}
                   onChange={handleFilterChange}
-                  placeholder="Semester..."
-                  className="w-21 bg-white text-xs p-1 border rounded-lg"
+                  placeholder="Search Semester..."
+                  className="w-full lg:w-36 bg-white text-xs p-1 border rounded-lg"
                 />
               </div>
-              <div className="p-2 flex justify-end">
+              
+              <div className="p-2">
                 <input
                   type="text"
                   name="internship_count"
                   value={filters.internship_count}
                   onChange={handleFilterChange}
                   placeholder="Search Count..."
-                  className="w-35 bg-white text-xs p-1 border rounded-lg"
+                  className="w-full lg:w-29 bg-white text-xs p-1 border rounded-lg"
                 />
               </div>
+
+              <div className="p-2"></div>
             </div>
 
             {/* Table */}
             <div className="border rounded-lg overflow-hidden">
               {/* Header */}
               <div
-                className="grid bg-gray-300 font-semibold text-sm sticky top-0"
+                className={`grid bg-gray-300 font-semibold text-sm sticky top-0`}
                 style={{ gridTemplateColumns: TABLE_GRID_COLS }}
               >
-                <div className="p-2 whitespace-nowrap sticky left-0 bg-gray-300 z-10">
-                  Sl. No.
-                </div>
-                <div className="p-2 text-left whitespace-nowrap">
+                <div className="p-2 whitespace-nowrap">Sl. No.</div>
+                
+                <div className="pl-10 pr-2 py-2 text-left whitespace-nowrap">
                   <SortButton columnKey="student_name" columnName="Student Name" />
                 </div>
-                <div className="p-2 pl-4 text-left whitespace-nowrap">
+                
+                <div className="p-2 text-left whitespace-nowrap">
                   <SortButton columnKey="rollno" columnName="Roll No." />
                 </div>
-                <div className="p-2 pl-9 text-left whitespace-nowrap">
-                  <SortButton columnKey="program_name" columnName="Program Name" />
+                
+                <div className="p-2 text-left whitespace-nowrap">
+                  <SortButton columnKey="program_name" columnName="Program" />
                 </div>
-                <div className="p-2 pl-32 text-center whitespace-nowrap">
-                  {/* Note: sorting by data key 'internship_session' */}
-                  <SortButton columnKey="internship_session" columnName="Internship Session" />
+                
+                <div className="p-2 text-left whitespace-nowrap">
+                  <SortButton columnKey="internship_session" columnName="Session" />
                 </div>
-                <div className="p-2 pl-11 text-center whitespace-nowrap">
+                
+                <div className="p-2 pl-9 text-center whitespace-nowrap">
                   <SortButton columnKey="semester" columnName="Semester" />
                 </div>
-                <div className="p-2 text-right whitespace-nowrap pr-4">
-                  <SortButton columnKey="internship_count" columnName="Internship Count" />
+                
+                <div className="p-2 pl-12 text-center whitespace-nowrap">
+                  <SortButton columnKey="internship_count" columnName="Count" />
                 </div>
+                
                 <div className="p-2 text-center whitespace-nowrap">
                   Certificates
                 </div>
               </div>
+
               {/* Body */}
               <div className="max-h-[500px] overflow-y-auto no-scrollbar">
                 {isLoading ? (
@@ -433,18 +449,27 @@ const StudentInternshipReportTable = ({ setToastMessage, selectedYear }) => {
                   paginatedData.map((item, index) => (
                     <div
                       key={`${item.userid}-${item.semester}-${item.internship_session}`}
-                      className="grid items-center border-t bg-white text-sm hover:bg-gray-50"
+                      className={`grid items-center border-t bg-white text-sm hover:bg-gray-50`}
                       style={{ gridTemplateColumns: TABLE_GRID_COLS }}
                     >
-                      <div className="p-2 pl-5 sticky left-0">
+                      <div className="p-2 pl-5">
                         {serialNoOffset + index + 1}.
                       </div>
-                      <div className="p-2 font-medium">{item.student_name}</div>
-                      <div className="p-2 pl-4">{item.rollno}</div>
-                      <div className="p-2 pl-5">{item.program_name}</div>
-                      <div className="p-2  text-center whitespace-nowrap">{item.internship_session || "N/A"}</div>
-                      <div className="p-2 pr-15 text-center">{item.semester || "N/A"}</div>
-                      <div className="p-2 text-center pr-15">{item.internship_count}</div>
+                      
+                      <div className="pl-10 pr-2 py-2 font-medium">
+                        {item.student_name}
+                      </div>
+                      
+                      <div className="p-2">{item.rollno}</div>
+                      
+                      <div className="p-2">{item.program_name}</div>
+                      
+                      <div className="p-2 text-left">{item.internship_session || "N/A"}</div>
+                      
+                      <div className="p-2 text-center">{item.semester || "N/A"}</div>
+                      
+                      <div className="p-2 text-center">{item.internship_count}</div>
+                      
                       <div className="p-2 text-center">
                         {item.certificates ? (
                           <div className="flex flex-col gap-1 items-center">
@@ -452,7 +477,7 @@ const StudentInternshipReportTable = ({ setToastMessage, selectedYear }) => {
                               cert ? (
                                 <a
                                   key={i}
-                                  href={`http://localhost:8000/uploads/certificates/${cert.trim()}`}
+                                  href={`/uploads/certificates/${cert.trim()}`}
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   className="text-blue-500 hover:underline text-xs"
@@ -480,7 +505,7 @@ const StudentInternshipReportTable = ({ setToastMessage, selectedYear }) => {
       </div>
       <style>{`
          @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
-         .animate-fadeIn { animation: fadeIn 0.3s ease-out forwards; }
+         .animate-fadeIn { animation: fadeIn 0.2s ease-out forwards; }
        `}</style>
     </div>
   );
