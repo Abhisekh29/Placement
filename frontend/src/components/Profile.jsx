@@ -109,20 +109,22 @@ const Profile = ({ studentData, onEdit, isFrozen, isLocked }) => {
 
         {/* Row 3 */}
         <div>
-          <p className="text-sm font-semibold text-gray-500">10th Percentage</p>
-          <p className="text-lg">{studentData.per_10}%</p>
-        </div>
-        <div>
-          <p className="text-sm font-semibold text-gray-500">12th Percentage</p>
-          <p className="text-lg">{studentData.per_12}%</p>
-        </div>
-        <div>
           <p className="text-sm font-semibold text-gray-500">Admission Session</p>
           <p className="text-lg">{sessionName}</p>
         </div>
         <div>
           <p className="text-sm font-semibold text-gray-500">Program</p>
           <p className="text-lg">{programName}</p>
+        </div>
+        <div>
+          <p className="text-sm font-semibold text-gray-500">CGPA (Upto Current Semester)</p>
+          <p className="text-lg">{studentData.cgpa}</p>
+        </div>
+        <div>
+          <p className="text-sm font-semibold text-gray-500">Active Backlogs</p>
+          <p className="text-lg">
+            {Number(studentData.active_backlogs) === 1 ? "Yes" : "No"}
+          </p>
         </div>
       </div>
     </div>

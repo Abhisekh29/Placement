@@ -34,16 +34,16 @@ const StudentDetailsModal = ({ student, onClose }) => {
     { label: "Gender", value: student.gender },
     { label: "Caste", value: student.caste || "N/A" },
     { label: "Address", value: student.address || "N/A" },
-    {
-      label: "10th Percentage",
-      value: student.per_10 ? `${student.per_10}%` : "N/A",
-    },
-    {
-      label: "12th Percentage",
-      value: student.per_12 ? `${student.per_12}%` : "N/A",
-    },
     { label: "Admission Session", value: student.session_name || "N/A" },
     { label: "Program", value: student.program_name || "N/A" },
+    {
+      label: "CGPA (Upto Current Sem)",
+      value: student.cgpa ? student.cgpa : "N/A",
+    },
+    {
+      label: "Active Backlogs",
+      value: Number(student.active_backlogs) === 1 ? "Yes" : "No",
+    },
     { label: "Modified By", value: student.modified_by || "N/A" },
     {
       label: "Last Modified",
@@ -112,8 +112,8 @@ const AdminEditStudentModal = ({
     gender: student.gender || "",
     caste: student.caste || "",
     address: student.address || "",
-    per_10: student.per_10 || 0,
-    per_12: student.per_12 || 0,
+    cgpa: student.cgpa || 0,
+    active_backlogs: student.active_backlogs || 0,
     session_name: student.session_name || "",
     program_name: student.program_name || "",
     session_id: "",
@@ -157,13 +157,13 @@ const AdminEditStudentModal = ({
       "session_id",
       "program_id",
     ];
-    const per_10_changed =
-      parseFloat(currentData.per_10 || 0) !==
-      parseFloat(originalStateWithIds.per_10 || 0);
-    const per_12_changed =
-      parseFloat(currentData.per_12 || 0) !==
-      parseFloat(originalStateWithIds.per_12 || 0);
-    if (per_10_changed || per_12_changed) {
+    const cgpa_changed =
+      parseFloat(currentData.cgpa || 0) !==
+      parseFloat(originalStateWithIds.cgpa || 0);
+    const backlogs_changed =
+      Number(currentData.active_backlogs || 0) !==
+      Number(originalStateWithIds.active_backlogs || 0);
+    if (cgpa_changed || backlogs_changed) {
       return true;
     }
     return keysToCompare.some((key) => {
@@ -236,8 +236,8 @@ const AdminEditStudentModal = ({
       mod_by: user.userid,
       session_id: formData.session_id ? Number(formData.session_id) : null,
       program_id: formData.program_id ? Number(formData.program_id) : null,
-      per_10: parseFloat(formData.per_10 || 0),
-      per_12: parseFloat(formData.per_12 || 0),
+      cgpa: parseFloat(formData.cgpa || 0),
+      active_backlogs: Number(formData.active_backlogs || 0),
     };
     try {
       await api.put(`/adminStudents/${student.userid}`, payload);
@@ -374,26 +374,27 @@ const AdminEditStudentModal = ({
               </select>
             </div>
             <div className="col-span-1">
-              <label className="block text-sm font-medium">10th %</label>
+              <label className="block text-sm font-medium">CGPA</label>
               <input
                 type="number"
                 step="0.01"
-                name="per_10"
-                value={formData.per_10}
+                name="cgpa"
+                value={formData.cgpa}
                 onChange={handleInputChange}
                 className="w-full p-2 border rounded-lg"
               />
             </div>
             <div className="col-span-1">
-              <label className="block text-sm font-medium">12th %</label>
-              <input
-                type="number"
-                step="0.01"
-                name="per_12"
-                value={formData.per_12}
+              <label className="block text-sm font-medium">Active Backlogs</label>
+              <select
+                name="active_backlogs"
+                value={formData.active_backlogs}
                 onChange={handleInputChange}
-                className="w-full p-2 border rounded-lg"
-              />
+                className="w-full p-2 border rounded-lg bg-white"
+              >
+                <option value={0}>No</option>
+                <option value={1}>Yes</option>
+              </select>
             </div>
             <div className="col-span-1">
               <label className="block text-sm font-medium">Gender</label>
@@ -779,10 +780,10 @@ const StudentTable = ({ setToastMessage }) => {
       "Gender",
       "Caste",
       "Address",
-      "10th Percentage",
-      "12th Percentage",
-      "Session",
+      "Admission Session",
       "Program",
+      "CGPA (upto current semester)",
+      "Active Backlogs",
       "Status"
     ];
     const formatDateForCsv = (dateString) => {
@@ -809,10 +810,10 @@ const StudentTable = ({ setToastMessage }) => {
         `"${(student.gender || "N/A").replace(/"/g, '""')}"`,
         `"${(student.caste || "N/A").replace(/"/g, '""')}"`,
         `"${(student.address || "N/A").replace(/"/g, '""')}"`,
-        `"${student.per_10 || "0"}%"`,
-        `"${student.per_12 || "0"}%"`,
         `"${(student.session_name || "N/A").replace(/"/g, '""')}"`,
         `"${(student.program_name || "N/A").replace(/"/g, '""')}"`,
+        `"${student.cgpa || "N/A"}"`,
+        `"${Number(student.active_backlogs) === 1 ? "Yes" : "No"}"`,
         `"${status}"`
       ].join(",");
     });

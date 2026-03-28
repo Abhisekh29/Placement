@@ -124,20 +124,20 @@ const StudentDriveDetails = () => {
       return {
         text: "Applied",
         disabled: true,
-        className: "bg-gray-400 text-gray-700 cursor-not-allowed",
+        className: "bg-gray-400 text-gray-700 text-sm cursor-not-allowed",
       };
     }
     if (isApplying) {
       return {
         text: "Applying...",
         disabled: true,
-        className: "opacity-70 cursor-wait bg-blue-600 text-white",
+        className: "opacity-70 text-sm cursor-wait bg-blue-600 text-white",
       };
     }
     return {
-      text: "Apply",
+      text: "Click Here if Applied",
       disabled: false,
-      className: "bg-blue-600 text-white hover:bg-blue-700",
+      className: "bg-blue-600 text-white text-sm hover:bg-blue-700",
     };
   };
 
@@ -251,7 +251,7 @@ const StudentDriveDetails = () => {
               Confirm Application
             </h3>
             <p className="text-gray-600 mb-6">
-              Are you sure you want to apply for the drive: <br />
+              Are you sure you have applied in the drive: <br />
               <strong className="text-gray-800">{drive.drive_name}</strong>?
               <br /><br />
               <span className="font-semibold text-red-600">Please note: This action cannot be undone.</span>

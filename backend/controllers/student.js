@@ -11,7 +11,7 @@ export const getStudentDetails = (req, res) => {
 
 export const addStudent = (req, res) => {
     const q =
-    "INSERT INTO student_master(`rollno`, `name`, `mobile`, `email`, `dob`, `gender`, `caste`, `address`, `per_10`, `per_12`, `session_id`, `program_id`, `userid`, `mod_by`) VALUES (?)";
+    "INSERT INTO student_master(`rollno`, `name`, `mobile`, `email`, `dob`, `gender`, `caste`, `address`, `cgpa`, `active_backlogs`, `session_id`, `program_id`, `userid`, `mod_by`) VALUES (?)";
 
     const values = [
         req.body.rollno,
@@ -22,8 +22,8 @@ export const addStudent = (req, res) => {
         req.body.gender,
         req.body.caste,
         req.body.address,
-        req.body.per_10,
-        req.body.per_12,
+        req.body.cgpa,
+        req.body.active_backlogs,
         req.body.session_id,
         req.body.program_id,
         req.body.userid,
@@ -52,7 +52,7 @@ export const updateStudent = (req, res) => {
 
     // 2. Proceed with Update if Not Locked
     const q =
-      "UPDATE student_master SET `rollno`=?, `name`=?, `mobile`=?, `email`=?, `dob`=?, `gender`=?, `caste`=?, `address`=?, `per_10`=?, `per_12`=?, `session_id`=?, `program_id`=?, `mod_by`=? WHERE userid = ?";
+      "UPDATE student_master SET `rollno`=?, `name`=?, `mobile`=?, `email`=?, `dob`=?, `gender`=?, `caste`=?, `address`=?, `cgpa`=?, `active_backlogs`=?, `session_id`=?, `program_id`=?, `mod_by`=? WHERE userid = ?";
 
     const values = [
       req.body.rollno,
@@ -63,8 +63,8 @@ export const updateStudent = (req, res) => {
       req.body.gender,
       req.body.caste,
       req.body.address,
-      req.body.per_10,
-      req.body.per_12,
+      req.body.cgpa,
+      req.body.active_backlogs,
       req.body.session_id,
       req.body.program_id,
       req.body.mod_by,

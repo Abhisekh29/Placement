@@ -67,7 +67,7 @@ export const getStudents = (req, res) => {
   let q = `
     SELECT 
       s.userid, s.rollno, s.name, s.mobile, s.email, s.dob, s.gender,
-      s.caste, s.address, s.per_10, s.per_12,
+      s.caste, s.address, s.cgpa, s.active_backlogs,
       ss.session_name,
       p.program_name,
       s.is_profile_frozen,
@@ -193,7 +193,7 @@ export const getRejectedStudents = (req, res) => {
 export const updateStudent = (req, res) => {
   const { userid } = req.params;
   const q =
-    "UPDATE student_master SET `rollno` = ?, `name` = ?, `mobile` = ?, `email` = ?, `dob` = ?, `gender` = ? , `caste` = ? , `address` = ? , `per_10` = ? , `per_12` = ? , `session_id` = ?, `program_id` = ?, `mod_by` = ?, `mod_time` = NOW() WHERE userid = ?";
+    "UPDATE student_master SET `rollno` = ?, `name` = ?, `mobile` = ?, `email` = ?, `dob` = ?, `gender` = ? , `caste` = ? , `address` = ? , `cgpa` = ? , `active_backlogs` = ? , `session_id` = ?, `program_id` = ?, `mod_by` = ?, `mod_time` = NOW() WHERE userid = ?";
   const values = [
     req.body.rollno,
     req.body.name,
@@ -203,8 +203,8 @@ export const updateStudent = (req, res) => {
     req.body.gender,
     req.body.caste,
     req.body.address,
-    req.body.per_10,
-    req.body.per_12,
+    req.body.cgpa,
+    req.body.active_backlogs,
     req.body.session_id,
     req.body.program_id,
     req.body.mod_by,

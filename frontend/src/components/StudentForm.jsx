@@ -25,23 +25,22 @@ const studentSchema = z.object({
   gender: z.enum(["Male", "Female", "Other"], "Select a valid gender"),
   caste: z.string().nonempty("Caste is required"),
   address: z.string().nonempty("Address is required"),
-
-  per_10: z
-    .number({ invalid_type_error: "Enter a number" })
-    .min(0, "Must be between 0-100")
-    .max(100, "Must be between 0-100")
-    .refine(
-      (val) => /^\d+(\.\d{1,2})?$/.test(String(val)),
-      "Up to 2 decimal places only"
-    ),
-  per_12: z
-    .number({ invalid_type_error: "Enter a number" })
-    .min(0, "Must be between 0-100")
-    .max(100, "Must be between 0-100")
-    .refine(
-      (val) => /^\d+(\.\d{1,2})?$/.test(String(val)),
-      "Up to 2 decimal places only"
-    ),
+  
+  cgpa: z.any()
+    .refine((val) => val !== "" && val !== undefined && !Number.isNaN(val), {
+      message: "CGPA is required",
+    })
+    .transform(Number)
+    .refine((val) => val >= 0 && val <= 10, {
+      message: "Must be between 0-10",
+    })
+    .refine((val) => /^\d+(\.\d{1,2})?$/.test(String(val)), {
+      message: "Up to 2 decimal places only",
+    }),
+  active_backlogs: z.any().refine((val) => val === 0 || val === 1, {
+    message: "Please select Yes or No",
+  }),
+    
   session_id: z.number({ invalid_type_error: "Select a session" }),
   program_id: z.number({ invalid_type_error: "Select a program" }),
 });
@@ -115,8 +114,8 @@ const StudentForm = ({
       dob: data.dob ? new Date(data.dob).toLocaleDateString("en-CA") : "", // Ensure consistent date format
       caste: data.caste || "",
       address: data.address || "",
-      per_10: Number(parseFloat(data.per_10 || 0).toFixed(2)), // Ensure number and fixed decimals
-      per_12: Number(parseFloat(data.per_12 || 0).toFixed(2)), // Ensure number and fixed decimals
+      cgpa: Number(parseFloat(data.cgpa || 0).toFixed(2)), // Ensure number and fixed decimals
+      active_backlogs: Number(data.active_backlogs || 0),
       session_id: Number(data.session_id || 0),
       program_id: Number(data.program_id || 0),
     };
@@ -153,8 +152,8 @@ const StudentForm = ({
         userid: user.userid,
         mod_by: user.userid,
         rollno: Number(data.rollno),
-        per_10: Number(data.per_10),
-        per_12: Number(data.per_12),
+        cgpa: Number(data.cgpa),
+        active_backlogs: Number(data.active_backlogs),
         session_id: Number(data.session_id),
         program_id: Number(data.program_id),
         address: data.address || "",
@@ -190,7 +189,7 @@ const StudentForm = ({
     <main className="flex-grow p-6">
       <form
         onSubmit={handleSubmit(onSubmit)}
-        className="bg-white p-6 rounded-xl shadow-md max-w-lg mx-auto space-y-4"
+        className="bg-blue-50 border-blue-400 border p-6 rounded-xl shadow-md max-w-lg mx-auto space-y-4"
       >
         {/* Roll Number */}
         <div>
@@ -354,42 +353,40 @@ const StudentForm = ({
           )}
         </div>
 
-        {/* Percentages */}
+        {/* Academic Details */}
         <div>
-          <label className="block mb-1 font-medium">10th Percentage</label>
+          <label className="block mb-1 font-medium">CGPA (Upto Current Semester) (Enter 0 if First Semester)</label>
           <input
             type="number"
             step="0.01"
-            {...register("per_10", { valueAsNumber: true })}
+            {...register("cgpa", { valueAsNumber: true })}
             className={`w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 ${
-              errors.per_10
+              errors.cgpa
                 ? "border-red-500 focus:ring-red-200"
                 : "focus:ring-blue-200"
             }`}
           />
-          {errors.per_10 && (
-            <p className="text-red-600 mt-1">
-              {"10th Percentage should be decimal between 1 to 100"}
-            </p>
+          {errors.cgpa && (
+            <p className="text-red-600 mt-1">{errors.cgpa.message}</p>
           )}
         </div>
 
         <div>
-          <label className="block mb-1 font-medium">12th Percentage</label>
-          <input
-            type="number"
-            step="0.01"
-            {...register("per_12", { valueAsNumber: true })}
+          <label className="block mb-1 font-medium">Active Backlogs?</label>
+          <select
+            {...register("active_backlogs", { valueAsNumber: true })}
             className={`w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 ${
-              errors.per_12
+              errors.active_backlogs
                 ? "border-red-500 focus:ring-red-200"
                 : "focus:ring-blue-200"
             }`}
-          />
-          {errors.per_12 && (
-            <p className="text-red-600 mt-1">
-              {"10th Percentage should be decimal between 1 to 100"}
-            </p>
+          >
+            <option value="">Select Option</option>
+            <option value={0}>No</option>
+            <option value={1}>Yes</option>
+          </select>
+          {errors.active_backlogs && (
+            <p className="text-red-600 mt-1">{errors.active_backlogs.message}</p>
           )}
         </div>
 
