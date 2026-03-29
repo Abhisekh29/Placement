@@ -43,30 +43,27 @@ export const getInternships = (req, res) => {
   // --- 2. Build Base Queries ---
   let q = `
     SELECT 
-      i.internship_id, i.user_id, i.company_id, i.semester,
+      i.internship_id, i.user_id, i.org_name, i.semester,
       i.session_id, sess.session_name,
       i.certificate,
       s.name AS student_name,
-      c.company_name,
       pm.program_name,
       i.mod_time,
       um.username AS modified_by
     FROM student_internship AS i
     JOIN student_master AS s ON i.user_id = s.userid
-    JOIN company_master AS c ON i.company_id = c.company_id
     LEFT JOIN user_master AS um ON i.mod_by = um.userid
     LEFT JOIN program_master AS pm ON s.program_id = pm.program_id
-    LEFT JOIN session_master AS sess ON i.session_id = sess.session_id -- ADDED JOIN
+    LEFT JOIN session_master AS sess ON i.session_id = sess.session_id 
   `;
 
   let countQuery = `
     SELECT COUNT(*) as total
     FROM student_internship AS i
     JOIN student_master AS s ON i.user_id = s.userid
-    JOIN company_master AS c ON i.company_id = c.company_id
     LEFT JOIN user_master AS um ON i.mod_by = um.userid
     LEFT JOIN program_master AS pm ON s.program_id = pm.program_id
-    LEFT JOIN session_master AS sess ON i.session_id = sess.session_id -- ADDED JOIN
+    LEFT JOIN session_master AS sess ON i.session_id = sess.session_id 
   `;
 
   // --- 3. Add Dynamic WHERE Clause for Search ---
@@ -74,7 +71,7 @@ export const getInternships = (req, res) => {
   const countValues = [];
 
   if (search) {
-    const whereClause = " WHERE (s.name LIKE ? OR c.company_name LIKE ? OR i.semester LIKE ? OR pm.program_name LIKE ?)";
+    const whereClause = " WHERE (s.name LIKE ? OR i.org_name LIKE ? OR i.semester LIKE ? OR pm.program_name LIKE ?)";
     const searchTerm = `%${search}%`;
     
     q += whereClause;
@@ -124,10 +121,10 @@ export const addInternship = (req, res) => {
     return res.status(400).json({ message: "Certificate file is required." });
   }
 
-  const q = "INSERT INTO student_internship (`user_id`, `company_id`, `semester`, `session_id`, `certificate`, `mod_by`, `mod_time`) VALUES (?, ?, ?, ?, ?, ?, NOW())";
+  const q = "INSERT INTO student_internship (`user_id`, `org_name`, `semester`, `session_id`, `certificate`, `mod_by`, `mod_time`) VALUES (?, ?, ?, ?, ?, ?, NOW())";
   const values = [
     req.body.user_id,
-    req.body.company_id,
+    req.body.org_name,
     req.body.semester,
     req.body.session_id, 
     req.file.filename,
@@ -143,7 +140,7 @@ export const addInternship = (req, res) => {
         }
 
         if (err.code === 'ER_DUP_ENTRY') {
-            return res.status(409).json({ message: "Error: This student already has an internship for this company and semester." });
+            return res.status(409).json({ message: "Error: This student already has an internship for this organization and semester." });
         }
         return res.status(500).json(err);
     }
@@ -173,10 +170,10 @@ export const updateInternship = (req, res) => {
       newFileName = req.file.filename;
     }
 
-    const q = "UPDATE student_internship SET `user_id` = ?, `company_id` = ?, `semester` = ?, `session_id` = ?, `certificate` = ?, `mod_by` = ?, `mod_time` = NOW() WHERE `internship_id` = ?";
+    const q = "UPDATE student_internship SET `user_id` = ?, `org_name` = ?, `semester` = ?, `session_id` = ?, `certificate` = ?, `mod_by` = ?, `mod_time` = NOW() WHERE `internship_id` = ?";
     const values = [
       req.body.user_id,
-      req.body.company_id,
+      req.body.org_name,
       req.body.semester,
       req.body.session_id,
       newFileName,
@@ -194,7 +191,7 @@ export const updateInternship = (req, res) => {
             }
 
             if (updateErr.code === 'ER_DUP_ENTRY') {
-                return res.status(409).json({ message: "Error: This student already has an internship for this company and semester." });
+                return res.status(409).json({ message: "Error: This student already has an internship for this organization and semester." });
             }
             return res.status(500).json(updateErr);
         }

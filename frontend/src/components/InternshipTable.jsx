@@ -5,7 +5,7 @@ import { debounce } from "lodash";
 
 const initialFormState = {
   user_id: "",
-  company_id: "",
+  org_name: "",
   semester: "",
   session_id: "",
   certificate: null,
@@ -25,7 +25,6 @@ const InternshipTable = ({ setToastMessage }) => {
 
   // --- Modal State ---
   const [allStudents, setAllStudents] = useState([]);
-  const [companies, setCompanies] = useState([]);
   const [sessions, setSessions] = useState([]);
   const [departments, setDepartments] = useState([]);
   const [programs, setPrograms] = useState([]);
@@ -81,14 +80,12 @@ const InternshipTable = ({ setToastMessage }) => {
   // --- Modal Data Fetching ---
   const fetchInitialData = async () => {
     try {
-      const [studentsRes, companiesRes, deptsRes, sessionsRes] = await Promise.all([
+      const [studentsRes, deptsRes, sessionsRes] = await Promise.all([
         api.get("/student_master/list/all"),
-        api.get("/adminCompany"),
         api.get("/filters/departments"),
         api.get("/session_master"),
       ]);
       setAllStudents(studentsRes.data);
-      setCompanies(companiesRes.data);
       setDepartments(deptsRes.data);
       setSessions(sessionsRes.data);
     } catch (err) {
@@ -176,7 +173,7 @@ const InternshipTable = ({ setToastMessage }) => {
     setEditingInternship(internship);
     setFormData({
       user_id: internship.user_id,
-      company_id: internship.company_id,
+      org_name: internship.org_name || "",
       semester: internship.semester,
       session_id: internship.session_id, 
       certificate: null,
@@ -199,13 +196,13 @@ const InternshipTable = ({ setToastMessage }) => {
     }
 
     const headers = [
-      "Student Name", "Company", "Program", "Session", "Semester", "Certificate", "Modified By", "Last Modified"
+      "Student Name", "Organization", "Program", "Session", "Semester", "Certificate", "Modified By", "Last Modified"
     ];
 
     const dataRows = internships.map((internship) =>
       [
         `"${(internship.student_name || "N/A").replace(/"/g, '""')}"`,
-        `"${(internship.company_name || "N/A").replace(/"/g, '""')}"`,
+        `"${(internship.org_name || "N/A").replace(/"/g, '""')}"`,
         `"${(internship.program_name || "N/A").replace(/"/g, '""')}"`,
         `"${(internship.session_name || "N/A").replace(/"/g, '""')}"`,
         `"${internship.semester || "N/A"}"`,
@@ -237,10 +234,10 @@ const InternshipTable = ({ setToastMessage }) => {
   // --- CRUD Functions ---
   const handleAddSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.user_id || !formData.company_id || !formData.semester || !formData.session_id || !formData.certificate) {
+    if (!formData.user_id || !formData.org_name || !formData.semester || !formData.session_id || !formData.certificate) {
       setToastMessage({
         type: "error",
-        content: "Student, Company, Semester, Session, and Certificate are all required.",
+        content: "Student, Organization/Institution, Semester, Session, and Certificate are all required.",
       });
       return;
     }
@@ -275,7 +272,7 @@ const InternshipTable = ({ setToastMessage }) => {
     e.preventDefault();
     const noChanges =
       Number(formData.user_id) === editingInternship.user_id &&
-      Number(formData.company_id) === editingInternship.company_id &&
+      formData.org_name === editingInternship.org_name &&
       Number(formData.semester) === editingInternship.semester &&
       Number(formData.session_id) === editingInternship.session_id &&
       !formData.certificate;
@@ -336,7 +333,7 @@ const InternshipTable = ({ setToastMessage }) => {
         <div className="flex items-center gap-2 w-full sm:w-auto">
           <input
             type="text"
-            placeholder="Search name, company, program, semester.."
+            placeholder="Search name, organization, program, semester.."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full sm:w-76 h-8 p-2 bg-white border rounded-lg text-sm shadow-sm focus:ring-2 focus:ring-blue-400 focus:outline-none"
@@ -411,7 +408,7 @@ const InternshipTable = ({ setToastMessage }) => {
           <div className="grid grid-cols-[0.5fr_1.2fr_1.2fr_1.2fr_1fr_0.8fr_1fr_1.5fr_1fr_1fr] bg-gray-300 p-2 font-semibold text-sm">
             <div>Sl. No.</div>
             <div>Student Name</div>
-            <div className="text-center">Company</div>
+            <div className="text-center">Organization</div>
             <div className="text-center">Program</div>
             <div className="text-center">Session</div>
             <div className="text-center">Semester</div>
@@ -431,7 +428,7 @@ const InternshipTable = ({ setToastMessage }) => {
                 >
                   <div>{serialNoOffset + index + 1}.</div>
                   <div className="font-semibold">{internship.student_name}</div>
-                  <div className="text-center">{internship.company_name}</div>
+                  <div className="text-center">{internship.org_name}</div>
                   <div className="text-center">{internship.program_name || "N/A"}</div>
                   <div className="text-center">{internship.session_name || "N/A"}</div>
                   <div className="text-center">{internship.semester}</div>
@@ -528,14 +525,19 @@ const InternshipTable = ({ setToastMessage }) => {
                     </ul>
                   )}
                 </div>
-                <select name="company_id" value={formData.company_id} onChange={handleInputChange} className="w-full p-3 border rounded-lg" required>
-                  <option value="">4. Select Company</option>
-                  {companies.map((c) => (<option key={c.company_id} value={c.company_id}>{c.company_name}</option>))}
-                </select>
                 <select name="session_id" value={formData.session_id} onChange={handleInputChange} className="w-full p-3 border rounded-lg" required>
                   <option value="">5. Select Session</option>
                   {sessions.map((s) => (<option key={s.session_id} value={s.session_id}>{s.session_name}</option>))}
                 </select>
+                <input 
+                  type="text" 
+                  name="org_name" 
+                  value={formData.org_name} 
+                  onChange={handleInputChange} 
+                  placeholder="4. Organization/Institution Name" 
+                  className="w-full p-3 border rounded-lg" 
+                  required 
+                />
                 <input type="number" min={1} max={10} name="semester" value={formData.semester} onChange={handleInputChange} placeholder="6. Semester" className="w-full p-3 border rounded-lg" required />
                 <label className="block text-sm font-medium text-gray-600 mb-1">
                   7. Certificate (PDF, JPG, JPEG, PNG)
@@ -571,14 +573,19 @@ const InternshipTable = ({ setToastMessage }) => {
                   <option value="">Select Student</option>
                   {allStudents.map((s) => (<option key={s.userid} value={s.userid}>{s.name} ({s.rollno})</option>))}
                 </select>
-                <select name="company_id" value={formData.company_id} onChange={handleInputChange} className="w-full p-3 border rounded-lg" required>
-                  <option value="">Select Company</option>
-                  {companies.map((c) => (<option key={c.company_id} value={c.company_id}>{c.company_name}</option>))}
-                </select>
                 <select name="session_id" value={formData.session_id} onChange={handleInputChange} className="w-full p-3 border rounded-lg" required>
                   <option value="">Select Session</option>
                   {sessions.map((s) => (<option key={s.session_id} value={s.session_id}>{s.session_name}</option>))}
                 </select>
+                <input 
+                  type="text" 
+                  name="org_name" 
+                  value={formData.org_name} 
+                  onChange={handleInputChange} 
+                  placeholder="Organization/Institution Name" 
+                  className="w-full p-3 border rounded-lg" 
+                  required 
+                />
                 <input type="number" name="semester" value={formData.semester} onChange={handleInputChange} placeholder="Semester" className="w-full p-3 border rounded-lg" required />
                 <div>
                   <label className="block text-sm font-medium">Certificate (Optional)</label>

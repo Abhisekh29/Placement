@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import api from "../api/axios";
 
 const initialFormState = {
-  company_id: "",
+  org_name: "",
   semester: "",
   session_id: "",
   certificate: null,
@@ -10,7 +10,6 @@ const initialFormState = {
 
 const StudentInternshipTable = ({ setToastMessage, isFrozen }) => {
   const [internships, setInternships] = useState([]);
-  const [companies, setCompanies] = useState([]);
   const [sessions, setSessions] = useState([]);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -34,15 +33,11 @@ const StudentInternshipTable = ({ setToastMessage, isFrozen }) => {
     }
   };
 
-  // 3. Fetch companies AND sessions
+  // 3. Fetch sessions
   useEffect(() => {
     const fetchDropdownData = async () => {
       try {
-        const [companiesRes, sessionsRes] = await Promise.all([
-          api.get("/company"),
-          api.get("/session_master"), // API call to get sessions
-        ]);
-        setCompanies(companiesRes.data);
+        const sessionsRes = await api.get("/session_master");
         setSessions(sessionsRes.data);
       } catch (err) {
         console.error("Failed to fetch dropdown data:", err);
@@ -50,7 +45,6 @@ const StudentInternshipTable = ({ setToastMessage, isFrozen }) => {
     };
     fetchInternships();
     fetchDropdownData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleInputChange = (e) => {
@@ -70,7 +64,7 @@ const StudentInternshipTable = ({ setToastMessage, isFrozen }) => {
   const handleEditClick = (internship) => {
     setEditingInternship(internship);
     setFormData({
-      company_id: internship.company_id,
+      org_name: internship.org_name || "",
       semester: internship.semester,
       session_id: internship.session_id,
       certificate: null,
@@ -88,15 +82,15 @@ const StudentInternshipTable = ({ setToastMessage, isFrozen }) => {
 
   const handleAddSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.company_id || !formData.semester || !formData.session_id || !formData.certificate) {
+    if (!formData.org_name || !formData.semester || !formData.session_id || !formData.certificate) {
       setToastMessage({
         type: "error",
-        content: "Company, Semester, Session, and Certificate are all required.",
+        content: "Organization/Institution, Semester, Session, and Certificate are all required.",
       });
       return;
     }
     const data = new FormData();
-    data.append("company_id", formData.company_id);
+    data.append("org_name", formData.org_name);
     data.append("semester", formData.semester);
     data.append("session_id", formData.session_id);
     data.append("certificate", formData.certificate);
@@ -121,7 +115,7 @@ const StudentInternshipTable = ({ setToastMessage, isFrozen }) => {
   const handleUpdateSubmit = (e) => {
     e.preventDefault();
     const noChanges =
-      Number(formData.company_id) === editingInternship.company_id &&
+      formData.org_name === editingInternship.org_name &&
       Number(formData.semester) === editingInternship.semester &&
       Number(formData.session_id) === editingInternship.session_id &&
       !formData.certificate;
@@ -137,7 +131,7 @@ const StudentInternshipTable = ({ setToastMessage, isFrozen }) => {
 
   const updateInternship = async () => {
     const data = new FormData();
-    data.append("company_id", formData.company_id);
+    data.append("org_name", formData.org_name);
     data.append("semester", formData.semester);
     data.append("session_id", formData.session_id);
     if (formData.certificate) {
@@ -197,7 +191,7 @@ const StudentInternshipTable = ({ setToastMessage, isFrozen }) => {
         <div className="min-w-[1000px]"> 
           <div className="grid grid-cols-[0.5fr_1fr_1fr_0.8fr_1fr_1.5fr_1fr_1fr] bg-gray-300 p-2 font-semibold text-sm">
             <div>Sl.No.</div>
-            <div>Company</div>
+            <div>Organization</div>
             <div className="text-center">Session</div>
             <div className="text-center">Semester</div>
             <div className="text-center">Certificate</div>
@@ -213,7 +207,7 @@ const StudentInternshipTable = ({ setToastMessage, isFrozen }) => {
                   className="grid grid-cols-[0.5fr_1fr_1fr_0.8fr_1fr_1.5fr_1fr_1fr] items-center p-2 border-t bg-white text-sm"
                 >
                   <div className="pl-3">{index + 1}.</div>
-                  <div className="font-semibold">{internship.company_name}</div>
+                  <div className="font-semibold">{internship.org_name}</div>
                   <div className="text-center">{internship.session_name || "N/A"}</div>
                   <div className="text-center">{internship.semester}</div>
                   <div className="text-center">
@@ -303,20 +297,6 @@ const StudentInternshipTable = ({ setToastMessage, isFrozen }) => {
             <form noValidate onSubmit={handleAddSubmit}>
               <div className="space-y-4">
                 <select
-                  name="company_id"
-                  value={formData.company_id}
-                  onChange={handleInputChange}
-                  className="w-full p-3 border rounded-lg"
-                  required
-                >
-                  <option value="">Select Company</option>
-                  {companies.map((c) => (
-                    <option key={c.company_id} value={c.company_id}>
-                      {c.company_name}
-                    </option>
-                  ))}
-                </select>
-                <select
                   name="session_id"
                   value={formData.session_id}
                   onChange={handleInputChange}
@@ -330,6 +310,15 @@ const StudentInternshipTable = ({ setToastMessage, isFrozen }) => {
                     </option>
                   ))}
                 </select>
+                <input
+                  type="text"
+                  name="org_name"
+                  value={formData.org_name}
+                  onChange={handleInputChange}
+                  placeholder="Organization/Institution Name"
+                  className="w-full p-3 border rounded-lg"
+                  required
+                />
                 <input
                   type="number"
                   name="semester"
@@ -381,19 +370,6 @@ const StudentInternshipTable = ({ setToastMessage, isFrozen }) => {
             <form noValidate onSubmit={handleUpdateSubmit}>
               <div className="grid gap-4">
                 <select
-                  name="company_id"
-                  value={formData.company_id}
-                  onChange={handleInputChange}
-                  className="w-full p-3 border rounded-lg"
-                >
-                  <option value="">Select Company</option>
-                  {companies.map((c) => (
-                    <option key={c.company_id} value={c.company_id}>
-                      {c.company_name}
-                    </option>
-                  ))}
-                </select>
-                <select
                   name="session_id"
                   value={formData.session_id}
                   onChange={handleInputChange}
@@ -407,6 +383,15 @@ const StudentInternshipTable = ({ setToastMessage, isFrozen }) => {
                     </option>
                   ))}
                 </select>
+                <input
+                  type="text"
+                  name="org_name"
+                  value={formData.org_name}
+                  onChange={handleInputChange}
+                  placeholder="Organization/Institution Name"
+                  className="w-full p-3 border rounded-lg"
+                  required
+                />
                 <input
                   type="number"
                   name="semester"

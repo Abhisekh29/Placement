@@ -52,7 +52,7 @@ const InternshipDashboardWidget = () => {
                   {/* Added index + 1 */}
                   <div className="pl-4">{index + 1}.</div>
                   <div className="font-medium truncate pr-2 text-center">
-                    {internship.company_name}
+                    {internship.org_name}
                   </div>
                   <div className="text-center">{internship.semester}</div>
                   <div className="text-center">
