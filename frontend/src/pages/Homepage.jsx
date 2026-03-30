@@ -148,7 +148,7 @@ const Homepage = () => {
       <main className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-6 p-6 md:p-10">
         <div className="flex flex-col items-center justify-center text-center">
           <img
-            src="gur.png"
+            src="gu_gate_bg.png"
             alt="Placement"
             className="w-full rounded-lg shadow-lg"
           />
