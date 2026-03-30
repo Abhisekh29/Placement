@@ -4,8 +4,8 @@ import api from "../../api/axios";
 import { ArrowUp } from "lucide-react";
 
 // --- Define Table Structure ---
-// Sl. No | Name | Roll | Program | Session | Semester | Count | Certificates
-const TABLE_GRID_COLS = "0.5fr 1.8fr 1fr 1.5fr 1.2fr 1fr 1fr 1fr";
+// Sl. No | Name | Roll | Organization | Program | Session | Semester | Certificates
+const TABLE_GRID_COLS = "0.5fr 1.8fr 1fr 1.5fr 1.5fr 1.2fr 1fr 1fr";
 const MIN_TABLE_WIDTH = "min-w-[1200px] lg:min-w-0";
 const TABLE_WRAPPER_CLASSES = `w-full ${MIN_TABLE_WIDTH}`;
 
@@ -18,10 +18,10 @@ const StudentInternshipReportTable = ({ setToastMessage, selectedYear }) => {
   const [filters, setFilters] = useState({
     student_name: "",
     rollno: "",
+    organization: "",
     program_name: "",
     semester: "",
     session_name: "",
-    internship_count: "",
   });
   const [debouncedFilters, setDebouncedFilters] = useState(filters);
   const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -53,10 +53,10 @@ const StudentInternshipReportTable = ({ setToastMessage, selectedYear }) => {
         yearId: selectedYear.year_id,
         student_name: debouncedFilters.student_name,
         rollno: debouncedFilters.rollno,
+        organization: debouncedFilters.organization,
         program_name: debouncedFilters.program_name,
         semester: debouncedFilters.semester,
         session_name: debouncedFilters.session_name,
-        internship_count: debouncedFilters.internship_count,
       };
       const res = await api.get("/reports/student-internship-report", { params });
       setData(res.data);
@@ -204,17 +204,17 @@ const StudentInternshipReportTable = ({ setToastMessage, selectedYear }) => {
       return;
     }
     setIsExporting(true);
-    const headers = ["Sl. No.", "Student Name", "Roll No.", "Program Name", "Session", "Semester", "Internship Count", "Certificates"];
+    const headers = ["Sl. No.", "Student Name", "Roll No.", "Organization", "Program Name", "Session", "Semester", "Certificates"];
     const exportSerialNoOffset = rowsPerPage === "all" ? 0 : serialNoOffset;
     const dataRows = dataToExport.map((item, index) =>
       [
         `"${exportSerialNoOffset + index + 1}"`,
         `"${(item.student_name || "").replace(/"/g, '""')}"`,
         `"${(item.rollno || "").replace(/"/g, '""')}"`,
+        `"${(item.organization || "N/A").replace(/"/g, '""')}"`,
         `"${(item.program_name || "").replace(/"/g, '""')}"`,
         `"${(item.internship_session || "N/A").replace(/"/g, '""')}"`,
         `"${(item.semester || "N/A").toString().replace(/"/g, '""')}"`,
-        `"${item.internship_count || 0}"`,
         `"${(item.certificates || "N/A").replace(/"/g, '""')}"`,
       ].join(",")
     );
@@ -355,6 +355,17 @@ const StudentInternshipReportTable = ({ setToastMessage, selectedYear }) => {
                   className="w-full lg:w-29 bg-white text-xs p-1 border rounded-lg"
                 />
               </div>
+
+              <div className="p-2">
+                <input
+                  type="text"
+                  name="organization"
+                  value={filters.organization}
+                  onChange={handleFilterChange}
+                  placeholder="Search Org..."
+                  className="w-full bg-white text-xs p-1 border rounded-lg"
+                />
+              </div>
               
               <div className="p-2">
                 <input
@@ -388,17 +399,6 @@ const StudentInternshipReportTable = ({ setToastMessage, selectedYear }) => {
                   className="w-full lg:w-36 bg-white text-xs p-1 border rounded-lg"
                 />
               </div>
-              
-              <div className="p-2">
-                <input
-                  type="text"
-                  name="internship_count"
-                  value={filters.internship_count}
-                  onChange={handleFilterChange}
-                  placeholder="Search Count..."
-                  className="w-full lg:w-29 bg-white text-xs p-1 border rounded-lg"
-                />
-              </div>
 
               <div className="p-2"></div>
             </div>
@@ -419,6 +419,10 @@ const StudentInternshipReportTable = ({ setToastMessage, selectedYear }) => {
                 <div className="p-2 text-left whitespace-nowrap">
                   <SortButton columnKey="rollno" columnName="Roll No." />
                 </div>
+
+                <div className="p-2 text-left whitespace-nowrap">
+                  <SortButton columnKey="organization" columnName="Organization" />
+                </div>
                 
                 <div className="p-2 text-left whitespace-nowrap">
                   <SortButton columnKey="program_name" columnName="Program" />
@@ -430,10 +434,6 @@ const StudentInternshipReportTable = ({ setToastMessage, selectedYear }) => {
                 
                 <div className="p-2 pl-9 text-center whitespace-nowrap">
                   <SortButton columnKey="semester" columnName="Semester" />
-                </div>
-                
-                <div className="p-2 pl-12 text-center whitespace-nowrap">
-                  <SortButton columnKey="internship_count" columnName="Count" />
                 </div>
                 
                 <div className="p-2 text-center whitespace-nowrap">
@@ -448,7 +448,7 @@ const StudentInternshipReportTable = ({ setToastMessage, selectedYear }) => {
                 ) : sortedData.length > 0 ? (
                   paginatedData.map((item, index) => (
                     <div
-                      key={`${item.userid}-${item.semester}-${item.internship_session}`}
+                      key={item.internship_id ? `internship-${item.internship_id}` : `${item.userid}-${index}`}
                       className={`grid items-center border-t bg-white text-sm hover:bg-gray-50`}
                       style={{ gridTemplateColumns: TABLE_GRID_COLS }}
                     >
@@ -461,6 +461,8 @@ const StudentInternshipReportTable = ({ setToastMessage, selectedYear }) => {
                       </div>
                       
                       <div className="p-2">{item.rollno}</div>
+
+                      <div className="p-2 font-medium text-gray-800">{item.organization || "N/A"}</div>
                       
                       <div className="p-2">{item.program_name}</div>
                       
@@ -468,25 +470,16 @@ const StudentInternshipReportTable = ({ setToastMessage, selectedYear }) => {
                       
                       <div className="p-2 text-center">{item.semester || "N/A"}</div>
                       
-                      <div className="p-2 text-center">{item.internship_count}</div>
-                      
                       <div className="p-2 text-center">
                         {item.certificates ? (
-                          <div className="flex flex-col gap-1 items-center">
-                            {item.certificates.split(',').map((cert, i) => (
-                              cert ? (
-                                <a
-                                  key={i}
-                                  href={`/uploads/certificates/${cert.trim()}`}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-blue-500 hover:underline text-xs"
-                                >
-                                  View {item.internship_count > 1 ? `(${i + 1})` : ''}
-                                </a>
-                              ) : null
-                            ))}
-                          </div>
+                          <a
+                            href={`/uploads/certificates/${item.certificates.trim()}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-500 hover:underline text-xs"
+                          >
+                            View
+                          </a>
                         ) : (
                           <span className="text-gray-400 text-xs">N/A</span>
                         )}

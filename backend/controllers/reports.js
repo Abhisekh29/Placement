@@ -320,10 +320,10 @@ export const getStudentInternshipReport = (req, res) => {
     yearId,
     student_name,
     rollno,
+    organization,
     program_name,
     semester,
     session_name,
-    internship_count,
   } = req.query;
 
   if (!yearId) {
@@ -334,7 +334,6 @@ export const getStudentInternshipReport = (req, res) => {
 
   let values = [yearId];
   let whereClauses = ["iss.year_id = ?"];
-  let havingClauses = [];
 
   if (student_name) {
     whereClauses.push("s.name LIKE ?");
@@ -344,12 +343,14 @@ export const getStudentInternshipReport = (req, res) => {
     whereClauses.push("s.rollno LIKE ?");
     values.push(`%${rollno}%`);
   }
+  if (organization) {
+    whereClauses.push("c.company_name LIKE ?");
+    values.push(`%${organization}%`);
+  }
   if (program_name) {
     whereClauses.push("p.program_name LIKE ?");
     values.push(`%${program_name}%`);
   }
-  
-  // Filter by the session name of the INTERNSHIP
   if (session_name) {
     whereClauses.push("iss.session_name LIKE ?");
     values.push(`%${session_name}%`);
@@ -357,29 +358,24 @@ export const getStudentInternshipReport = (req, res) => {
 
   if (semester) {
     if (semester.toLowerCase() === "n/a" || semester === "0") {
-      havingClauses.push("si.semester IS NULL"); // Added 'si.' for clarity
+      whereClauses.push("si.semester IS NULL");
     } else {
-      havingClauses.push("CAST(si.semester AS CHAR) LIKE ?");
+      whereClauses.push("CAST(si.semester AS CHAR) LIKE ?");
       values.push(`${semester}%`);
     }
   }
 
-  if (internship_count) {
-    havingClauses.push("CAST(COUNT(si.internship_id) AS CHAR) LIKE ?"); // Fixed to count aggregate
-    values.push(`${internship_count}%`);
-  }
-
-  // FIX 2: Changed LEFT JOIN to JOIN for internships, as we only want records with actual internships in the selected year
   const q = `
     SELECT 
         s.userid, 
         s.name AS student_name, 
         s.rollno, 
+        c.company_name AS organization,
         p.program_name, 
         si.semester, 
         iss.session_name AS internship_session, 
-        COUNT(si.internship_id) AS internship_count,
-        GROUP_CONCAT(si.certificate SEPARATOR ',') AS certificates
+        si.internship_id,
+        si.certificate AS certificates
     FROM 
         student_master AS s
     JOIN 
@@ -390,13 +386,10 @@ export const getStudentInternshipReport = (req, res) => {
         student_internship AS si ON s.userid = si.user_id
     JOIN
         session_master AS iss ON si.session_id = iss.session_id 
+    LEFT JOIN
+        company_master AS c ON si.company_id = c.company_id
     WHERE 
         ${whereClauses.join(" AND ")}
-    GROUP BY 
-        s.userid, s.name, s.rollno, p.program_name, si.semester, iss.session_name
-    ${
-      havingClauses.length > 0 ? "HAVING " + havingClauses.join(" AND ") : ""
-    }
     ORDER BY 
         s.name, si.semester;
   `;
