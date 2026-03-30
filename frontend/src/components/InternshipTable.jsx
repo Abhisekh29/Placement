@@ -502,16 +502,16 @@ const InternshipTable = ({ setToastMessage }) => {
               <div className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <select name="deptId" value={filters.deptId} onChange={handleFilterChange} className="w-full p-3 border rounded-lg">
-                    <option value="">1. Select Department</option>
+                    <option value="">Select Department</option>
                     {departments.map((d) => (<option key={d.department_id} value={d.department_id}>{d.department_name}</option>))}
                   </select>
                   <select name="progId" value={filters.progId} onChange={handleFilterChange} className="w-full p-3 border rounded-lg">
-                    <option value="">2. Select Program</option>
+                    <option value="">Select Program</option>
                     {programs.map((p) => (<option key={p.program_id} value={p.program_id}>{p.program_name}</option>))}
                   </select>
                 </div>
                 <div className="relative">
-                  <input type="text" name="searchTerm" placeholder="3. Search Student by Name or Roll No." value={filters.searchTerm} onChange={handleFilterChange} className="w-full p-3 border rounded-lg" disabled={!filters.progId} />
+                  <input type="text" name="searchTerm" placeholder="Search Student by Name or Roll No." value={filters.searchTerm} onChange={handleFilterChange} className="w-full p-3 border rounded-lg" disabled={!filters.progId} />
                   {searchedStudents.length > 0 && filters.searchTerm && (
                     <ul className="absolute z-10 bg-white border rounded-lg mt-1 w-full max-h-48 overflow-y-auto shadow-md">
                       {searchedStudents.map((s) => (
@@ -528,17 +528,22 @@ const InternshipTable = ({ setToastMessage }) => {
                     </ul>
                   )}
                 </div>
-                <select name="company_id" value={formData.company_id} onChange={handleInputChange} className="w-full p-3 border rounded-lg" required>
-                  <option value="">4. Select Company</option>
-                  {companies.map((c) => (<option key={c.company_id} value={c.company_id}>{c.company_name}</option>))}
-                </select>
                 <select name="session_id" value={formData.session_id} onChange={handleInputChange} className="w-full p-3 border rounded-lg" required>
                   <option value="">5. Select Session</option>
                   {sessions.map((s) => (<option key={s.session_id} value={s.session_id}>{s.session_name}</option>))}
                 </select>
+                <input 
+                  type="text" 
+                  name="org_name" 
+                  value={formData.org_name} 
+                  onChange={handleInputChange} 
+                  placeholder="4. Organization/Institution Name" 
+                  className="w-full p-3 border rounded-lg" 
+                  required 
+                />
                 <input type="number" min={1} max={10} name="semester" value={formData.semester} onChange={handleInputChange} placeholder="6. Semester" className="w-full p-3 border rounded-lg" required />
                 <label className="block text-sm font-medium text-gray-600 mb-1">
-                  7. Certificate (PDF, JPG, JPEG, PNG)
+                  Certificate (PDF, JPG, JPEG, PNG)
                 </label>
                 <input
                   type="file"
@@ -571,14 +576,19 @@ const InternshipTable = ({ setToastMessage }) => {
                   <option value="">Select Student</option>
                   {allStudents.map((s) => (<option key={s.userid} value={s.userid}>{s.name} ({s.rollno})</option>))}
                 </select>
-                <select name="company_id" value={formData.company_id} onChange={handleInputChange} className="w-full p-3 border rounded-lg" required>
-                  <option value="">Select Company</option>
-                  {companies.map((c) => (<option key={c.company_id} value={c.company_id}>{c.company_name}</option>))}
-                </select>
                 <select name="session_id" value={formData.session_id} onChange={handleInputChange} className="w-full p-3 border rounded-lg" required>
                   <option value="">Select Session</option>
                   {sessions.map((s) => (<option key={s.session_id} value={s.session_id}>{s.session_name}</option>))}
                 </select>
+                <input 
+                  type="text" 
+                  name="org_name" 
+                  value={formData.org_name} 
+                  onChange={handleInputChange} 
+                  placeholder="Organization/Institution Name" 
+                  className="w-full p-3 border rounded-lg" 
+                  required 
+                />
                 <input type="number" name="semester" value={formData.semester} onChange={handleInputChange} placeholder="Semester" className="w-full p-3 border rounded-lg" required />
                 <div>
                   <label className="block text-sm font-medium">Certificate (Optional)</label>
