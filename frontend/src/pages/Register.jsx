@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../api/axios";
+import { Eye, EyeOff } from "lucide-react";
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -9,6 +10,7 @@ const Register = () => {
     user_type: "1", // default: student
   });
 
+  const [showPassword, setShowPassword] = useState(false);
   const [err, setErr] = useState("");
 
   const navigate = useNavigate();
@@ -97,16 +99,25 @@ const Register = () => {
             <label className="block text-sm font-medium text-gray-600">
               Password
             </label>
-            <input
-              type="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              placeholder="••••••••"
-              className="mt-1 w-full rounded-xl border border-gray-300 px-4 py-2 text-gray-700 
-                focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
-              required
-            />
+            <div className="relative mt-1">
+              <input
+                type={showPassword ? "text" : "password"}
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                placeholder="••••••••"
+                className="w-full rounded-xl border border-gray-300 px-4 py-2 pr-10 text-gray-700 
+                  focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute inset-y-0 right-3 flex items-center text-gray-500 hover:text-blue-500 transition-all duration-200 hover:scale-110 active:scale-90"
+              >
+                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
+            </div>
           </div>
 
           {/* Submit button */}

@@ -302,15 +302,6 @@ const StudentInternshipTable = ({ setToastMessage, isFrozen }) => {
             </h3>
             <form noValidate onSubmit={handleAddSubmit}>
               <div className="space-y-4">
-                <input
-                  type="text"
-                  name="org_name"
-                  value={formData.org_name}
-                  onChange={handleInputChange}
-                  placeholder="Organization/Institution Name"
-                  className="w-full p-3 border rounded-lg"
-                  required
-                />
                 <select
                   name="company_id"
                   value={formData.company_id}
@@ -389,15 +380,6 @@ const StudentInternshipTable = ({ setToastMessage, isFrozen }) => {
             </h3>
             <form noValidate onSubmit={handleUpdateSubmit}>
               <div className="grid gap-4">
-                <input
-                  type="text"
-                  name="org_name"
-                  value={formData.org_name}
-                  onChange={handleInputChange}
-                  placeholder="Organization/Institution Name"
-                  className="w-full p-3 border rounded-lg"
-                  required
-                />
                 <select
                   name="company_id"
                   value={formData.company_id}
