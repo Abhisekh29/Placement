@@ -4,7 +4,11 @@
   "main": "server.js",
   "type": "module",
   "scripts": {
-    "start": "nodemon server.js"
+  "start": "pm2 start server.js --name placement-api",
+  "stop": "pm2 stop placement-api",
+  "restart": "pm2 restart placement-api",
+  "logs": "pm2 logs",
+  "dev": "nodemon server.js"
   },
   "keywords": [],
   "author": "",

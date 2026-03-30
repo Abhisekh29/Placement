@@ -58,7 +58,6 @@ const InternshipDashboardWidget = () => {
                   <div className="text-center">
                     {internship.certificate ? (
                       <a
-                        /* href={`http://localhost:8000/uploads/certificates/${internship.certificate}` --> Development} */
                         href={`/uploads/certificates/${internship.certificate}`}
                         target="_blank"
                         rel="noopener noreferrer"

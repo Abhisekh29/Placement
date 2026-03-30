@@ -527,7 +527,7 @@ const sortedData = useMemo(() => {
                       <div className="p-2 text-center">
                         {item.offerletter_file_name ? (
                           <a
-                            href={`http://localhost:8000/uploads/offer_letters/${item.offerletter_file_name}`}
+                            href={`/uploads/offer_letters/${item.offerletter_file_name}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-blue-500 hover:underline text-xs"
