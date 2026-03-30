@@ -452,8 +452,7 @@ const InternshipTable = ({ setToastMessage }) => {
                   <div className="text-center">
                     {internship.certificate ? (
                       <a
-                        /* href={`http://localhost:8000/uploads/certificates/${internship.certificate}`} --> Development */
-                        href={`/uploads/certificates/${internship.certificate}`}
+                        href={`http://localhost:8000/uploads/certificates/${internship.certificate}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-blue-500 hover:underline"
@@ -714,8 +713,7 @@ const InternshipTable = ({ setToastMessage }) => {
                     <p className="text-xs text-gray-500 mt-1">
                       Current Certificate:{" "}
                       <a 
-                        /* href={`http://localhost:8000/uploads/certificates/${editingInternship.certificate}`} --> Development */
-                        href={`/uploads/certificates/${editingInternship.certificate}`}
+                        href={`http://localhost:8000/uploads/certificates/${editingInternship.certificate}`}
                         target="_blank" 
                         rel="noopener noreferrer" 
                         className="text-blue-500 hover:underline ml-1">

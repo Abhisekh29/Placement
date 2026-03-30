@@ -645,7 +645,6 @@ const DescriptionModal = ({ drive, onClose }) => (
           <div className="mt-4 pt-4 border-t">
             <a 
               href={`http://localhost:8000/uploads/placement_drive_files/${drive.jd_file}`}
-              // href={`/uploads/placement_drive_files/${drive.jd_file}`}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center text-blue-600 hover:text-blue-800 font-semibold"

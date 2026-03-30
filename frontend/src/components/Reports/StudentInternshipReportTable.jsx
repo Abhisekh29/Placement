@@ -362,7 +362,7 @@ const StudentInternshipReportTable = ({ setToastMessage, selectedYear }) => {
                   name="organization"
                   value={filters.organization}
                   onChange={handleFilterChange}
-                  placeholder="Search Org..."
+                  placeholder="Search Organization..."
                   className="w-full bg-white text-xs p-1 border rounded-lg"
                 />
               </div>
