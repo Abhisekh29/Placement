@@ -16,6 +16,8 @@ const StudentInternshipTable = ({ setToastMessage, isFrozen }) => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingInternship, setEditingInternship] = useState(null);
   const [formData, setFormData] = useState(initialFormState);
+  const [companySearch, setCompanySearch] = useState("");
+  const [isCompanyDropdownOpen, setIsCompanyDropdownOpen] = useState(false);
   const [actionToConfirm, setActionToConfirm] = useState(null);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
 
@@ -34,7 +36,19 @@ const StudentInternshipTable = ({ setToastMessage, isFrozen }) => {
     }
   };
 
-  // 3. Fetch companies AND sessions
+  // Sync the search text when editing an existing record
+  useEffect(() => {
+    if (formData.company_id && companies.length > 0) {
+      const selected = companies.find(
+        (c) => String(c.company_id) === String(formData.company_id)
+      );
+      if (selected) setCompanySearch(selected.company_name);
+    } else {
+      setCompanySearch("");
+    }
+  }, [formData.company_id, companies]);
+
+  // Fetch companies AND sessions
   useEffect(() => {
     const fetchDropdownData = async () => {
       try {
@@ -197,7 +211,7 @@ const StudentInternshipTable = ({ setToastMessage, isFrozen }) => {
         <div className="min-w-[1000px]"> 
           <div className="grid grid-cols-[0.5fr_1fr_1fr_0.8fr_1fr_1.5fr_1fr_1fr] bg-gray-300 p-2 font-semibold text-sm">
             <div>Sl.No.</div>
-            <div>Company</div>
+            <div className="text-center">Organization</div>
             <div className="text-center">Session</div>
             <div className="text-center">Semester</div>
             <div className="text-center">Certificate</div>
@@ -213,7 +227,7 @@ const StudentInternshipTable = ({ setToastMessage, isFrozen }) => {
                   className="grid grid-cols-[0.5fr_1fr_1fr_0.8fr_1fr_1.5fr_1fr_1fr] items-center p-2 border-t bg-white text-sm"
                 >
                   <div className="pl-3">{index + 1}.</div>
-                  <div className="font-semibold">{internship.company_name}</div>
+                  <div className="font-semibold text-center">{internship.company_name}</div>
                   <div className="text-center">{internship.session_name || "N/A"}</div>
                   <div className="text-center">{internship.semester}</div>
                   <div className="text-center">
@@ -302,20 +316,67 @@ const StudentInternshipTable = ({ setToastMessage, isFrozen }) => {
             </h3>
             <form noValidate onSubmit={handleAddSubmit}>
               <div className="space-y-4">
-                <select
-                  name="company_id"
-                  value={formData.company_id}
-                  onChange={handleInputChange}
-                  className="w-full p-3 border rounded-lg"
-                  required
-                >
-                  <option value="">Select Company</option>
-                  {companies.map((c) => (
-                    <option key={c.company_id} value={c.company_id}>
-                      {c.company_name}
-                    </option>
-                  ))}
-                </select>
+                <div className="relative w-full">
+                  <input
+                    type="text"
+                    placeholder="Search or Select Company..."
+                    value={companySearch}
+                    onChange={(e) => {
+                      setCompanySearch(e.target.value);
+                      setIsCompanyDropdownOpen(true);
+                      // If the user clears the input, clear the hidden ID in formData
+                      if (e.target.value === "") {
+                        handleInputChange({ target: { name: "company_id", value: "" } });
+                      }
+                    }}
+                    onFocus={() => setIsCompanyDropdownOpen(true)}
+                    onBlur={() => {
+                      // 200ms delay ensures the click event on the list item fires before the list closes
+                      setTimeout(() => setIsCompanyDropdownOpen(false), 200);
+                    }}
+                    className="w-full p-3 border rounded-lg focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                    required={!formData.company_id} // HTML5 validation: fails if no valid ID is selected
+                  />
+
+                  {/* Floating Dropdown List */}
+                  {isCompanyDropdownOpen && (
+                    <ul className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-xl max-h-60 overflow-y-auto custom-scrollbar">
+                      {companies
+                        .filter((c) =>
+                          c.company_name.toLowerCase().includes(companySearch.toLowerCase())
+                        )
+                        .map((c) => (
+                          <li
+                            key={c.company_id}
+                            className={`p-3 hover:bg-blue-50 cursor-pointer text-sm text-gray-700 transition-colors ${
+                              String(formData.company_id) === String(c.company_id)
+                                ? "bg-blue-100 font-semibold"
+                                : ""
+                            }`}
+                            onClick={() => {
+                              // Update the visible text and the hidden ID
+                              setCompanySearch(c.company_name);
+                              handleInputChange({
+                                target: { name: "company_id", value: c.company_id },
+                              });
+                              setIsCompanyDropdownOpen(false);
+                            }}
+                          >
+                            {c.company_name}
+                          </li>
+                        ))}
+                      
+                      {/* Show this if search yields no results */}
+                      {companies.filter((c) =>
+                        c.company_name.toLowerCase().includes(companySearch.toLowerCase())
+                      ).length === 0 && (
+                        <li className="p-3 text-gray-500 italic text-sm text-center">
+                          No companies found
+                        </li>
+                      )}
+                    </ul>
+                  )}
+                </div>
                 <select
                   name="session_id"
                   value={formData.session_id}
@@ -380,19 +441,71 @@ const StudentInternshipTable = ({ setToastMessage, isFrozen }) => {
             </h3>
             <form noValidate onSubmit={handleUpdateSubmit}>
               <div className="grid gap-4">
-                <select
-                  name="company_id"
-                  value={formData.company_id}
-                  onChange={handleInputChange}
-                  className="w-full p-3 border rounded-lg"
-                >
-                  <option value="">Select Company</option>
-                  {companies.map((c) => (
-                    <option key={c.company_id} value={c.company_id}>
-                      {c.company_name}
-                    </option>
-                  ))}
-                </select>
+                <div className="relative w-full">
+                  <input
+                    type="text"
+                    placeholder="Search or Select Company..."
+                    value={companySearch}
+                    onChange={(e) => {
+                      setCompanySearch(e.target.value);
+                      setIsCompanyDropdownOpen(true);
+                      if (formData.company_id) {
+                        handleInputChange({ target: { name: "company_id", value: "" } });
+                      }
+                    }}
+                    onFocus={() => setIsCompanyDropdownOpen(true)}
+                    onBlur={() => {
+                      setTimeout(() => setIsCompanyDropdownOpen(false), 200);
+                    }}
+                    className="w-full p-3 border rounded-lg focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                  />
+
+                  <input
+                    type="text"
+                    value={formData.company_id || ""}
+                    required
+                    onChange={() => {}}
+                    className="absolute opacity-0 pointer-events-none inset-0 w-full h-full"
+                    tabIndex={-1}
+                  />
+
+                  {/* Floating Dropdown List */}
+                  {isCompanyDropdownOpen && (
+                    <ul className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-xl max-h-60 overflow-y-auto custom-scrollbar">
+                      {companies
+                        .filter((c) =>
+                          c.company_name.toLowerCase().includes(companySearch.toLowerCase())
+                        )
+                        .map((c) => (
+                          <li
+                            key={c.company_id}
+                            className={`p-3 hover:bg-blue-50 cursor-pointer text-sm text-gray-700 transition-colors ${
+                              String(formData.company_id) === String(c.company_id)
+                                ? "bg-blue-100 font-semibold"
+                                : ""
+                            }`}
+                            onClick={() => {
+                              setCompanySearch(c.company_name);
+                              handleInputChange({
+                                target: { name: "company_id", value: c.company_id },
+                              });
+                              setIsCompanyDropdownOpen(false);
+                            }}
+                          >
+                            {c.company_name}
+                          </li>
+                        ))}
+                      
+                      {companies.filter((c) =>
+                        c.company_name.toLowerCase().includes(companySearch.toLowerCase())
+                      ).length === 0 && (
+                        <li className="p-3 text-gray-500 italic text-sm text-center">
+                          No companies found
+                        </li>
+                      )}
+                    </ul>
+                  )}
+                </div>
                 <select
                   name="session_id"
                   value={formData.session_id}
