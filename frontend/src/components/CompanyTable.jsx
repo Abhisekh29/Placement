@@ -20,6 +20,10 @@ const CompanyTable = ({ setToastMessage }) => {
   const [actionToConfirm, setActionToConfirm] = useState(null);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
 
+  // --- NEW STATE FOR VIEW MORE ---
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [viewingCompany, setViewingCompany] = useState(null);
+
   //  --- NEW STATE FOR SEARCH --- 
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -59,6 +63,11 @@ const CompanyTable = ({ setToastMessage }) => {
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleViewClick = (company) => {
+    setViewingCompany(company);
+    setShowViewModal(true);
   };
 
   const handleAddClick = () => {
@@ -277,15 +286,14 @@ const CompanyTable = ({ setToastMessage }) => {
       {/* Table */}
       <div className="border rounded-lg overflow-x-auto no-scrollbar">
         <div className="min-w-[1200px]">
-          <div className="grid grid-cols-[0.5fr_1.5fr_1fr_1.5fr_1fr_1fr_1.5fr_1.5fr_1fr] bg-gray-300 p-2 font-semibold text-sm">
+          <div className="grid grid-cols-[0.5fr_2fr_1.5fr_2fr_1.2fr_1fr_0.8fr_1.2fr] bg-gray-300 p-2 font-semibold text-sm">
             <div>S.No.</div>
             <div>Company Name</div>
             <div>HR Name</div>
             <div>Email</div>
             <div>Mobile</div>
             <div>Type</div>
-            <div>Modified By</div>
-            <div>Last Modified</div>
+            <div className="text-center">View More</div>
             <div className="text-right">Actions</div>
           </div>
           <div className="max-h-96 overflow-y-auto no-scrollbar">
@@ -294,18 +302,22 @@ const CompanyTable = ({ setToastMessage }) => {
               filteredCompanies.map((company, index) => (
                 <div
                   key={company.company_id}
-                  className="grid grid-cols-[0.5fr_1.5fr_1fr_1.5fr_1fr_1fr_1.5fr_1.5fr_1fr] items-center p-2 border-t bg-white text-sm"
+                  className="grid grid-cols-[0.5fr_2fr_1.5fr_2fr_1.2fr_1fr_0.8fr_1.2fr] items-center p-2 border-t bg-white text-sm"
                 >
                   <div>{index + 1}.</div>
                   <div className="font-semibold">{company.company_name}</div>
                   <div>{company.hr_name || "N/A"}</div>
-                  <div className="break-words">{company.company_email}</div>
+                  <div className="break-all pr-2">{company.company_email}</div>
                   <div>{company.company_mobile}</div>
                   <div>{company.type_name}</div>
-                  <div className="break-words">
-                    {company.modified_by || "N/A"}
+                  <div className="text-center">
+                    <button
+                      onClick={() => handleViewClick(company)}
+                      className="text-blue-600 hover:text-blue-800 hover:underline font-small transition"
+                    >
+                      View
+                    </button>
                   </div>
-                  <div>{new Date(company.mod_time).toLocaleString()}</div>
                   <div className="flex justify-end gap-2">
                     <button
                       onClick={() => handleEditClick(company)}
@@ -426,6 +438,45 @@ const CompanyTable = ({ setToastMessage }) => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+      
+      {/* View Details Modal */}
+      {showViewModal && viewingCompany && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black/30 backdrop-blur-sm z-50">
+          <div className="bg-white w-full max-w-md rounded-xl shadow-2xl p-6 animate-fadeIn">
+            <h3 className="text-xl font-bold text-gray-800 border-b pb-3 mb-4">
+              Additional Details
+            </h3>
+            <div className="space-y-4 text-sm text-gray-700">
+              <div>
+                <span className="font-bold text-gray-900 block mb-1">Company Description:</span>
+                <div className="bg-gray-50 p-3 rounded-lg border max-h-60 overflow-y-auto">
+                  <p className="whitespace-pre-wrap break-words text-gray-700 leading-relaxed">
+                    {viewingCompany.company_description || "No description provided."}
+                  </p>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <span className="font-bold text-gray-900 block mb-1">Modified By:</span>
+                  <p>{viewingCompany.modified_by || "N/A"}</p>
+                </div>
+                <div>
+                  <span className="font-bold text-gray-900 block mb-1">Last Modified:</span>
+                  <p>{new Date(viewingCompany.mod_time).toLocaleString()}</p>
+                </div>
+              </div>
+            </div>
+            <div className="flex justify-end gap-3 mt-6">
+              <button
+                onClick={() => setShowViewModal(false)}
+                className="px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 transition"
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}
