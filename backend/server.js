@@ -30,11 +30,21 @@ import reportRoutes from "./routes/reports.js";
 
 const app = express()
 
-// ✅ Enable CORS
+// Enable CORS
+const allowedOrigins = process.env.CORS_ORIGIN 
+  ? process.env.CORS_ORIGIN.split(",") 
+  : []; 
+
 app.use(cors({
-  // origin: "http://localhost:5173", // allow your frontend
-  origin: ["http://172.16.0.34", "http://localhost:5173"],
-  credentials: true, // if you plan to use cookies/sessions
+  origin: function (origin, callback) {
+    // Check if the incoming origin is in our allowed list
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  credentials: true,
 }));
 
 app.use(express.json())

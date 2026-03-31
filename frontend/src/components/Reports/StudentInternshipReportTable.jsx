@@ -473,7 +473,7 @@ const StudentInternshipReportTable = ({ setToastMessage, selectedYear }) => {
                       <div className="p-2 text-center">
                         {item.certificates ? (
                           <a
-                            href={`/uploads/certificates/${item.certificates.trim()}`}
+                            href={`http://localhost:8000/uploads/certificates/${item.certificates.trim()}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-blue-500 hover:underline text-xs"
