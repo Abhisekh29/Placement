@@ -41,18 +41,6 @@ const InternshipTable = ({ setToastMessage }) => {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const user = JSON.parse(sessionStorage.getItem("user"));
 
-  // Sync the search text when editing an existing record
-  useEffect(() => {
-    if (formData.company_id && companies.length > 0) {
-      const selected = companies.find(
-        (c) => String(c.company_id) === String(formData.company_id)
-      );
-      if (selected) setCompanySearch(selected.company_name);
-    } else {
-      setCompanySearch("");
-    }
-  }, [formData.company_id, companies]);
-
   // --- Debounce Effect ---
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -184,6 +172,7 @@ const InternshipTable = ({ setToastMessage }) => {
     setFormData(initialFormState);
     setFilters({ deptId: "", progId: "", searchTerm: "" });
     setSearchedStudents([]);
+    setCompanySearch("");
     setShowAddModal(true);
   };
   const handleEditClick = (internship) => {
@@ -195,6 +184,8 @@ const InternshipTable = ({ setToastMessage }) => {
       session_id: internship.session_id, 
       certificate: null,
     });
+    const comp = companies.find((c) => String(c.company_id) === String(internship.company_id));
+    setCompanySearch(comp ? comp.company_name : "");
     setShowEditModal(true);
   };
   const handleDeleteClick = (internship) => {
@@ -251,6 +242,10 @@ const InternshipTable = ({ setToastMessage }) => {
   // --- CRUD Functions ---
   const handleAddSubmit = async (e) => {
     e.preventDefault();
+    if (!formData.company_id) {
+      setToastMessage && setToastMessage({ type: "error", content: "Please select a valid company from the list." });
+      return;
+    }
     if (!formData.user_id || !formData.company_id || !formData.semester || !formData.session_id || !formData.certificate) {
       setToastMessage({
         type: "error",
@@ -287,6 +282,11 @@ const InternshipTable = ({ setToastMessage }) => {
 
   const handleUpdateSubmit = (e) => {
     e.preventDefault();
+    if (!editingInternship) return;
+    if (!formData.company_id) {
+      setToastMessage && setToastMessage({ type: "error", content: "Please select a valid company from the list." });
+      return;
+    }
     const noChanges =
       Number(formData.user_id) === editingInternship.user_id &&
       Number(formData.company_id) === editingInternship.company_id &&
@@ -544,23 +544,28 @@ const InternshipTable = ({ setToastMessage }) => {
                 <div className="relative w-full">
                   <input
                     type="text"
-                    placeholder="Search or Select Company..."
+                    placeholder="Search or Select Company*"
                     value={companySearch}
                     onChange={(e) => {
-                      setCompanySearch(e.target.value);
+                      const val = e.target.value;
+                      setCompanySearch(val);
                       setIsCompanyDropdownOpen(true);
-                      // If the user clears the input, clear the hidden ID in formData
-                      if (e.target.value === "") {
+                      
+                      // Auto-select if exact match, otherwise clear the ID
+                      const exactMatch = companies.find(
+                        (c) => (c.company_name || "").toLowerCase() === val.toLowerCase()
+                      );
+                      if (exactMatch) {
+                        handleInputChange({ target: { name: "company_id", value: exactMatch.company_id } });
+                      } else {
                         handleInputChange({ target: { name: "company_id", value: "" } });
                       }
                     }}
                     onFocus={() => setIsCompanyDropdownOpen(true)}
                     onBlur={() => {
-                      // 200ms delay ensures the click event on the list item fires before the list closes
                       setTimeout(() => setIsCompanyDropdownOpen(false), 200);
                     }}
-                    className="w-full p-3 border rounded-lg focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                    required={!formData.company_id} // HTML5 validation: fails if no valid ID is selected
+                    className="w-full p-3 border rounded-lg focus:outline-none focus:ring-1 focus:ring-purple-500"
                   />
 
                   {/* Floating Dropdown List */}
@@ -568,14 +573,14 @@ const InternshipTable = ({ setToastMessage }) => {
                     <ul className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-xl max-h-60 overflow-y-auto custom-scrollbar">
                       {companies
                         .filter((c) =>
-                          c.company_name.toLowerCase().includes(companySearch.toLowerCase())
+                          (c.company_name || "").toLowerCase().includes(companySearch.toLowerCase())
                         )
                         .map((c) => (
                           <li
                             key={c.company_id}
-                            className={`p-3 hover:bg-blue-50 cursor-pointer text-sm text-gray-700 transition-colors ${
+                            className={`p-3 hover:bg-purple-50 cursor-pointer text-sm text-gray-700 transition-colors ${
                               String(formData.company_id) === String(c.company_id)
-                                ? "bg-blue-100 font-semibold"
+                                ? "bg-purple-100 font-semibold"
                                 : ""
                             }`}
                             onClick={() => {
@@ -593,7 +598,7 @@ const InternshipTable = ({ setToastMessage }) => {
                       
                       {/* Show this if search yields no results */}
                       {companies.filter((c) =>
-                        c.company_name.toLowerCase().includes(companySearch.toLowerCase())
+                        (c.company_name || "").toLowerCase().includes(companySearch.toLowerCase())
                       ).length === 0 && (
                         <li className="p-3 text-gray-500 italic text-sm text-center">
                           No companies found
@@ -640,12 +645,20 @@ const InternshipTable = ({ setToastMessage }) => {
                 <div className="relative w-full">
                   <input
                     type="text"
-                    placeholder="Search or Select Company..."
+                    placeholder="Search or Select Company*"
                     value={companySearch}
                     onChange={(e) => {
-                      setCompanySearch(e.target.value);
+                      const val = e.target.value;
+                      setCompanySearch(val);
                       setIsCompanyDropdownOpen(true);
-                      if (formData.company_id) {
+                      
+                      // Auto-select if exact match, otherwise clear the ID
+                      const exactMatch = companies.find(
+                        (c) => (c.company_name || "").toLowerCase() === val.toLowerCase()
+                      );
+                      if (exactMatch) {
+                        handleInputChange({ target: { name: "company_id", value: exactMatch.company_id } });
+                      } else {
                         handleInputChange({ target: { name: "company_id", value: "" } });
                       }
                     }}
@@ -653,15 +666,7 @@ const InternshipTable = ({ setToastMessage }) => {
                     onBlur={() => {
                       setTimeout(() => setIsCompanyDropdownOpen(false), 200);
                     }}
-                    className="w-full p-3 border rounded-lg focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                  />
-                  <input
-                    type="text"
-                    value={formData.company_id || ""}
-                    required
-                    onChange={() => {}}
-                    className="absolute opacity-0 pointer-events-none inset-0 w-full h-full"
-                    tabIndex={-1}
+                    className="w-full p-3 border rounded-lg focus:outline-none focus:ring-1 focus:ring-purple-500"
                   />
 
                   {/* Floating Dropdown List */}
@@ -669,17 +674,18 @@ const InternshipTable = ({ setToastMessage }) => {
                     <ul className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-xl max-h-60 overflow-y-auto custom-scrollbar">
                       {companies
                         .filter((c) =>
-                          c.company_name.toLowerCase().includes(companySearch.toLowerCase())
+                          (c.company_name || "").toLowerCase().includes(companySearch.toLowerCase())
                         )
                         .map((c) => (
                           <li
                             key={c.company_id}
-                            className={`p-3 hover:bg-blue-50 cursor-pointer text-sm text-gray-700 transition-colors ${
+                            className={`p-3 hover:bg-purple-50 cursor-pointer text-sm text-gray-700 transition-colors ${
                               String(formData.company_id) === String(c.company_id)
-                                ? "bg-blue-100 font-semibold"
+                                ? "bg-purple-100 font-semibold"
                                 : ""
                             }`}
                             onClick={() => {
+                              // Update the visible text and the hidden ID
                               setCompanySearch(c.company_name);
                               handleInputChange({
                                 target: { name: "company_id", value: c.company_id },
@@ -691,8 +697,9 @@ const InternshipTable = ({ setToastMessage }) => {
                           </li>
                         ))}
                       
+                      {/* Show this if search yields no results */}
                       {companies.filter((c) =>
-                        c.company_name.toLowerCase().includes(companySearch.toLowerCase())
+                        (c.company_name || "").toLowerCase().includes(companySearch.toLowerCase())
                       ).length === 0 && (
                         <li className="p-3 text-gray-500 italic text-sm text-center">
                           No companies found

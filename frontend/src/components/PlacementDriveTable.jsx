@@ -726,6 +726,8 @@ const PlacementDriveTable = ({ setToastMessage }) => {
   const [totalDrives, setTotalDrives] = useState(0);
   const [searchTerm, setSearchTerm] = useState(""); // Replaces your 'searchQuery'
   const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [companySearch, setCompanySearch] = useState("");
+  const [isCompanyDropdownOpen, setIsCompanyDropdownOpen] = useState(false);
   
   const totalPages = Math.ceil(totalDrives / limit);
   const serialNoOffset = (limit === "all" || currentPage === 1) ? 0 : (currentPage - 1) * limit;
@@ -800,6 +802,7 @@ const PlacementDriveTable = ({ setToastMessage }) => {
   const handleAddClick = () => {
     setFormData(initialForm);
     setEditingDrive(null);
+    setCompanySearch("");
     setShowAddModal(true);
   };
 
@@ -813,6 +816,8 @@ const PlacementDriveTable = ({ setToastMessage }) => {
       ctc: drive.ctc,
       is_active: drive.is_active, jd_file: null,
     });
+    const comp = companies.find((c) => String(c.company_id) === String(drive.company_id));
+    setCompanySearch(comp ? comp.company_name : "");
     setShowEditModal(true);
   };
 
@@ -900,6 +905,10 @@ const PlacementDriveTable = ({ setToastMessage }) => {
 
   const handleAddSubmit = async (e) => {
     e.preventDefault();
+    if (!formData.company_id) {
+      setToastMessage && setToastMessage({ type: "error", content: "Please select a valid company from the list." });
+      return;
+    }
     if (!formData.drive_name.trim() || !formData.session_id || !formData.company_id || !formData.ctc) {
       setToastMessage && setToastMessage({ type: "error", content: "Name, Session, Company, and CTC are required." });
       return;
@@ -944,6 +953,10 @@ const PlacementDriveTable = ({ setToastMessage }) => {
   const handleUpdateSubmit = (e) => {
     e.preventDefault();
     if (!editingDrive) return;
+    if (!formData.company_id) {
+      setToastMessage && setToastMessage({ type: "error", content: "Please select a valid company from the list." });
+      return;
+    }
     if (Number(formData.ctc) < 0) {
       setToastMessage && setToastMessage({ type: "error", content: "CTC cannot be negative." });
       return;
@@ -1283,19 +1296,72 @@ const PlacementDriveTable = ({ setToastMessage }) => {
                     </option>
                   ))}
                 </select>
-                <select
-                  name="company_id"
-                  value={formData.company_id}
-                  onChange={handleInputChange}
-                  className="p-3 border rounded-lg"
-                >
-                  <option value="">Select Company*</option>
-                  {companies.map((c) => (
-                    <option key={c.company_id} value={c.company_id}>
-                      {c.company_name}
-                    </option>
-                  ))}
-                </select>
+                <div className="relative w-full">
+                  <input
+                  type="text"
+                  placeholder="Search or Select Company*"
+                  value={companySearch}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setCompanySearch(val);
+                    setIsCompanyDropdownOpen(true);
+                    
+                    // Auto-select if exact match, otherwise clear the ID
+                    const exactMatch = companies.find(
+                      (c) => (c.company_name || "").toLowerCase() === val.toLowerCase()
+                    );
+                    if (exactMatch) {
+                      handleInputChange({ target: { name: "company_id", value: exactMatch.company_id } });
+                    } else {
+                      handleInputChange({ target: { name: "company_id", value: "" } });
+                    }
+                  }}
+                  onFocus={() => setIsCompanyDropdownOpen(true)}
+                  onBlur={() => {
+                    setTimeout(() => setIsCompanyDropdownOpen(false), 200);
+                  }}
+                  className="w-full p-3 border rounded-lg focus:outline-none focus:ring-1 focus:ring-purple-500"
+                />
+
+                  {/* Floating Dropdown List */}
+                  {isCompanyDropdownOpen && (
+                    <ul className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-xl max-h-60 overflow-y-auto custom-scrollbar">
+                      {companies
+                        .filter((c) =>
+                          (c.company_name || "").toLowerCase().includes(companySearch.toLowerCase())
+                        )
+                        .map((c) => (
+                          <li
+                            key={c.company_id}
+                            className={`p-3 hover:bg-purple-50 cursor-pointer text-sm text-gray-700 transition-colors ${
+                              String(formData.company_id) === String(c.company_id)
+                                ? "bg-purple-100 font-semibold"
+                                : ""
+                            }`}
+                            onClick={() => {
+                              // Update the visible text and the hidden ID
+                              setCompanySearch(c.company_name);
+                              handleInputChange({
+                                target: { name: "company_id", value: c.company_id },
+                              });
+                              setIsCompanyDropdownOpen(false);
+                            }}
+                          >
+                            {c.company_name}
+                          </li>
+                        ))}
+                      
+                      {/* Show this if search yields no results */}
+                      {companies.filter((c) =>
+                        (c.company_name || "").toLowerCase().includes(companySearch.toLowerCase())
+                      ).length === 0 && (
+                        <li className="p-3 text-gray-500 italic text-sm text-center">
+                          No companies found
+                        </li>
+                      )}
+                    </ul>
+                  )}
+                </div>
                 <input
                   type="number"
                   name="ctc"
