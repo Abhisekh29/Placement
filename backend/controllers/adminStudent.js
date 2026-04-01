@@ -215,39 +215,39 @@ export const updateStudent = (req, res) => {
   });
 };
 
-export const deleteStudent = (req, res) => {
+export const deleteStudent = async (req, res) => {
   const { userid } = req.params;
+  const connection = db.promise();
 
-  // Start transaction to ensure both records are handled
-  db.beginTransaction((err) => {
-    if (err) return res.status(500).json({ message: "Transaction failed." });
+  try {
+    await connection.beginTransaction();
 
     // 1. Delete from student_master
     const q1 = "DELETE FROM student_master WHERE userid = ?";
-    db.query(q1, [userid], (err, data) => {
-      // Check for foreign key constraints on student_master
-      if (err && err.code === "ER_ROW_IS_REFERENCED_2") {
-        return db.rollback(() =>
-          res
-            .status(400)
-            .json({
-              message:
-                "Cannot delete student: They have existing placement or internship records.",
-            })
-        );
-      }
+    await connection.query(q1, [userid]);
 
-      db.commit((commitErr) => {
-        if (commitErr)
-          return db.rollback(() =>
-            res.status(500).json({ message: "Commit failed." })
-          );
-        return res
-          .status(200)
-          .json({ message: "Student and User records deleted successfully." });
-      });
+    // 2. Delete from user_master
+    const q2 = "DELETE FROM user_master WHERE userid = ?";
+    await connection.query(q2, [userid]);
+
+    await connection.commit();
+
+    return res.status(200).json({
+      message: "Student and User records deleted successfully.",
     });
-  });
+  } catch (err) {
+    await connection.rollback();
+
+    if (err.code === "ER_ROW_IS_REFERENCED_2") {
+      return res.status(400).json({
+        message:
+          "Cannot delete student: They have existing placement or internship records.",
+      });
+    }
+
+    console.error("Delete Student Error:", err);
+    return res.status(500).json({ message: "Delete failed." });
+  }
 };
 
 

@@ -7,7 +7,6 @@ import { HiExclamationTriangle } from "react-icons/hi2";
 
 const StudentDriveDetails = () => {
   const { driveId } = useParams(); // Get driveId from URL
-  
 
   // State for this page
   const [drive, setDrive] = useState(null);
@@ -51,9 +50,9 @@ const StudentDriveDetails = () => {
           api.get(`/student-placement-drives/details/${driveId}`),
           api.get("/student-placements/applied-drives", {
             headers: {
-              'Cache-Control': 'no-cache',
-              'Pragma': 'no-cache',
-              'Expires': '0',
+              "Cache-Control": "no-cache",
+              Pragma: "no-cache",
+              Expires: "0",
             },
           }),
         ]);
@@ -62,7 +61,9 @@ const StudentDriveDetails = () => {
         setAppliedDriveIds(appliedRes.data || []);
       } catch (err) {
         console.error("Failed to fetch drive data:", err);
-        setError(err.response?.data?.message || "Could not load drive details.");
+        setError(
+          err.response?.data?.message || "Could not load drive details.",
+        );
       } finally {
         setIsLoading(false);
       }
@@ -91,7 +92,6 @@ const StudentDriveDetails = () => {
         type: "success",
         content: "Application submitted successfully!",
       });
-
     } catch (err) {
       const msg = err.response?.data?.message || "Application failed.";
       // Handle the "already applied" error
@@ -154,60 +154,68 @@ const StudentDriveDetails = () => {
     }
     if (drive) {
       return (
-        <div className="bg-gray-50 p-6 rounded-lg shadow-md h-full flex flex-col relative border border-black">
-
-          <div className="absolute top-6 right-6">
+        <div className="max-w-4xl mx-auto w-full animate-fadeIn">
+          
+          {/* Header & Button */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+            <h2 className="text-2xl text-center font-bold text-gray-800">
+              Drive Detail Page
+            </h2>
             <button
               onClick={handleApplyClick}
               disabled={buttonProps.disabled}
-              className={`px-6 py-2 rounded-lg font-semibold transition ${buttonProps.className}`}
+              className={`px-6 py-2.5 rounded-lg font-semibold shadow-sm transition w-full sm:w-auto ${buttonProps.className}`}
             >
               {buttonProps.text}
             </button>
           </div>
 
-          {/* THIS IS THE NEW, CORRECTED BLOCK - REPLACE WITH THIS */}
-          <div className="space-y-3 text-lg">
-
-            {/* Drive Name */}
-            <div className="flex">
-              <span className="font-semibold text-gray-700 w-32 flex-shrink-0">Drive Name:</span>
-              <span className="text-gray-900 pl-4">{drive.drive_name}</span>
-            </div>
-
-            {/* Company */}
-            <div className="flex">
-              <span className="font-semibold text-gray-700 w-32 flex-shrink-0">Company:</span>
-              <span className="text-gray-900 pl-4">{drive.company_name}</span>
-            </div>
-
-            {/* CTC */}
-            <div className="flex">
-              <span className="font-semibold text-gray-700 w-32 flex-shrink-0">CTC:</span>
-              <span className="text-gray-900 pl-4">{Number(drive.ctc).toFixed(2)} LPA</span>
-            </div>
-
-            {/* Description */}
-            <div className="pt-2 flex items-start">
-              <span className="font-semibold text-gray-700 w-32 flex-shrink-0">Description:</span>
-              <div className="pl-4">
-                <p className="text-gray-900 whitespace-pre-wrap">
-                  {drive.drive_description || "No description provided."}
-                </p>
-                {drive.jd_file && (
-                  <div className="mt-4 pt-4 border-t border-gray-200">
-                    <a 
-                      href={`/uploads/placement_drive_files/${drive.jd_file}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center text-blue-600 hover:text-blue-800 font-semibold"
-                    >
-                      📄 View Attached PDF
-                    </a>
-                  </div>
-                )}
+          {/* Details Card */}
+          <div className="bg-white p-6 md:p-8 rounded-xl shadow border border-gray-200">
+            
+            {/* Top Grid for Quick Info */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+              <div>
+                <p className="text-sm font-semibold text-gray-500 mb-1">Drive Name</p>
+                <p className="text-lg font-medium text-gray-900">{drive.drive_name}</p>
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-gray-500 mb-1">Company</p>
+                <p className="text-lg font-medium text-gray-900">{drive.company_name}</p>
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-gray-500 mb-1">CTC (Package)</p>
+                <p className="text-lg font-bold text-green-600">₹{Number(drive.ctc).toFixed(2)} LPA</p>
               </div>
             </div>
+
+            {/* Description Section */}
+            <div className="border-t border-gray-200 pt-6">
+              <p className="text-sm font-semibold text-gray-500 mb-3">Description</p>
+              <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                <p className="text-gray-800 whitespace-pre-wrap text-base leading-relaxed">
+                  {drive.drive_description || "No description provided."}
+                </p>
+              </div>
+            </div>
+
+            {/* PDF Attachment Section */}
+            {drive.jd_file && (
+              <div className="mt-6 border-t border-gray-200 pt-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <p className="font-semibold text-gray-800">Official Document</p>
+                  <p className="text-sm text-gray-500">Download the attached PDF for full details.</p>
+                </div>
+                <a
+                  href={`/uploads/placement_drive_files/${drive.jd_file}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-5 py-2 bg-blue-100 text-blue-700 border border-blue-200 rounded-lg font-semibold hover:bg-blue-200 transition text-center"
+                >
+                  📄 View PDF
+                </a>
+              </div>
+            )}
 
           </div>
         </div>
@@ -223,8 +231,9 @@ const StudentDriveDetails = () => {
       {/* Toast Message */}
       {toastMessage.content && (
         <div
-          className={`fixed top-5 left-1/2 transform -translate-x-1/2 p-4 rounded-lg text-white shadow-lg z-[9999] ${toastMessage.type === "success" ? "bg-green-500" : "bg-red-500"
-            }`}
+          className={`fixed top-5 left-1/2 transform -translate-x-1/2 p-4 rounded-lg text-white shadow-lg z-[9999] ${
+            toastMessage.type === "success" ? "bg-green-500" : "bg-red-500"
+          }`}
         >
           {toastMessage.content}
         </div>
@@ -252,8 +261,11 @@ const StudentDriveDetails = () => {
             <p className="text-gray-600 mb-6">
               Are you sure you have applied in the drive: <br />
               <strong className="text-gray-800">{drive.drive_name}</strong>?
-              <br /><br />
-              <span className="font-semibold text-red-600">Please note: This action cannot be undone.</span>
+              <br />
+              <br />
+              <span className="font-semibold text-red-600">
+                Please note: This action cannot be undone.
+              </span>
             </p>
             <div className="flex justify-end gap-3">
               <button
