@@ -39,6 +39,17 @@ export const updateAcademicSession = (req, res) => {
   });
 };
 
+// Controller to handle the toggle switch
+export const toggleSessionStatus = (req, res) => {
+  const { sessionId } = req.params;
+  const { is_active, mod_by } = req.body;
+  const q = "UPDATE session_master SET is_active = ?, mod_by = ?, mod_time = NOW() WHERE session_id = ?";
+  db.query(q, [is_active, mod_by, sessionId], (err, data) => {
+    if (err) return res.status(500).json(err);
+    return res.status(200).json({ message: "Session status updated." });
+  });
+};
+
 export const deleteAcademicSession = (req, res) => {
   const { sessionId } = req.params;
   const q = "DELETE FROM session_master WHERE session_id = ?";
