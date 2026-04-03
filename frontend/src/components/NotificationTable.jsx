@@ -194,7 +194,7 @@ const NotificationTable = ({ setToastMessage }) => {
       </div>
 
       {(showAddModal || showEditModal) && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/30 backdrop-blur-sm z-50">
+        <div className="fixed inset-0 flex items-center justify-center bg-black/30 backdrop-blur-sm z-50 p-6">
           <div className="bg-white w-full max-w-lg rounded-xl shadow-2xl p-6 animate-fadeIn">
             <h3 className="text-xl font-bold text-gray-800 border-b pb-3 mb-4">
               {showAddModal ? "Add New Notification" : "Edit Notification"}
@@ -207,7 +207,7 @@ const NotificationTable = ({ setToastMessage }) => {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-600 mb-1">Notification Text</label>
-                  <textarea name="text" value={formData.text} onChange={handleInputChange} rows="4" placeholder="Enter notification details..." className="w-full p-3 border rounded-lg"></textarea>
+                  <textarea name="text" value={formData.text} onChange={handleInputChange} rows="4" placeholder="Enter notification details..." className="w-full p-3 border rounded-lg resize-y overflow-y-auto min-h-[180px] max-h-[45vh]"></textarea>
                 </div>
               </div>
               <div className="flex justify-end gap-3 mt-4">
