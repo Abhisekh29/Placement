@@ -55,15 +55,51 @@ const AcademicSessionTable = ({ setToastMessage }) => {
   const handleDeleteClick = (session) => {
     setShowEditModal(false);
     setActionToConfirm(
-      () => () => deleteSession(session.session_id, session.session_name)
+      () => () => deleteSession(session.session_id, session.session_name),
     );
     setShowConfirmModal(true);
+  };
+
+  // Handle Status Toggle
+  const handleToggleStatusClick = (session) => {
+    const newStatus = session.is_active === "1" ? "0" : "1";
+    setActionToConfirm(
+      () => () =>
+        toggleSessionStatus(
+          session.session_id,
+          newStatus,
+          session.session_name,
+        ),
+    );
+    setShowConfirmModal(true);
+  };
+
+  const toggleSessionStatus = async (sessionId, newStatus, sessionName) => {
+    const statusText = newStatus === "0" ? "Closed" : "Active";
+    try {
+      await api.put(`/academic-session/status/${sessionId}`, {
+        is_active: newStatus,
+        mod_by: user.userid,
+      });
+      fetchAcademicSessions();
+      setToastMessage({
+        type: "success",
+        content: `"${sessionName}" status set to ${statusText}.`,
+      });
+    } catch (err) {
+      const msg =
+        err.response?.data?.message || `Failed to set status to ${statusText}.`;
+      setToastMessage({
+        type: "error",
+        content: msg,
+      });
+    }
   };
 
   const handleUpdateClick = (e) => {
     e.preventDefault();
     const originalYear = academicYears.find(
-      (y) => y.year_name === editingSession.year_name
+      (y) => y.year_name === editingSession.year_name,
     );
     if (
       newSessionName.trim() === editingSession.session_name &&
@@ -107,7 +143,7 @@ const AcademicSessionTable = ({ setToastMessage }) => {
     try {
       await api.delete(`/academic-session/${sessionId}`);
       setAcademicSessions(
-        academicSessions.filter((session) => session.session_id !== sessionId)
+        academicSessions.filter((session) => session.session_id !== sessionId),
       );
       setToastMessage({
         type: "success",
@@ -165,64 +201,96 @@ const AcademicSessionTable = ({ setToastMessage }) => {
   };
 
   return (
-  <div className="bg-blue-200 py-2 px-4 rounded-xl shadow-md">
-    <h2 className="text-2xl font-bold mb-3">Academic Sessions</h2>
-    <div className="border rounded-lg overflow-x-auto no-scrollbar">
-      <div className="min-w-[800px]">
-        <div className="grid grid-cols-12 bg-gray-300 p-2 font-semibold text-sm">
-          <div className="col-span-1">S.No.</div>
-          <div className="col-span-2 whitespace-nowrap">Session Name</div>
-          <div className="col-span-2 whitespace-nowrap">Academic Year</div>
-          <div className="col-span-3 whitespace-nowrap">Modified By</div>
-          <div className="col-span-2 whitespace-nowrap">Last Modified</div>
-          <div className="text-right col-span-2 whitespace-nowrap pl-3">
-            Actions
+    <div className="bg-blue-200 py-2 px-4 rounded-xl shadow-md">
+      <h2 className="text-2xl font-bold mb-3">Academic Sessions</h2>
+      <div className="border rounded-lg overflow-x-auto no-scrollbar">
+        <div className="min-w-[1200px]">
+          <div className="grid grid-cols-15 bg-gray-300 p-2 font-semibold text-sm">
+            <div className="col-span-1">S.No.</div>
+            <div className="col-span-3 whitespace-nowrap">Session Name</div>
+            <div className="col-span-2 whitespace-nowrap">Academic Year</div>
+            <div className="col-span-2 pl-7.5 whitespace-nowrap">
+              Status
+            </div>
+            <div className="col-span-2 whitespace-nowrap">Modified By</div>
+            <div className="col-span-3 whitespace-nowrap pl-9">Last Modified</div>
+            <div className="text-right col-span-2 whitespace-nowrap pl-3">
+              Actions
+            </div>
           </div>
-        </div>
 
-        <div className="max-h-60 overflow-y-auto no-scrollbar">
-          {academicSessions.length > 0 ? (
-            academicSessions.map((session, index) => (
-              <div
-                key={session.session_id}
-                className="grid grid-cols-12 items-center p-2 border-t bg-white text-sm"
-              >
-                <div className="col-span-1">{index + 1}</div>
-                <div className="col-span-2 whitespace-nowrap">
-                  {session.session_name}
-                </div>
-                <div className="col-span-2 whitespace-nowrap">
-                  {session.year_name}
-                </div>
-                <div className="col-span-3 whitespace-nowrap">
-                  {session.modified_by || "N/A"}
-                </div>
+          <div className="max-h-60 overflow-y-auto no-scrollbar">
+            {academicSessions.length > 0 ? (
+              academicSessions.map((session, index) => (
+                <div
+                  key={session.session_id}
+                  className="grid grid-cols-15 items-center p-2 border-t bg-white text-sm"
+                >
+                  <div className="col-span-1">{index + 1}</div>
 
-                <div className="col-span-2 whitespace-nowrap">
-                  {session.mod_time
-                    ? new Date(session.mod_time).toLocaleString()
-                    : "N/A"}
+                  <div className="col-span-3 whitespace-nowrap">
+                    {session.session_name}
+                  </div>
+
+                  <div className="col-span-2 whitespace-nowrap">
+                    {session.year_name}
+                  </div>
+
+                  {/* STATUS BADGE */}
+                  <div className="col-span-2 pl-6 whitespace-nowrap">
+                    <span
+                      className={`px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider ${
+                        session.is_active === "1"
+                          ? "bg-green-100 text-green-800 border border-green-200"
+                          : "bg-red-100 text-red-800 border border-red-200"
+                      }`}
+                    >
+                      {session.is_active === "1" ? "Active" : "Closed"}
+                    </span>
+                  </div>
+
+                  <div className="col-span-2 whitespace-nowrap">
+                    {session.modified_by || "N/A"}
+                  </div>
+
+                  <div className="col-span-3 whitespace-nowrap pl-9">
+                    {session.mod_time
+                      ? new Date(session.mod_time).toLocaleString()
+                      : "N/A"}
+                  </div>
+
+                  <div className="flex justify-end gap-2 col-span-2 whitespace-nowrap pl-3">
+                    <button
+                      onClick={() => handleToggleStatusClick(session)}
+                      className={`w-[75px] px-2 py-0.5 rounded-md text-xs text-white transition ${
+                        session.is_active === "0"
+                          ? "bg-green-500 hover:bg-green-600"
+                          : "bg-red-500 hover:bg-red-600"
+                      }`}
+                    >
+                      {session.is_active === "0" ? "Set Active" : "Set Closed"}
+                    </button>
+
+                    <button
+                      onClick={() => handleEditClick(session)}
+                      className="bg-blue-500 text-white px-2 py-0.5 rounded-md text-xs hover:bg-blue-600 transition"
+                    >
+                      Edit
+                    </button>
+
+                    <button
+                      onClick={() => handleDeleteClick(session)}
+                      className="bg-red-500 text-white px-2 py-0.5 rounded-md text-xs hover:bg-red-600 transition"
+                    >
+                      Delete
+                    </button>
+                  </div>
                 </div>
-                <div className="flex justify-end gap-2 col-span-2 whitespace-nowrap pl-3">
-                  <button
-                    onClick={() => handleEditClick(session)}
-                    className="bg-blue-500 text-white px-2 py-0.5 rounded-md text-xs hover:bg-blue-600 transition"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleDeleteClick(session)}
-                    className="bg-red-500 text-white px-2 py-0.5 rounded-md text-xs hover:bg-red-600 transition"
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
-            ))
-          ) : (
-            <p className="text-center text-gray-500 p-2 text-sm">
-              No academic sessions found.
-            </p>
+              ))
+            ) : (
+              <p className="text-center text-gray-500 p-2 text-sm">
+                No academic sessions found.
+              </p>
             )}
           </div>
         </div>

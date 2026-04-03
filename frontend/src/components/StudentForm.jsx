@@ -185,6 +185,9 @@ const StudentForm = ({
     }
   };
 
+  // Check if the student's currently assigned session is closed
+  const isCurrentSessionClosed = existingData && sessions.find(s => Number(s.session_id) === Number(existingData.session_id))?.is_active === "0";
+
   return (
     <main className="flex-grow p-6">
       <form
@@ -395,21 +398,35 @@ const StudentForm = ({
           <label className="block mb-1 font-medium">Admission Session</label>
           <select
             {...register("session_id", { valueAsNumber: true })}
-            className={`w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 ${
-              errors.session_id
-                ? "border-red-500 focus:ring-red-200"
+            disabled={isCurrentSessionClosed}
+            className={`w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 transition-colors ${
+              isCurrentSessionClosed
+                ? "bg-gray-100 text-gray-500 cursor-not-allowed border-gray-300"
+                : errors.session_id
+                ? "border-red-500 focus:ring-red-200 bg-white"
                 : "focus:ring-blue-200"
             }`}
           >
             <option value="">Select Admission Session</option>
-            {sessions.map((s) => (
-              <option key={s.session_id} value={s.session_id}>
-                {s.session_name}
-              </option>
-            ))}
+            {sessions
+              .filter(
+                (s) =>
+                  String(s.is_active) === "1" ||
+                  (existingData && Number(s.session_id) === Number(existingData.session_id))
+              )
+              .map((s) => (
+                <option key={s.session_id} value={s.session_id}>
+                  {s.session_name} {String(s.is_active) === "0" ? "(Closed)" : ""}
+                </option>
+              ))}
           </select>
-          {errors.session_id && (
-            <p className="text-red-600 mt-1">{"Select a valid session"}</p>
+          {errors.session_id && !isCurrentSessionClosed && (
+            <p className="text-red-600 mt-1 text-sm">{"Select a valid session"}</p>
+          )}
+          {isCurrentSessionClosed && (
+            <p className="text-gray-500 mt-1 text-xs font-medium italic">
+              Your admission session is closed and cannot be changed.
+            </p>
           )}
         </div>
 

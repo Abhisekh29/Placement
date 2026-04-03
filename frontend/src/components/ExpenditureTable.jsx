@@ -248,6 +248,9 @@ const ExpenditureTable = ({ setToastMessage }) => {
   
   const showPagination = !isLoading && limit !== "all";
 
+  // Check if the currently editing expenditure's session is closed
+  const isCurrentExpenditureSessionClosed = showEditModal && editingExpenditure && sessions.find(s => Number(s.session_id) === Number(editingExpenditure.session_id))?.is_active === "0";
+
   return (
     <div className="bg-blue-200 py-2 px-4 rounded-xl shadow-md">
       {/*  NEW Search Bar  */}
@@ -416,28 +419,48 @@ const ExpenditureTable = ({ setToastMessage }) => {
                   placeholder="Expense Description"
                   className="w-full md:col-span-2 p-3 border rounded-lg"
                 />
-                <select
-                  name="session_id"
-                  value={formData.session_id}
-                  onChange={handleInputChange}
-                  className="w-full p-3 border rounded-lg"
-                >
-                  <option value="">Select Session</option>
-                  {sessions.map((s) => (
-                    <option key={s.session_id} value={s.session_id}>
-                      {s.session_name}
-                    </option>
-                  ))}
-                </select>
-                <input
-                  type="number"
-                  step="0.01"
-                  name="amount"
-                  value={formData.amount}
-                  onChange={handleInputChange}
-                  placeholder="Amount"
-                  className="w-full p-3 border rounded-lg"
-                />
+                <div className="w-full">
+                  <select
+                    name="session_id"
+                    value={formData.session_id}
+                    onChange={handleInputChange}
+                    disabled={isCurrentExpenditureSessionClosed}
+                    className={`w-full p-3 border rounded-lg transition-colors ${
+                      isCurrentExpenditureSessionClosed
+                        ? "bg-gray-100 text-gray-500 cursor-not-allowed border-gray-300"
+                        : "bg-white focus:outline-none focus:ring-2 focus:ring-blue-400"
+                    }`}
+                  >
+                    <option value="">Select Session</option>
+                    {sessions
+                      .filter(
+                        (s) =>
+                          String(s.is_active) === "1" ||
+                          (editingExpenditure && Number(s.session_id) === Number(editingExpenditure.session_id))
+                      )
+                      .map((s) => (
+                        <option key={s.session_id} value={s.session_id}>
+                          {s.session_name} {String(s.is_active) === "0" ? "(Closed)" : ""}
+                        </option>
+                    ))}
+                  </select>
+                  {isCurrentExpenditureSessionClosed && (
+                    <p className="text-gray-500 mt-1 text-xs font-medium italic">
+                      This session is closed and cannot be changed.
+                    </p>
+                  )}
+                </div>
+                <div className="w-full self-start">
+                  <input
+                    type="number"
+                    step="0.01"
+                    name="amount"
+                    value={formData.amount}
+                    onChange={handleInputChange}
+                    placeholder="Amount"
+                    className="w-full p-3 border rounded-lg"
+                  />
+                </div>
                 <div className="md:col-span-2">
                   <label className="block text-sm font-medium text-gray-600 mb-1">
                     {showAddModal

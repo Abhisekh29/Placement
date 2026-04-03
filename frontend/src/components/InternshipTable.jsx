@@ -342,6 +342,9 @@ const InternshipTable = ({ setToastMessage }) => {
     }
   };
 
+  // Check if the currently editing internship's session is closed
+  const isCurrentInternshipSessionClosed = showEditModal && editingInternship && sessions.find(s => Number(s.session_id) === Number(editingInternship.session_id))?.is_active === "0";
+
   return (
     <div className="bg-blue-200 py-2 px-4 rounded-xl shadow-md">
       {/* Search Bar  */}
@@ -607,9 +610,13 @@ const InternshipTable = ({ setToastMessage }) => {
                     </ul>
                   )}
                 </div>
-                <select name="session_id" value={formData.session_id} onChange={handleInputChange} className="w-full p-3 border rounded-lg" required>
+                <select name="session_id" value={formData.session_id} onChange={handleInputChange} className="w-full p-3 border rounded-lg focus:outline-none focus:ring-1 focus:ring-purple-500" required>
                   <option value="">Select Session</option>
-                  {sessions.map((s) => (<option key={s.session_id} value={s.session_id}>{s.session_name}</option>))}
+                  {sessions
+                    .filter((s) => String(s.is_active) === "1")
+                    .map((s) => (
+                      <option key={s.session_id} value={s.session_id}>{s.session_name}</option>
+                  ))}
                 </select>
                 <input type="number" min={1} max={10} name="semester" value={formData.semester} onChange={handleInputChange} placeholder="Semester" className="w-full p-3 border rounded-lg" required />
                 <label className="block text-sm font-medium text-gray-600 mb-1">
@@ -708,10 +715,38 @@ const InternshipTable = ({ setToastMessage }) => {
                     </ul>
                   )}
                 </div>
-                <select name="session_id" value={formData.session_id} onChange={handleInputChange} className="w-full p-3 border rounded-lg" required>
-                  <option value="">Select Session</option>
-                  {sessions.map((s) => (<option key={s.session_id} value={s.session_id}>{s.session_name}</option>))}
-                </select>
+                <div className="w-full">
+                  <select 
+                    name="session_id" 
+                    value={formData.session_id} 
+                    onChange={handleInputChange} 
+                    disabled={isCurrentInternshipSessionClosed}
+                    className={`w-full p-3 border rounded-lg transition-colors ${
+                      isCurrentInternshipSessionClosed
+                        ? "bg-gray-100 text-gray-500 cursor-not-allowed border-gray-300"
+                        : "bg-white focus:outline-none focus:ring-1 focus:ring-purple-500"
+                    }`}
+                    required
+                  >
+                    <option value="">Select Session</option>
+                    {sessions
+                      .filter(
+                        (s) =>
+                          String(s.is_active) === "1" ||
+                          (editingInternship && Number(s.session_id) === Number(editingInternship.session_id))
+                      )
+                      .map((s) => (
+                        <option key={s.session_id} value={s.session_id}>
+                          {s.session_name} {String(s.is_active) === "0" ? "(Closed)" : ""}
+                        </option>
+                    ))}
+                  </select>
+                  {isCurrentInternshipSessionClosed && (
+                    <p className="text-gray-500 mt-1 text-xs font-medium italic leading-tight">
+                      Session closed and cannot be changed.
+                    </p>
+                  )}
+                </div>
                 <input type="number" name="semester" value={formData.semester} onChange={handleInputChange} placeholder="Semester" className="w-full p-3 border rounded-lg" required />
                 <div>
                   <label className="block text-sm font-medium">Certificate (Optional)</label>

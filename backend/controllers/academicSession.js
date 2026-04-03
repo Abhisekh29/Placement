@@ -6,6 +6,7 @@ export const getAcademicSessions = (req, res) => {
       s.session_id, 
       s.session_name, 
       ay.year_name,
+      s.is_active,
       s.mod_time, 
       um.username AS modified_by
     FROM session_master AS s
@@ -21,8 +22,7 @@ export const getAcademicSessions = (req, res) => {
 
 export const addAcademicSession = (req, res) => {
   const { session_name, year_id, mod_by } = req.body;
-  
-  const insertQuery = "INSERT INTO session_master (session_name, year_id, mod_by, mod_time) VALUES (?, ?, ?, NOW())";
+  const insertQuery = "INSERT INTO session_master (session_name, year_id, is_active, mod_by, mod_time) VALUES (?, ?, '1', ?, NOW())";
   db.query(insertQuery, [session_name, year_id, mod_by], (err, data) => {
     if (err) return res.status(500).json(err);
     return res.status(201).json({ message: "Academic session added successfully." });
