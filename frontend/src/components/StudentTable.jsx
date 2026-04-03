@@ -266,6 +266,10 @@ const AdminEditStudentModal = ({
       </div>
     );
   }
+
+  // Check if the student's assigned session is closed
+  const isCurrentStudentSessionClosed = sessions.find((s) => s.session_name === student.session_name)?.is_active === "0";
+
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black/30 backdrop-blur-sm z-[1000] p-4 overflow-y-auto">
       <div className="bg-white w-full max-w-4xl rounded-xl shadow-2xl p-6 my-4 animate-fadeIn relative max-h-[95vh] overflow-y-auto">
@@ -342,20 +346,36 @@ const AdminEditStudentModal = ({
               />
             </div>
             <div className="col-span-1">
-              <label className="block text-sm font-medium">Session</label>
+              <label className="block text-sm font-medium">Admission Session</label>
               <select
                 name="session_id"
                 value={formData.session_id}
                 onChange={handleInputChange}
-                className="w-full p-2 border rounded-lg bg-white"
+                disabled={isCurrentStudentSessionClosed}
+                className={`w-full p-2 border rounded-lg transition-colors ${
+                  isCurrentStudentSessionClosed
+                    ? "bg-gray-100 text-gray-500 cursor-not-allowed border-gray-300"
+                    : "bg-white"
+                }`}
               >
                 <option value="">Select Session</option>
-                {sessions.map((s) => (
-                  <option key={s.session_id} value={String(s.session_id)}>
-                    {s.session_name}
-                  </option>
+                {sessions
+                  .filter(
+                    (s) =>
+                      String(s.is_active) === "1" ||
+                      (student && s.session_name === student.session_name)
+                  )
+                  .map((s) => (
+                    <option key={s.session_id} value={String(s.session_id)}>
+                      {s.session_name} {String(s.is_active) === "0" ? "(Closed)" : ""}
+                    </option>
                 ))}
               </select>
+              {isCurrentStudentSessionClosed && (
+                <p className="text-gray-500 mt-1 text-xs font-medium italic leading-tight">
+                  This session is closed and cannot be changed.
+                </p>
+              )}
             </div>
             <div className="col-span-1">
               <label className="block text-sm font-medium">Program</label>

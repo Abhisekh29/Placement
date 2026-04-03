@@ -4,6 +4,7 @@ import {
   addAcademicSession,
   updateAcademicSession,
   deleteAcademicSession,
+  toggleSessionStatus,
 } from "../controllers/academicSession.js";
 import { isAdmin } from "../middleware/auth.js"; // Import the admin middleware
 
@@ -11,6 +12,7 @@ const router = express.Router();
 
 router.get("/", isAdmin, getAcademicSessions);
 router.post("/", isAdmin, addAcademicSession);
+router.put("/status/:sessionId", isAdmin, toggleSessionStatus);
 router.put("/:sessionId", isAdmin, updateAcademicSession);
 router.delete("/:sessionId", isAdmin, deleteAcademicSession);
 

@@ -434,6 +434,9 @@ const PlacementDriveTable = ({ setToastMessage }) => {
     setShowConfirmModal(false);
   };
 
+  // Check if the currently editing drive's session is closed
+  const isCurrentDriveSessionClosed = showEditModal && editingDrive && sessions.find(s => Number(s.session_id) === Number(editingDrive.session_id))?.is_active === "0";
+
   return (
     <div className="bg-blue-200 py-4 px-4 rounded-xl shadow-md">
       {/* Search Bar + Export  */}
@@ -661,26 +664,44 @@ const PlacementDriveTable = ({ setToastMessage }) => {
                   name="drive_name"
                   value={formData.drive_name}
                   onChange={handleInputChange}
-                  placeholder="Drive Name*"
+                  placeholder="Drive Name"
                   className="w-full md:col-span-2 p-3 border rounded-lg focus:ring-2 focus:ring-purple-500"
                 />
-                <select
-                  name="session_id"
-                  value={formData.session_id}
-                  onChange={handleInputChange}
-                  className="p-3 border rounded-lg"
-                >
-                  <option value="">Select Session*</option>
-                  {sessions.map((s) => (
-                    <option key={s.session_id} value={s.session_id}>
-                      {s.session_name} ({s.year_name})
-                    </option>
-                  ))}
-                </select>
+                <div className="w-full">
+                  <select
+                    name="session_id"
+                    value={formData.session_id}
+                    onChange={handleInputChange}
+                    disabled={isCurrentDriveSessionClosed}
+                    className={`w-full p-3 border rounded-lg transition-colors ${
+                      isCurrentDriveSessionClosed
+                        ? "bg-gray-100 text-gray-500 cursor-not-allowed border-gray-300"
+                        : "bg-white focus:ring-2 focus:ring-purple-500"
+                    }`}
+                  >
+                    <option value="">Select Session*</option>
+                    {sessions
+                      .filter(
+                        (s) =>
+                          String(s.is_active) === "1" ||
+                          (editingDrive && Number(s.session_id) === Number(editingDrive.session_id))
+                      )
+                      .map((s) => (
+                        <option key={s.session_id} value={s.session_id}>
+                          {s.session_name}
+                        </option>
+                    ))}
+                  </select>
+                  {isCurrentDriveSessionClosed && (
+                    <p className="text-gray-500 mt-1 text-xs font-medium italic">
+                      This session is closed and cannot be changed.
+                    </p>
+                  )}
+                </div>
                 <div className="relative w-full">
                   <input
                   type="text"
-                  placeholder="Search or Select Company*"
+                  placeholder="Search or Select Company"
                   value={companySearch}
                   onChange={(e) => {
                     const val = e.target.value;
@@ -750,7 +771,7 @@ const PlacementDriveTable = ({ setToastMessage }) => {
                   step="0.01"
                   value={formData.ctc}
                   onChange={handleInputChange}
-                  placeholder="CTC (LPA)*"
+                  placeholder="CTC (LPA)"
                   className="p-3 border rounded-lg"
                 />
                 {showEditModal && editingDrive && (
