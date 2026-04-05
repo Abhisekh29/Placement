@@ -57,7 +57,7 @@ const StudentDetailsModal = ({ student, onClose }) => {
     <div className="fixed inset-0 flex items-center justify-center bg-black/30 backdrop-blur-sm z-[1000] p-4 overflow-y-auto">
       <div className="bg-white w-full max-w-4xl rounded-xl shadow-2xl p-6 md:p-8 animate-fadeIn relative max-h-[95vh] my-4 overflow-y-auto">
         <h3 className="text-2xl font-bold text-gray-800 border-b pb-3 mb-6">
-          Details for: {student.name} ({student.rollno})
+          Details for: {student.name} ({student.username})
         </h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-4 text-sm">
           {studentFields.map((field, index) => (
