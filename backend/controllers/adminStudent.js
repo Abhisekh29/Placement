@@ -73,7 +73,8 @@ export const getStudents = (req, res) => {
       s.is_profile_frozen,
       s.is_profile_locked, -- Added Lock Status
       s.mod_time,
-      um.username AS modified_by
+      um.username AS modified_by,
+      u.username
     FROM student_master AS s
     JOIN session_master AS ss ON s.session_id = ss.session_id
     JOIN academic_year AS ay ON ss.year_id = ay.year_id 
