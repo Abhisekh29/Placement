@@ -407,8 +407,7 @@ const AcademicSessionTable = ({ setToastMessage }) => {
               Are you sure?
             </h3>
             <p className="text-gray-600 mb-6">
-              Do you really want to proceed with this action? This cannot be
-              undone.
+              Do you really want to proceed with this action?
             </p>
             <div className="flex justify-end gap-3">
               <button

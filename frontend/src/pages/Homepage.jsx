@@ -38,7 +38,7 @@ const NotificationTicker = ({ notifications }) => {
         style={{ height: "100%", overflow: "hidden" }}
       >
         {finalData.map((notif, index) => {
-          const formattedDate = formatDate(notif.date);
+          const formattedDate = formatDate(notif.start_date);
           const isBlank = notif.text === "";
 
           return (
@@ -96,7 +96,7 @@ const Homepage = () => {
         const res = await api.get("/homeNotifications");
         if (Array.isArray(res.data)) {
           const sortedData = res.data.sort((a, b) => {
-            return new Date(b.date).getTime() - new Date(a.date).getTime();
+            return new Date(b.start_date).getTime() - new Date(a.start_date).getTime();
           });
           setNotifications(sortedData);
         } else {

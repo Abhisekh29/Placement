@@ -16,6 +16,7 @@ const PlacementTable = ({ setToastMessage }) => {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [actionToConfirm, setActionToConfirm] = useState(null);
   const [selectedPlacement, setSelectedPlacement] = useState(null);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
 
   const [formData, setFormData] = useState({
     is_selected: "Pending",
@@ -79,6 +80,11 @@ const PlacementTable = ({ setToastMessage }) => {
   };
 
   // Click Handlers
+  const handleViewDetailsClick = (placement) => {
+    setSelectedPlacement(placement);
+    setShowDetailsModal(true);
+  };
+
   const handleEditClick = (placement) => {
     setSelectedPlacement(placement);
     setFormData({
@@ -217,7 +223,7 @@ const PlacementTable = ({ setToastMessage }) => {
   };
 
   // --- GRID LAYOUT CONSTANT ---
-  const gridLayout = "grid-cols-[0.5fr_1.5fr_1fr_1.5fr_1fr_1.2fr_0.8fr_1.2fr_1fr_1fr]";
+  const gridLayout = "grid-cols-[0.5fr_1.5fr_1.5fr_1.5fr_1fr_1.2fr_0.8fr_0.8fr_1fr]";
 
   return (
     <div className="bg-blue-200 py-2 px-4 rounded-xl shadow-md">
@@ -294,8 +300,7 @@ const PlacementTable = ({ setToastMessage }) => {
             <div className="text-center">Session</div>
             <div className="text-center">Program</div>
             <div className="text-center">Status</div>
-            <div className="text-center">Modified By</div>
-            <div className="text-center">Last Modified</div>
+            <div className="text-center">Details</div>
             <div className="text-right pr-2">Actions</div>
           </div>
           
@@ -316,8 +321,14 @@ const PlacementTable = ({ setToastMessage }) => {
                   <div className="text-center text-gray-600">{placement.session_name || "N/A"}</div>
                   <div className="text-center text-gray-600">{placement.program_name || "N/A"}</div>
                   <div className="text-center">{getStatusText(placement.is_selected)}</div>
-                  <div className="text-center text-gray-600">{placement.modified_by || "N/A"}</div>
-                  <div className="text-center text-gray-600">{new Date(placement.mod_time).toLocaleString()}</div>
+                  <div className="text-center">
+                    <button
+                      onClick={() => handleViewDetailsClick(placement)}
+                      className="text-blue-500 hover:underline text-xs"
+                    >
+                      View
+                    </button>
+                  </div>
                   <div className="flex justify-end gap-2 pr-2">
                     <button
                       onClick={() => handleEditClick(placement)}
@@ -342,6 +353,51 @@ const PlacementTable = ({ setToastMessage }) => {
           </div>
         </div>
       </div>
+
+      {/* Details Modal */}
+      {showDetailsModal && selectedPlacement && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm z-[1000] p-4">
+          <div className="bg-white w-full max-w-lg rounded-xl shadow-2xl p-6 animate-fadeIn relative">
+            <h3 className="text-xl font-bold text-gray-800 border-b pb-3 mb-4">
+              Details for: {selectedPlacement.name}
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+              <div>
+                <p className="text-sm font-semibold text-gray-500">Modified By</p>
+                <p className="text-base text-gray-800">
+                  {selectedPlacement.modified_by || "N/A"}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-gray-500">Last Modified</p>
+                <p className="text-base text-gray-800">
+                  {selectedPlacement.mod_time ? new Date(selectedPlacement.mod_time).toLocaleString() : "N/A"}
+                </p>
+              </div>
+              {selectedPlacement.offerletter_file_name && (
+                <div className="md:col-span-2 mt-2 pt-4 border-t">
+                  <a 
+                    href={`/uploads/offer_letters/${selectedPlacement.offerletter_file_name}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center text-blue-600 hover:text-blue-800 font-semibold"
+                  >
+                    📄 View Offer Letter
+                  </a>
+                </div>
+              )}
+            </div>
+            <div className="flex justify-end mt-6">
+              <button
+                onClick={() => setShowDetailsModal(false)}
+                className="px-6 py-2 rounded-lg bg-purple-500 text-white hover:bg-purple-600 transition"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Edit Modal */}
       {showEditModal && selectedPlacement && (

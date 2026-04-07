@@ -2,7 +2,8 @@ import React, { useState, useEffect } from "react";
 import api from "../api/axios";
 
 const initialFormState = {
-  date: new Date().toLocaleDateString("en-CA"), // Default to today
+  start_date: new Date().toLocaleDateString("en-CA"), // Default to today
+  end_date: "", // Default empty, admin must select
   text: "",
 };
 
@@ -42,7 +43,8 @@ const NotificationTable = ({ setToastMessage }) => {
   const handleEditClick = (notification) => {
     setEditingNotification(notification);
     setFormData({
-      date: new Date(notification.date).toLocaleDateString("en-CA"),
+      start_date: new Date(notification.start_date).toLocaleDateString("en-CA"),
+      end_date: new Date(notification.end_date).toLocaleDateString("en-CA"),
       text: notification.text,
     });
     setShowEditModal(true);
@@ -58,12 +60,18 @@ const NotificationTable = ({ setToastMessage }) => {
   const handleUpdateSubmit = (e) => {
     e.preventDefault();
     const noChanges =
-      new Date(formData.date).toLocaleDateString("en-CA") === new Date(editingNotification.date).toLocaleDateString("en-CA") &&
+      new Date(formData.start_date).toLocaleDateString("en-CA") === new Date(editingNotification.start_date).toLocaleDateString("en-CA") &&
+      new Date(formData.end_date).toLocaleDateString("en-CA") === new Date(editingNotification.end_date).toLocaleDateString("en-CA") &&
       formData.text.trim() === editingNotification.text;
 
     if (noChanges) {
       setToastMessage({ type: "error", content: "No changes were made." });
       setShowEditModal(false);
+      return;
+    }
+
+    if (new Date(formData.start_date) > new Date(formData.end_date)) {
+      setToastMessage({ type: "error", content: "End date cannot be before start date." });
       return;
     }
     setShowEditModal(false);
@@ -73,8 +81,12 @@ const NotificationTable = ({ setToastMessage }) => {
   
   const handleAddSubmit = (e) => {
     e.preventDefault();
-    if (!formData.date || !formData.text.trim()) {
+    if (!formData.start_date || !formData.end_date || !formData.text.trim()) {
       setToastMessage({ type: "error", content: "All fields are required." });
+      return;
+    }
+    if (new Date(formData.start_date) > new Date(formData.end_date)) {
+      setToastMessage({ type: "error", content: "End date cannot be before start date." });
       return;
     }
     addNotification();
@@ -142,25 +154,27 @@ const NotificationTable = ({ setToastMessage }) => {
     <h2 className="text-2xl font-bold mb-3">Notifications</h2>
     <div className="border rounded-lg overflow-x-auto no-scrollbar">
       <div className="min-w-[900px]">
-        <div className="grid grid-cols-[0.5fr_2fr_1fr_minmax(140px,1fr)_minmax(180px,1fr)_1fr] bg-gray-300 p-2 font-semibold text-sm">
-  <div>S.No.</div>
-  <div>Notification Text</div>
-  <div>Date</div>
-  <div>Modified By</div>
-  <div>Last Modified</div>
-  <div className="text-right">Actions</div>
-</div>
+        <div className="grid grid-cols-[0.5fr_2fr_1fr_1fr_minmax(140px,1fr)_minmax(180px,1fr)_1fr] bg-gray-300 p-2 font-semibold text-sm">
+        <div>S.No.</div>
+        <div>Notification Text</div>
+        <div>Start Date</div>
+        <div>End Date</div>
+        <div>Modified By</div>
+        <div>Last Modified</div>
+        <div className="text-right">Actions</div>
+      </div>
 
 <div className="max-h-96 overflow-y-auto no-scrollbar">
   {notifications.length > 0 ? (
     notifications.map((item, index) => (
       <div
         key={item.nid}
-        className="grid grid-cols-[0.5fr_2fr_1fr_minmax(140px,1fr)_minmax(180px,1fr)_1fr] items-center p-2 border-t bg-white text-sm"
+        className="grid grid-cols-[0.5fr_2fr_1fr_1fr_minmax(140px,1fr)_minmax(180px,1fr)_1fr] items-center p-2 border-t bg-white text-sm"
       >
         <div>{index + 1}</div>
         <div className="pr-6">{item.text}</div>
-        <div>{new Date(item.date).toLocaleDateString("en-IN")}</div>
+        <div>{new Date(item.start_date).toLocaleDateString("en-IN")}</div>
+        <div>{new Date(item.end_date).toLocaleDateString("en-IN")}</div>
         <div className="break-words pr-6">{item.modified_by || "N/A"}</div>
         <div className="break-words pr-6">{new Date(item.mod_time).toLocaleString()}</div>
         <div className="flex justify-end gap-2">
@@ -201,9 +215,15 @@ const NotificationTable = ({ setToastMessage }) => {
             </h3>
             <form onSubmit={showAddModal ? handleAddSubmit : handleUpdateSubmit}>
               <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-600 mb-1">Date</label>
-                  <input type="date" name="date" value={formData.date} onChange={handleInputChange} className="w-full p-3 border rounded-lg" />
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-600 mb-1">Start Date</label>
+                    <input type="date" name="start_date" value={formData.start_date} onChange={handleInputChange} className="w-full p-3 border rounded-lg" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-600 mb-1">End Date</label>
+                    <input type="date" name="end_date" value={formData.end_date} onChange={handleInputChange} className="w-full p-3 border rounded-lg" />
+                  </div>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-600 mb-1">Notification Text</label>

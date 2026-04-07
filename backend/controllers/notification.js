@@ -4,13 +4,14 @@ export const getNotifications = (req, res) => {
   const q = `
     SELECT 
       n.nid, 
-      n.date, 
+      n.start_date, 
+      n.end_date, 
       n.text, 
       n.mod_time, 
       um.username AS modified_by
     FROM notification AS n
     LEFT JOIN user_master AS um ON n.mod_by = um.userid
-    ORDER BY n.date DESC
+    ORDER BY n.start_date DESC
   `;
   db.query(q, (err, data) => {
     if (err) return res.status(500).json(err);
@@ -19,9 +20,9 @@ export const getNotifications = (req, res) => {
 };
 
 export const addNotification = (req, res) => {
-  const { date, text, mod_by } = req.body;
-  const q = "INSERT INTO notification (`date`, `text`, `mod_by`, `mod_time`) VALUES (?, ?, ?, NOW())";
-  db.query(q, [date, text, mod_by], (err, data) => {
+  const { start_date, end_date, text, mod_by } = req.body;
+  const q = "INSERT INTO notification (`start_date`, `end_date`, `text`, `mod_by`, `mod_time`) VALUES (?, ?, ?, ?, NOW())";
+  db.query(q, [start_date, end_date, text, mod_by], (err, data) => {
     if (err) return res.status(500).json(err);
     return res.status(201).json({ message: "Notification added successfully." });
   });
@@ -29,9 +30,9 @@ export const addNotification = (req, res) => {
 
 export const updateNotification = (req, res) => {
   const { nid } = req.params;
-  const { date, text, mod_by } = req.body;
-  const q = "UPDATE notification SET `date` = ?, `text` = ?, `mod_by` = ?, `mod_time` = NOW() WHERE nid = ?";
-  db.query(q, [date, text, mod_by, nid], (err, data) => {
+  const { start_date, end_date, text, mod_by } = req.body;
+  const q = "UPDATE notification SET `start_date` = ?, `end_date` = ?, `text` = ?, `mod_by` = ?, `mod_time` = NOW() WHERE nid = ?";
+  db.query(q, [start_date, end_date, text, mod_by, nid], (err, data) => {
     if (err) return res.status(500).json(err);
     return res.status(200).json({ message: "Notification updated successfully." });
   });
