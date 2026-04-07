@@ -2,7 +2,7 @@ import { db } from "../db.js";
 
 export const getHomeNotifications = (req, res) => {
   // A safer alternative to avoid whitespace issues
-  const q = `SELECT n.date, n.text FROM notification AS n ORDER BY n.date DESC`;
+  const q = `SELECT n.start_date, n.end_date, n.text FROM notification AS n WHERE CURDATE() BETWEEN n.start_date AND n.end_date ORDER BY n.start_date DESC`;
 
   db.query(q, (err, data) => {
     if (err) {
