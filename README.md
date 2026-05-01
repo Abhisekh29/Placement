@@ -93,8 +93,19 @@ The React application responsible for the UI/UX.
     ```bash
     mysql -u root -p placement < Placement.sql
     ```
+    ⚠️ **Disclaimer:** The Database file is confidential and is not available publicly. Please contact the developers at the contacts given below for the file.
 
-### ⚙️ 2. Backend Setup
+### 💻 2. Frontend Setup
+1.  Open a new terminal and navigate to the frontend folder: `cd frontend`
+2.  Install dependencies: `npm install`
+3.  Create a `.env` file in the root of the `/frontend` directory:
+    ```env
+    VITE_API_URL=http://localhost:8000/api
+    ```
+4.  Start the development server: `npm run dev`
+5.  The application will be available at `http://localhost:5173`.
+
+### ⚙️ 3. Backend Setup
 1.  Navigate to the backend folder: `cd backend`
 2.  Install dependencies: `npm install`
 3.  Create a `.env` file in the root of the `/backend` directory:
@@ -106,16 +117,6 @@ The React application responsible for the UI/UX.
     CORS_ORIGIN=http://localhost:5173
     ```
 4.  Start the server: `npm start` (Runs on port 8000).
-
-### 💻 3. Frontend Setup
-1.  Open a new terminal and navigate to the frontend folder: `cd frontend`
-2.  Install dependencies: `npm install`
-3.  Create a `.env` file in the root of the `/frontend` directory:
-    ```env
-    VITE_API_URL=http://localhost:8000/api
-    ```
-4.  Start the development server: `npm run dev`
-5.  The application will be available at `http://localhost:5173`.
 
 ---
 
@@ -153,22 +154,227 @@ To add a new feature (e.g., an "Alumni" module), follow this standard flow:
 
 ## 🌐 7. Deployment Guide (Production Server)
 
-*(This section covers the setup of an Ubuntu VM, securing it, and deploying the application using Nginx & PM2. Detailed steps will be added here shortly).*
-
-1.  Server Provisioning & SSH Access
-2.  Installing Dependencies (Node.js, MySQL, Nginx, PM2)
-3.  Database Migration on Production
-4.  Backend Deployment via PM2
-5.  Frontend Build & Serving via Nginx
+This section covers the setup of an Ubuntu VM, securing it, and deploying the application using Nginx & PM2.
 
 ---
 
-## 🤝 Contribution Guidelines
+### 🔐 1. Access the Server using SSH and Update OS
+
+1. Log into the server using your terminal and ensure the operating system is up to date.
+    ```bash
+    # Log in using your IP address (replace username and IP)
+    ssh username@your_server_ip
+
+    # Update the package lists and upgrade existing software
+    sudo apt update && sudo apt upgrade -y
+    ```
+
+### 📦 2. Installing Dependencies (Node.js, MySQL, Nginx, PM2)
+
+1. Install Node.js (for the runtime), MySQL (for the database), Nginx (for the web server), and PM2 (to keep the backend alive).
+    ```bash
+    # 1. Install Node.js (v20 LTS is recommended)
+    curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+    sudo apt install -y nodejs
+
+    # 2. Install MySQL Server
+    sudo apt install -y mysql-server
+    sudo mysql_secure_installation   # Follow the prompts to secure your database
+
+    # 3. Install Nginx
+    sudo apt install -y nginx
+
+    # 4. Install PM2 globally
+    sudo npm install -g pm2
+    ```
+
+### 🗄️ 3. Database Migration & Configuration on Production
+
+1. Create a dedicated database and a restricted user for the application to follow security best practices.
+    ```bash
+    # Open the MySQL shell as the root user
+    sudo mysql -u root -p
+    ```
+    ```sql
+    -- Create the database 
+    CREATE DATABASE placement_db; 
+
+    -- Create a secure user for the application 
+    CREATE USER 'placement_user'@'localhost' IDENTIFIED BY 'your_secure_password'; 
+
+    -- Grant the user access ONLY to the placement_db 
+    GRANT ALL PRIVILEGES ON placement_db.* TO 'placement_user'@'localhost'; 
+
+    -- Apply the changes and exit 
+    FLUSH PRIVILEGES; 
+    EXIT;
+
+    -- Import Tables
+    mysql -u username -p placement_db < your_dump_file.sql
+    ```
+
+
+### ⚙️ 4. Transfer Code and Backend Deployment via PM2
+
+1. Create a directory for your application, move your code there (using Git or SCP), and start the backend server.
+    ```bash
+    # Clone your repository (or use SCP from your local machine if not using Git)
+    git clone <your-repository-url> 
+
+    # Navigate to the backend directory 
+    cd /Placement/backend
+
+    # Install backend dependencies 
+    npm install 
+
+    # Create and edit the environment variables file 
+    nano .env
+    ```
+2. Inside the `.env` file, paste your credentials:
+    ```bash
+    PORT=8000
+    DB_HOST=localhost 
+    DB_USER=placement_user
+    DB_PASS=your_secure_password 
+    DB_NAME=placement_db 
+
+    # The exact IP address or domain users will type into their browser to access the site
+    CORS_ORIGIN=http://your_server_ip
+    ```
+3. Save and exit nano (Press Ctrl+O, Enter, then Ctrl+X).
+    ```bash
+    # Start the backend with PM2 
+    pm2 start server.js --name "placement-backend" 
+
+    # Save the PM2 list so it automatically restarts on server reboot 
+    pm2 save 
+    pm2 startup
+    ```
+
+### 💻 5. Prepare and Build the Frontend
+
+1. Convert the React/Vite development code into optimized, static production files. For Vite, environment variables must be present before you build.
+    ```bash
+    # Navigate to the frontend directory
+    cd /Placement/frontend
+
+    # Create and edit the frontend environment variables file
+    nano .env
+    ```
+2. Inside the frontend `.env` file, set your API URL:
+    ```bash
+    # Since Nginx will route '/api' to your backend, you can use a relative path
+    VITE_API_URL=http://your_server_ip/api
+    ```
+3. Save and exit nano.
+    ```bash
+    # Install frontend dependencies (using legacy-peer-deps to bypass React 19/17 conflicts)
+    npm install --legacy-peer-deps
+
+    # Build the production files
+    npm run build
+    ```
+
+*(This will generate a `dist` folder inside the frontend directory).*
+
+
+### 🌍 6. Configure Nginx Reverse Proxy
+
+1. Set up Nginx to route normal web traffic to your frontend dist folder and API requests to your Node.js backend.
+    ```bash
+    # Create a new Nginx configuration file
+    sudo nano /etc/nginx/sites-available/placement
+    ```
+2. Paste the following configuration:
+    ```nginx
+    server {
+        listen 80;
+        server_name your_server_ip;
+
+        # 1. Serve Frontend Static Files
+        root /Placement/frontend/dist;
+        index index.html;
+
+        location / {
+            try_files $uri /index.html; # Essential for React Router to work
+        }
+
+        # 2. Proxy API requests to the Backend
+        location /api/ {
+            proxy_pass http://localhost:8000; # Points to your PM2/Node process
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection 'upgrade';
+            proxy_set_header Host $host;
+            proxy_cache_bypass $http_upgrade;
+        }
+
+        # 3. Serve Uploaded Files (Resumes, Photos)
+        location /uploads/ {
+            alias /Placement/backend/uploads/;
+        }
+    }
+    ```
+3. Save and exit nano (Press Ctrl+O, Enter, then Ctrl+X).
+    ```bash
+    # Enable the site by creating a symbolic link
+    sudo ln -s /etc/nginx/sites-available/placement /etc/nginx/sites-enabled/
+
+    # Test the Nginx configuration for syntax errors
+    sudo nginx -t
+
+    # Restart Nginx to apply the changes
+    sudo systemctl restart nginx
+    ```
+
+
+### ✅ 7. Verify the Deployment
+
+1. Your application is now live.
+2. Open a web browser.
+3. Enter your server's IP address.
+4. Verify that the UI loads, data fetches correctly, and the CORS/API connection works without errors in the browser console.
+
+---
+
+## 🔐 8. Important Notes & Security
+
+- Always use the `production` branch for server deployment (do not deploy from `main`)
+- Do not commit `.env` files or expose credentials in the repository
+- Use strong passwords for MySQL and backend environment variables
+- Ensure MySQL and backend services are running before accessing the application
+- After deployment, restart services:
+  ```bash
+  pm2 restart placement-backend
+  sudo systemctl restart nginx
+  ```
+- During deployment, if error shown is "API Server is not running", run command:
+  ```bash
+  pm2 restart placement-backend
+  ```
+- Restrict database user access to only required privileges
+- Keep your server updated regularly:
+  ```bash
+  sudo apt update && sudo apt upgrade -y
+  ```
+
+---
+
+## 🤝 9. Contribution Guidelines
 
 1.  Ensure your code follows the existing style.
 2.  Write descriptive commit messages.
 3.  For major changes, please open an issue first to discuss what you would like to change.
 
----
+---  
 
-*✨ Created by the Development Team ( Abhisekh, Binit & Shikhar ) with Love❤️.*
+## 👨‍💻 Developers & Contact
+
+1. Abhisekh Roy — abhisekhroy2912@email.com  
+2. Shikhar Kashyap Jyoti — shikharkashyapjyoti2003@gmail.com
+
+<br>
+
+> ⚠️ **Disclaimer:** This application is developed by the development team for academic purposes only and is not intended for sale or commercial purposes.
+
+*✨ Created by Abhisekh, Binit & Shikhar with Love❤️.*
