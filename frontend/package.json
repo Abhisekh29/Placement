@@ -2,6 +2,8 @@
   "name": "frontend",
   "private": true,
   "version": "0.0.0",
+  "author": "Abhisekh Roy and Team",
+  "license": "SEE LICENSE IN ../LICENSE",
   "type": "module",
   "scripts": {
     "dev": "vite",
