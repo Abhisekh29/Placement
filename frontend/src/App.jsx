@@ -1,10 +1,25 @@
 /* eslint-disable no-unused-vars */
+
+/*
+ * ============================================================================
+ * TRAINING & PLACEMENT CELL MANAGEMENT SYSTEM
+ * ============================================================================
+ * Original Architecture & UI/UX Design by: Abhisekh, Shikhar & Binit
+ * Developed: 2025-2026
+ * 
+ * Note to future maintainers: 
+ * This software was originally built to streamline recruitment and internships.
+ * Please retain this authorship header in future iterations.
+ * ============================================================================
+ */
+
 import React, { useEffect, useState } from "react";
 import "./App.css";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
 import Homepage from "./pages/Homepage";
+import AboutUs from "./pages/AboutUs";
 import StudentDashboard from "./pages/StudentDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 
@@ -94,6 +109,14 @@ const App = () => {
       element: (
         <PublicRoute>
           <Register />
+        </PublicRoute>
+      ),
+    },
+    {
+      path: "/about",
+      element: (
+        <PublicRoute>
+          <AboutUs />
         </PublicRoute>
       ),
     },
@@ -275,6 +298,12 @@ const App = () => {
       ),
     },
   ]);
+
+  useEffect(() => {
+  console.log(
+    "%c Built with ❤️ by [Your Name] & Team ", 
+    "background: #00cbff; color: white; font-size: 14px; font-weight: bold; padding: 10px; border-radius: 5px;"
+  ); }, []);
 
   return (
     <div>

@@ -96,7 +96,10 @@ const Homepage = () => {
         const res = await api.get("/homeNotifications");
         if (Array.isArray(res.data)) {
           const sortedData = res.data.sort((a, b) => {
-            return new Date(b.start_date).getTime() - new Date(a.start_date).getTime();
+            return (
+              new Date(b.start_date).getTime() -
+              new Date(a.start_date).getTime()
+            );
           });
           setNotifications(sortedData);
         } else {
@@ -145,22 +148,29 @@ const Homepage = () => {
   return (
     <div className="flex flex-col min-h-screen bg-white">
       <Header />
-      <main className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-6 p-6 md:p-10">
+      {/* <main className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-6 p-6 md:p-10"> */}
+      <main className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-6 p-6 md:p-10 md:pb-6">
         <div className="flex flex-col items-center justify-center text-center">
-          <img
-            src="gu_gate_bg.png"
-            alt="Placement"
-            className="w-full rounded-lg shadow-lg"
-          />
-          <h1 className="mt-6 text-2xl font-bold text-gray-800">
-            Placement Management System
+          <div className="relative group w-full">
+            <div className="absolute -inset-2 bg-gradient-to-r from-blue-400 to-indigo-500 rounded-xl blur-lg opacity-0 group-hover:opacity-40 transition duration-500"></div>
+            <img
+              src="gu_gate_bg.png"
+              alt="Placement"
+              className="relative w-full rounded-lg shadow-lg transform transition-all duration-500 group-hover:scale-[1.004]"
+            />
+          </div>
+          <h1 className="mt-6 text-2xl md:text-2xl font-extrabold text-gray-800 leading-tight">
+            Training & Placement Cell <br />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">
+              Management System
+            </span>
           </h1>
         </div>
         <div className="flex flex-col gap-6">
           <div className="grid grid-cols-2 gap-6 h-40">
             <Link
               to={"/login"}
-              className="flex flex-col items-center justify-center p-6 bg-blue-100 rounded-lg shadow-md 
+              className="flex flex-col items-center justify-center p-6 bg-blue-100 rounded-lg shadow-md border-blue-400 border
                hover:bg-blue-200 transform transition-all duration-300 hover:scale-105 cursor-pointer"
             >
               <img
@@ -168,13 +178,13 @@ const Homepage = () => {
                 alt="Student"
                 className="w-12 h-12 mb-2 transition-transform duration-300 group-hover:scale-110"
               />
-              <h2 className="font-semibold text-blue-600 text-center">
+              <h2 className="font-bold text-blue-600 text-center">
                 Student Login
               </h2>
             </Link>
             <Link
               to={"/login"}
-              className="flex flex-col items-center justify-center p-6 bg-green-100 rounded-lg shadow-md 
+              className="flex flex-col items-center justify-center p-6 bg-green-100 rounded-lg shadow-md border-green-400 border
                hover:bg-green-200 transform transition-all duration-300 hover:scale-105 cursor-pointer"
             >
               <img
@@ -182,15 +192,19 @@ const Homepage = () => {
                 alt="Admin"
                 className="w-12 h-12 mb-2 transition-transform duration-300 group-hover:scale-110"
               />
-              <h2 className="font-semibold text-green-600 text-center">
+              <h2 className="font-bold text-green-600 text-center">
                 Admin Login
               </h2>
             </Link>
           </div>
+
           <div className="p-6 pt-4 bg-gradient-to-br from-white to-blue-50 rounded-2xl shadow-lg border border-blue-100 overflow-hidden h-84 flex flex-col backdrop-blur-sm">
             <div className="flex items-center justify-between pb-3 border-b border-blue-200">
               <h3 className="text-xl font-bold text-blue-600 flex items-center gap-2">
-                🔔 Latest Notifications
+                <span className="inline-block origin-top animate-[swing_2s_infinite]">
+                  🔔
+                </span>
+                Latest Notifications
               </h3>
               <span className="text-xs text-gray-500 italic">
                 Hover to pause scroll
