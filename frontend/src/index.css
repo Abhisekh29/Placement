@@ -193,3 +193,9 @@
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background-color: #94a3b8 !important; 
 }
+
+/* Bell Swing Animation */
+@keyframes swing {
+  0%, 100% { transform: rotate(-15deg); }
+  50% { transform: rotate(15deg); }
+}

@@ -11,8 +11,8 @@
   "dev": "nodemon server.js"
   },
   "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "author": "Abhisekh Roy and Team",
+  "license": "SEE LICENSE IN ../LICENSE", 
   "description": "",
   "dependencies": {
     "bcryptjs": "^3.0.2",
