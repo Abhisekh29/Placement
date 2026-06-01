@@ -201,6 +201,7 @@ const ForgotPassword = () => {
                   maxDate={new Date()}
                   className="w-full rounded-xl border border-gray-300 px-4 py-2"
                   wrapperClassName="w-full"
+                  popperClassName="!z-[9999]"
                   required
                 />
               </div>
