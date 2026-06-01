@@ -218,26 +218,38 @@ export const updateStudent = (req, res) => {
 
 export const deleteStudent = async (req, res) => {
   const { userid } = req.params;
-  const connection = db.promise();
+  let connection; // Declare variable outside try block so catch block can access it
 
   try {
+    // 1. GET A SINGLE DEDICATED CONNECTION FROM THE POOL
+    connection = await db.promise().getConnection();
+
+    // 2. Start the transaction on this specific connection
     await connection.beginTransaction();
 
-    // 1. Delete from student_master
+    // 3. Delete from student_master
     const q1 = "DELETE FROM student_master WHERE userid = ?";
     await connection.query(q1, [userid]);
 
-    // 2. Delete from user_master
+    // 4. Delete from user_master
     const q2 = "DELETE FROM user_master WHERE userid = ?";
     await connection.query(q2, [userid]);
 
+    // 5. Commit the transaction
     await connection.commit();
+
+    // 6. CRITICAL: Release the connection back to the pool
+    connection.release();
 
     return res.status(200).json({
       message: "Student and User records deleted successfully.",
     });
   } catch (err) {
-    await connection.rollback();
+    // If an error occurs, rollback and release connection
+    if (connection) {
+      await connection.rollback();
+      connection.release(); // Must release even on failure!
+    }
 
     if (err.code === "ER_ROW_IS_REFERENCED_2") {
       return res.status(400).json({
