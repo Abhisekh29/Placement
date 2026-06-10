@@ -27,6 +27,7 @@ import adminRoutes from "./routes/admin.js";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import reportRoutes from "./routes/reports.js";
+import { startBackupCron } from "./utilities/backup.js";
 
 const app = express()
 
@@ -88,6 +89,9 @@ app.use('/uploads', express.static('uploads'));
 
 // At Home Page Routes
 app.use("/api/homeNotifications", homeNotificationRoutes);
+
+// Database Backup Cron Job
+startBackupCron();
 
 const PORT = process.env.PORT || 8000;
 app.listen(PORT, () => console.log(`Server is running on port ${PORT}`));

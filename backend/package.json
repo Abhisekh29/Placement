@@ -12,7 +12,7 @@
   },
   "keywords": [],
   "author": "Abhisekh Roy and Team",
-  "license": "SEE LICENSE IN ../LICENSE", 
+  "license": "SEE LICENSE IN ../LICENSE",
   "description": "",
   "dependencies": {
     "bcryptjs": "^3.0.2",
@@ -24,6 +24,7 @@
     "multer": "^2.0.2",
     "mysql": "^2.18.1",
     "mysql2": "^3.14.5",
+    "node-cron": "^4.2.1",
     "nodemon": "^3.1.10"
   }
 }
