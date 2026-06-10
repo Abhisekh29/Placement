@@ -357,6 +357,13 @@ This section covers the setup of an Ubuntu VM, securing it, and deploying the ap
   ```bash
   sudo apt update && sudo apt upgrade -y
   ```
+- **Automated Database Backups (Disaster Recovery):** The system automatically creates a complete backup of the MySQL database every day at 4:00 AM (IST). These `.sql` files are stored securely in the `backend/utilities/backups/` directory. To optimize server storage, backups older than 30 days are automatically deleted.
+- **Database Restoration:** In the event of system failure or data corruption, you can securely restore the database to a previous state using the built-in terminal utility. Navigate to the `utilities` folder and execute:
+  ```bash
+  cd backend/utilities
+  node restore_db.js
+  ```
+  Select the required `.sql` file and then press Enter. The database will be automatically restored to the selected state.
 
 ---
 
